@@ -18,8 +18,8 @@ A plataforma centraliza o cadastro de provas, gabaritos, pesos por avaliação, 
 
 | Integrante                                  | Função / Papel no Projeto        | GitHub / Contato                            |
 | :------------------------------------------ | :--------------------------------- | :------------------------------------------ |
-| **[Felipe Cafalloni da Costa]**       | Product Owner (PO) / Desenvolvedor | [GitHub](https://github.com/FelipeCafalloni) |
-| **[Sayuri Vidal Nozaki]**             | Scrum Master / Desenvolvedor       | [GitHub](https://github.com/Balinhadmwlango) |
+| **[Felipe Cafalloni da Costa]**       | Product Owner (PO)                 | [GitHub](https://github.com/FelipeCafalloni) |
+| **[Sayuri Vidal Nozaki]**             | Scrum Master                       | [GitHub](https://github.com/Balinhadmwlango) |
 | **[Mateus Daniel Santos]**            | Desenvolvedor                      | [GitHub](https://github.com/Teuzor)          |
 | **[Rian Fernandes Paes]**             | Desenvolvedor                      | [GitHub](https://github.com/rianrz)          |
 | **[Yago de Noronha Chaves]**          | Desenvolvedor                      | [GitHub](https://github.com/1cafee)          |
@@ -92,6 +92,57 @@ O desenvolvimento é conduzido sob a metodologia **Scrum**, garantindo entregas 
 * **Backend:** Linguagem **Java** (desenvolvido com conceitos avançados de POO e arquitetura limpa).
 * **Banco de Dados:** Modelagem relacional estruturada através de **MER** (Modelo Entidade-Relacionamento) e **DER** (Diagrama Entidade-Relacionamento).
 * **Controle de Versão:** Git e GitHub.
+
+---
+
+## Definition of Ready (DoR)
+
+> 🟢 **Um item só entra na sprint se todos os critérios abaixo estiverem atendidos.** Verificado no Refinement e confirmado no Planning.
+
+### Clareza do item
+- [ ] História escrita no formato "Como `<tipo de usuário>`, quero `<ação>`, para `<benefício>`"
+- [ ] Objetivo de negócio e valor do item estão claros para o time
+- [ ] Critérios de aceite descritos e testáveis
+- [ ] Item não depende de nada bloqueado externamente (como outra user story)
+- [ ] Endpoint(s) envolvidos definidos (método, rota, parâmetros)
+- [ ] Regras de validação e cenários de erro previstos
+
+### Preparação para o Planning
+- [ ] Item priorizado pelo PO no backlog
+- [ ] Item estimado pelo time (story points)
+- [ ] Item pequeno o suficiente para caber em uma sprint (se não, foi quebrado)
+- [ ] Dúvidas levantadas no refinamento foram respondidas pelo PO
+- [ ] Ambiente, acessos e ferramentas necessários já disponíveis
+
+---
+
+## Definition of Done (DoD)
+
+> 🏁 **Um item só é considerado "Pronto" quando todos os critérios abaixo forem cumpridos.** Sem exceções negociadas no meio da sprint.
+
+### Código
+- [ ] Todos os critérios de aceite da história foram atendidos
+- [ ] Código segue o padrão de commits e o padrão de código do projeto
+- [ ] Code review aprovado por ao menos um par
+- [ ] Branch integrada à branch principal sem conflitos
+- [ ] Nenhum código comentado, credencial ou dado sensível versionado
+
+### Qualidade
+- [ ] Testes unitários escritos e passando
+- [ ] Cenários de erro e validações testados
+- [ ] Sem bugs conhecidos de severidade alta em aberto
+- [ ] Interface (Design) aprovada
+
+### Documentação
+- [ ] Documentação e manuais atualizados
+- [ ] README atualizado quando houver mudança de setup ou execução
+- [ ] Mudanças que quebram contrato comunicadas e versionadas
+
+### Entrega e aceite
+- [ ] Deploy realizado no ambiente de homologação
+- [ ] Item validado e aceito pelo PO
+- [ ] Status atualizado no board
+- [ ] Item demonstrado (ou pronto para demonstração) na Sprint Review
 
 ---
 
