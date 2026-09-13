@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <AnchorPane layoutX="64.0" layoutY="74.0" opacity="0.5" prefHeight="62.0" prefWidth="472.0" style="-fx-background-color: #D3D3D3;" />
+      <AnchorPane prefHeight="54.0" prefWidth="600.0" />
+      <Button fx:id="enviarProva" layoutX="483.0" layoutY="346.0" mnemonicParsing="false" onAction="#enviarProva" prefHeight="39.0" prefWidth="106.0" style="-fx-background-color: #88e788;" text="Enviar Prova">
+         <font>
+            <Font size="15.0" />
+         </font>
+      </Button>
+      <AnchorPane prefHeight="54.0" prefWidth="600.0" style="-fx-background-color: #D3D3D3;">
+         <children>
+            <Label layoutX="21.0" layoutY="17.0" prefHeight="22.0" prefWidth="118.0" text="Envio de Provas">
+               <font>
+                  <Font size="17.0" />
+               </font>
+            </Label>
+         </children>
+      </AnchorPane>
+      <Label layoutX="64.0" layoutY="79.0" prefHeight="30.0" prefWidth="118.0" text="Enviar Prova">
+         <font>
+            <Font name="System Bold" size="20.0" />
+         </font>
+      </Label>
+      <Label layoutX="64.0" layoutY="110.0" prefHeight="20.0" prefWidth="472.0" text="Faça o upload do arquivo da prova digitalizada para que seja disponibilizada aos alunos." textFill="#000000b2" />
+      <Label layoutX="64.0" layoutY="139.0" prefHeight="30.0" prefWidth="118.0" text="Disciplina">
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font>
+      </Label>
+      <ComboBox layoutX="64.0" layoutY="166.0" opacity="0.85" prefHeight="26.0" prefWidth="472.0" promptText="Selecione a disciplina" />
+      <Label layoutX="64.0" layoutY="199.0" prefHeight="30.0" prefWidth="118.0" text="Nome da prova">
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font>
+      </Label>
+      <TextField layoutX="64.0" layoutY="229.0" prefHeight="26.0" prefWidth="472.0" promptText="Ex: Prova 1 - Cálculo" />
+      <Button layoutX="64.0" layoutY="268.0" mnemonicParsing="false" prefHeight="62.0" prefWidth="472.0" text="Selecione o arquivo">
+         <font>
+            <Font size="20.0" />
+         </font>
+      </Button>
+      <Button fx:id="voltarPagina" layoutX="11.0" layoutY="346.0" mnemonicParsing="false" onAction="#voltarPagina" prefHeight="39.0" prefWidth="106.0" style="-fx-background-color: #FF7F7F;" text="Voltar">
+         <font>
+            <Font size="15.0" />
+         </font>
+      </Button>
+   </children>
+</AnchorPane>
