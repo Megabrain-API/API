@@ -24,7 +24,7 @@
       <TextField layoutX="270.0" layoutY="131.0" />
       <Button fx:id="entrar" layoutX="196.0" layoutY="221.0" mnemonicParsing="false" prefHeight="47.0" prefWidth="208.0" style="-fx-background-color: #4A7C59; -fx-background-radius: 12px;" text="Entrar" textFill="WHITE">
          <font>
-            <Font size="20.0" />
+            <Font name="System Bold" size="20.0" />
          </font>
       </Button>
       <Label layoutX="229.0" layoutY="344.0" text="Não tem login?" />

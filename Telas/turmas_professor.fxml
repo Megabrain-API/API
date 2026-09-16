@@ -7,7 +7,6 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <Label layoutX="207.0" layoutY="26.0" text="Minhas Turmas">
@@ -24,7 +23,7 @@
             <TableColumn prefWidth="76.0" text="Semestre" />
         </columns>
       </TableView>
-      <Button layoutX="177.0" layoutY="323.0" mnemonicParsing="false" text="Acessar" />
-      <Button layoutX="359.0" layoutY="323.0" mnemonicParsing="false" text="Inserir" />
+      <Button layoutX="150.0" layoutY="318.0" mnemonicParsing="false" prefHeight="36.0" prefWidth="86.0" style="-fx-background-radius: 8px;" text="Acessar" />
+      <Button layoutX="340.0" layoutY="318.0" mnemonicParsing="false" prefHeight="36.0" prefWidth="86.0" style="-fx-background-radius: 8px;" text="Inserir" />
    </children>
 </AnchorPane>
