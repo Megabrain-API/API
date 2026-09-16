@@ -28,11 +28,7 @@
          </font>
       </Button>
       <Label layoutX="229.0" layoutY="344.0" text="Não tem login?" />
-      <Hyperlink fx:id="cadastrar" layoutX="314.0" layoutY="341.0" text="Cadastrar" />
-      <Hyperlink fx:id="forgetsenha" layoutX="246.0" layoutY="178.0" text="Esqueceu sua senha?">
-         <font>
-            <Font size="11.0" />
-         </font>
-      </Hyperlink>
+      <Hyperlink fx:id="hyp_cadastraraluno" layoutX="314.0" layoutY="341.0" onAction="#hyper_cad_aluno" text="Cadastrar" />
+      <Hyperlink fx:id="forgetsenha" layoutX="241.0" layoutY="177.0" text="Esqueceu sua senha?" />
    </children>
 </AnchorPane>
