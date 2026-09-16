@@ -4,7 +4,7 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.layout.AnchorPane?>
-
+<?import javafx.scene.layout.Region?>
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1">
    <children>
@@ -14,17 +14,34 @@
             <items>
               <MenuItem mnemonicParsing="false" text="Delete" />
             </items>
+               <graphic>
+                  <Region prefHeight="115.0" prefWidth="0.0" />
+               </graphic>
           </Menu>
             <Menu mnemonicParsing="false" text="Dados Pessoais">
                <items>
                   <MenuItem mnemonicParsing="false" text="Delete" />
                </items>
+               <graphic>
+                  <Region prefHeight="36.0" prefWidth="0.0" />
+               </graphic>
             </Menu>
           <Menu mnemonicParsing="false" text="FAQ">
             <items>
               <MenuItem mnemonicParsing="false" text="About" />
             </items>
+               <graphic>
+                  <Region prefHeight="115.0" prefWidth="0.0" />
+               </graphic>
           </Menu>
+            <Menu mnemonicParsing="false" text="Sair">
+               <items>
+                  <MenuItem mnemonicParsing="false" text="About" />
+               </items>
+               <graphic>
+                  <Region prefHeight="36.0" prefWidth="246.0" />
+               </graphic>
+            </Menu>
         </menus>
       </MenuBar>
    </children>
