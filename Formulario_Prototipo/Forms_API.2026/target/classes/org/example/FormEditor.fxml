@@ -10,18 +10,14 @@
 <AnchorPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.FormEditorController">
    <children>
       <Button fx:id="btn_adicionar" layoutX="184.0" layoutY="39.0" mnemonicParsing="false" onAction="#adicionarQuestao" prefHeight="53.0" prefWidth="157.0" text="Adicionar Questão" />
-      <MenuBar layoutY="1.0" prefHeight="27.0" prefWidth="849.0">
+      <MenuBar layoutY="1.0" mouseTransparent="true" prefHeight="27.0" prefWidth="849.0">
         <menus>
           <Menu mnemonicParsing="false" text="Editor de Formulário" />
         </menus>
       </MenuBar>
       <ScrollPane fitToHeight="true" fitToWidth="true" layoutX="29.0" layoutY="116.0" prefHeight="454.0" prefWidth="718.0">
          <content>
-          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="452.0" prefWidth="718.0">
-               <children>
-                  <VBox fx:id="container_dinamico" layoutX="-2.0" layoutY="1.0" prefHeight="425.0" prefWidth="693.0" />
-               </children>
-            </AnchorPane>
+            <VBox fx:id="container_dinamico" prefHeight="425.0" prefWidth="693.0" />
          </content>
       </ScrollPane>
    </children>
