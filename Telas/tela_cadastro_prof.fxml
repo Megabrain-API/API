@@ -7,7 +7,6 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <Label layoutX="177.0" layoutY="144.0" text="Matrícula">
@@ -15,7 +14,7 @@
             <Font size="14.0" />
          </font>
       </Label>
-      <TextField layoutX="242.0" layoutY="233.0" prefHeight="25.0" prefWidth="171.0" />
+      <TextField layoutX="242.0" layoutY="233.0" prefHeight="25.0" prefWidth="171.0" promptText="Insira sua senha novamente" />
       <Label layoutX="188.0" layoutY="190.0" text="Senha">
          <font>
             <Font size="14.0" />
@@ -26,14 +25,14 @@
             <Font size="14.0" />
          </font>
       </Label>
-      <TextField layoutX="242.0" layoutY="141.0" prefHeight="25.0" prefWidth="171.0" />
-      <TextField layoutX="242.0" layoutY="188.0" prefHeight="25.0" prefWidth="171.0" />
+      <TextField layoutX="242.0" layoutY="141.0" prefHeight="25.0" prefWidth="171.0" promptText="Insira o número da Matrícula" />
+      <TextField layoutX="242.0" layoutY="188.0" prefHeight="25.0" prefWidth="171.0" promptText="Insira sua senha" />
       <Label layoutX="188.0" layoutY="103.0" text="Nome">
          <font>
             <Font size="14.0" />
          </font>
       </Label>
-      <TextField layoutX="242.0" layoutY="101.0" prefHeight="25.0" prefWidth="171.0" />
+      <TextField layoutX="242.0" layoutY="101.0" prefHeight="25.0" prefWidth="171.0" promptText="Insira seu Nome Completo" />
       <Button layoutX="225.0" layoutY="283.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="150.0" style="-fx-background-radius: 8px; -fx-background-color: #4A7C59;" text="Cadastrar" textFill="WHITE">
          <font>
             <Font name="System Bold" size="18.0" />
