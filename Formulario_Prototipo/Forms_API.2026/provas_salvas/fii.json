@@ -1,0 +1,21 @@
+{
+  "nome": "fii",
+  "prazo": "",
+  "questoes": [
+    {
+      "enunciado": "qual a melhor comida de caralhopolis?",
+      "alternativas": [
+        "caralho",
+        "polis"
+      ]
+    },
+    {
+      "enunciado": "Qual continente fica a ilha de caralhopolis?",
+      "alternativas": [
+        "oceania",
+        "africa",
+        "América do Sul"
+      ]
+    }
+  ]
+}
