@@ -52,7 +52,15 @@ public class PreviewFormularioController {
     @FXML
     void VoltarLista(ActionEvent event) {
         try {
-            App.setRoot("VisualizaProva"); // Volta para a tela da lista
+            // Carrega o FXML diretamente à força
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("ListaProva.fxml"));
+            javafx.scene.Parent root = loader.load();
+
+            // Substitui o conteúdo da tela atual pela tela nova
+            vb_formulario.getScene().setRoot(root);
+
+
+            //App.setRoot("VisualizaProva"); // Volta para a tela da lista
         } catch (Exception e) {
             e.printStackTrace();
         }

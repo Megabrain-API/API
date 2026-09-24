@@ -152,7 +152,17 @@ public class ListaProvaController {
         // Se tiver selecionado, guarda na sessão global e muda de tela
         SessaoApp.provaAtual = provaSelecionadaTemporaria;
         try {
-            App.setRoot("PrewiewFormulario"); // Mude para o nome do seu novo arquivo FXML
+            System.out.println("URL: " + App.class.getResource("PreviewFormulario.fxml"));
+            System.out.println("URL Lista: " + App.class.getResource("ListaProva.fxml"));
+
+            // Carrega o FXML diretamente à força
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("PreviewFormulario.fxml"));
+            javafx.scene.Parent root = loader.load();
+
+            // Substitui o conteúdo da tela atual pela tela nova
+            vb_provacontainer.getScene().setRoot(root);
+
+            //App.setRoot("PrewiewFormulario"); // Mude para o nome do seu novo arquivo FXML
         } catch (Exception e) {
             e.printStackTrace();
         }

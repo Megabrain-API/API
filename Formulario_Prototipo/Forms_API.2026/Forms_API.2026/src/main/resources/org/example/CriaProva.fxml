@@ -53,7 +53,7 @@
             </font>
         </Label>
         <ComboBox fx:id="selectQuestoes" layoutX="65.0" layoutY="294.0" opacity="0.85" prefHeight="26.0" prefWidth="472.0" promptText="Selecione o tipo das questões" />
-        <Label layoutX="63.0" layoutY="153.0" prefHeight="30.0" prefWidth="183.0" text="Insira o prazo de entrega">
+        <Label layoutX="63.0" layoutY="153.0" prefHeight="30.0" prefWidth="204.0" text="Insira o prazo de entrega">
             <font>
                 <Font name="System Bold" size="15.0" />
             </font>
