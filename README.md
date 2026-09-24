@@ -34,9 +34,9 @@ A plataforma centraliza o cadastro de provas, gabaritos, pesos por avaliação, 
 | Sprint                        | Período (semanas) | Foco principal              | Entregáveis                                                                           |
 | :------------------------------ | :------------------- | :---------------------------- | :--------------------------------------------------------------------------------------- |
 | Preparação                  |                    | Descoberta e setup          | Visão do produto, backlog inicial priorizado, repositório configurado                |
-| Sprint 1 — Fundação        | 07/09/26 - 27/09/26           | Base técnica               | Estrutura do projeto, modelagem de dados, conexão com banco, funcionalidades básicas |
-| Sprint 2 — Autenticação    | 05/10/26 - 25/10/26           | Segurança e agradabilidade | Cadastro/login, telas, funcionalidades essenciais                                      |
-| Sprint 3 — Núcleo funcional | 02/11/26 - 27/11/16           | Polimento                   | Validações, tratamento de erros padronizado, conclusão de funcionalidades faltantes |
+| Sprint 1 — Fundação        | 07/09/26 - 27/09/26           | Base técnica               | Estrutura do projeto, telas principais, funcionalidade de criação de provas |
+| Sprint 2 — Autenticação    | 05/10/26 - 25/10/26           | Acesso e utilidade  | Cadastro/login, , funcionalidades essenciais de realização de provas pelos alunos e correção dos professores                                      |
+| Sprint 3 — Núcleo funcional | 02/11/26 - 27/11/16           | Polimento e Interação                   | Validações, tratamento de erros, conclusão de funcionalidades faltantes, refinamento de funções de interação entre professores |
 
 ---
 
@@ -124,6 +124,73 @@ O desenvolvimento é conduzido sob a metodologia **Scrum**, garantindo entregas 
 * **Controle de Versão:** Git e GitHub.
 
 ---
+
+# Checklist de Definição de Pronto para Começar (DoR)
+
+> 💡 **Regra:** Um item só entra na sprint se todos os critérios abaixo estiverem atendidos. Verificado no *Refinement* e confirmado no *Planning*.
+
+---
+
+## Clareza do Item
+
+- [ ] **História formatada:** Escrita no padrão `"Como <tipo de usuário>, quero <ação>, para <benefício>"`.
+- [ ] **Valor de negócio:** Objetivo e valor do item claros para todo o time.
+- [ ] **Critérios de aceite:** Detalhados e testáveis.
+- [ ] **Independência:** Item não depende de bloqueios externos (ex: dependência de uma User Story futura).
+- [ ] **Especificação técnica:** Endpoint(s) envolvidos definidos (método, rota e parâmetros).
+- [ ] **Regras de negócio:** Regras de validação e cenários de erro previstos.
+
+---
+
+## Preparação para o Planning
+
+- [ ] **Priorização:** Item priorizado pelo PO no backlog.
+- [ ] **Estimativa:** Item estimado pelo time de desenvolvimento (*story points*).
+- [ ] **Tamanho adequado:** Item fatiado o suficiente para ser concluído dentro de uma única sprint.
+- [ ] **Dúvidas sanadas:** Questões levantadas no refinamento devidamente respondidas pelo PO.
+- [ ] **Infraestrutura:** Ambiente, acessos e ferramentas necessárias já estão disponíveis.
+
+---
+
+# Checklist de Definição de Pronto (DoD)
+
+> 🏁 **Regra:** Um item só é considerado "Pronto" quando todos os critérios abaixo forem cumpridos. Sem exceções negociadas no meio da sprint.
+
+---
+
+## Código
+
+- [ ] **Critérios de aceite:** Todos os critérios de aceite da história foram atendidos.
+- [ ] **Padrões:** Código segue o padrão de commits e o padrão de código do projeto.
+- [ ] **Code Review:** Aprovado por ao menos um par.
+- [ ] **Integração:** Branch integrada à branch principal sem conflitos.
+- [ ] **Segurança e Limpeza:** Nenhum código comentado, credencial ou dado sensível versionado.
+
+---
+
+## Qualidade
+
+- [ ] **Testes unitários:** Escritos e passando.
+- [ ] **Validações:** Cenários de erro e validações testados.
+- [ ] **Bugs:** Sem bugs conhecidos de severidade alta em aberto.
+- [ ] **Interface:** Design/Interface aprovada.
+
+---
+
+## Documentação
+
+- [ ] **Manuais:** Documentação e manuais atualizados.
+- [ ] **README:** Atualizado quando houver mudança de setup ou execução.
+- [ ] **Contratos e APIs:** Mudanças que quebram contrato comunicadas e versionadas.
+
+---
+
+## Entrega e Aceite
+
+- [ ] **Deploy:** Funcionalidade lançada na main.
+- [ ] **Aprovação do PO:** Item validado e aceito pelo PO.
+- [ ] **Gestão:** Status atualizado no board.
+- [ ] **Sprint Review:** Item demonstrado (ou pronto para demonstração) na Sprint Review.
 
 ## 📦 Como Executar o Projeto
 
