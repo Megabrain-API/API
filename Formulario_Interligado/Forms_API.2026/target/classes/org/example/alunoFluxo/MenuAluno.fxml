@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.Region?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.alunoControllers.MenuAlunoController">
+   <children>
+      <MenuBar prefHeight="44.0" prefWidth="600.0" style="-fx-background-color: #6C757D;" stylesheets="@estilo.css">
+        <menus>
+          <Menu mnemonicParsing="false" text="Meu Curso">
+            <items>
+              <MenuItem fx:id="menu_meucurso" mnemonicParsing="false" onAction="#entra_meucurso" text="Meu Curso btn" />
+            </items>
+               <graphic>
+                  <Region prefHeight="36.0" prefWidth="0.0" />
+               </graphic>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Dados Pessoais">
+            <items>
+              <MenuItem fx:id="dados_pessoais_alu" mnemonicParsing="false" onAction="#entra_dados_pessoais_alu" text="Dados Pessoais btn" />
+            </items>
+               <graphic>
+                  <Region prefHeight="36.0" prefWidth="0.0" />
+               </graphic>
+          </Menu>
+          <Menu mnemonicParsing="false" text="FAQ">
+            <items>
+              <MenuItem fx:id="menu_faq" mnemonicParsing="false" onAction="#entra_faq" text="faq btn" />
+            </items>
+               <graphic>
+                  <Region prefHeight="36.0" prefWidth="0.0" />
+               </graphic>
+          </Menu>
+            <Menu mnemonicParsing="false">
+               <items>
+                  <MenuItem mnemonicParsing="false" text="Close" />
+               </items>
+               <graphic>
+                  <Region prefHeight="36.0" prefWidth="280.0" />
+               </graphic>
+            </Menu>
+            <Menu mnemonicParsing="false" text="Sair">
+               <items>
+                  <MenuItem fx:id="menu_sair_aluno" mnemonicParsing="false" onAction="#deslogar_aluno" text="Sair btn" />
+               </items>
+               <graphic>
+                  <Region prefHeight="36.0" prefWidth="0.0" />
+               </graphic>
+            </Menu>
+        </menus>
+      </MenuBar>
+   </children>
+</AnchorPane>
