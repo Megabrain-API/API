@@ -1,4 +1,4 @@
-package org.example;
+package org.example.profControllers;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -8,6 +8,9 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.event.ActionEvent;
+import org.example.Prova;
+import org.example.Questao;
+import org.example.SessaoApp;
 
 public class PreviewFormularioController {
 
@@ -53,7 +56,7 @@ public class PreviewFormularioController {
     void VoltarLista(ActionEvent event) {
         try {
             // Carrega o FXML diretamente à força
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("ListaProva.fxml"));
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(org.example.App.class.getResource("professorFluxo/ListaProva.fxml"));
             javafx.scene.Parent root = loader.load();
 
             // Substitui o conteúdo da tela atual pela tela nova

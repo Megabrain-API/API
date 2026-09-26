@@ -6,10 +6,11 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.FormEditorController">
+<AnchorPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.profControllers.FormEditorController">
    <children>
-      <Button fx:id="btn_adicionar" layoutX="184.0" layoutY="39.0" mnemonicParsing="false" onAction="#adicionarQuestao" prefHeight="53.0" prefWidth="157.0" text="Adicionar Questão" />
+      <Button fx:id="btn_adicionar" layoutX="64.0" layoutY="40.0" mnemonicParsing="false" onAction="#adicionarQuestao" prefHeight="53.0" prefWidth="157.0" style="-fx-background-radius: 8px;" text="Adicionar Questão" />
       <MenuBar layoutY="1.0" prefHeight="27.0" prefWidth="849.0">
         <menus>
           <Menu mnemonicParsing="false" text="Editor de Formulário" />
@@ -20,6 +21,11 @@
             <VBox fx:id="container_dinamico" prefHeight="425.0" prefWidth="693.0" />
          </content>
       </ScrollPane>
-      <Button fx:id="btn_finalizar" layoutX="425.0" layoutY="40.0" mnemonicParsing="false" onAction="#GeraJson" prefHeight="53.0" prefWidth="157.0" text="Finalizar Formulário" />
+      <Button fx:id="btn_finalizar" layoutX="310.0" layoutY="40.0" mnemonicParsing="false" onAction="#GeraJson" prefHeight="53.0" prefWidth="157.0" style="-fx-background-radius: 8px;" text="Finalizar Formulário" />
+      <Button fx:id="btn_cancelar_form" layoutX="548.0" layoutY="40.0" mnemonicParsing="false" onAction="#cancelaFormulario" prefHeight="53.0" prefWidth="157.0" style="-fx-background-radius: 8px; -fx-background-color: #C6131B;" text="Cancelar" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font>
+      </Button>
    </children>
 </AnchorPane>

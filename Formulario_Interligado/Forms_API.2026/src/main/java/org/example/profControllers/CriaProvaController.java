@@ -17,6 +17,9 @@ public class CriaProvaController {
     private Button confirmCriarProva;
 
     @FXML
+    private Button voltarCriaProva;
+
+    @FXML
     private TextField nomeProva;
 
     @FXML
@@ -35,7 +38,11 @@ public class CriaProvaController {
         SessaoApp.provaAtual.setNome(nomeProva.getText());
         SessaoApp.provaAtual.setPrazo(prazoEntrega.getText());
 
-        App.setRoot("FormEditor");
+        App.setRoot("professorFluxo/FormEditor");
+    }
+    @FXML
+    void voltar_criaProva(ActionEvent event) throws IOException {
+        App.setRoot("professorFluxo/ListaProva");
     }
 
 }

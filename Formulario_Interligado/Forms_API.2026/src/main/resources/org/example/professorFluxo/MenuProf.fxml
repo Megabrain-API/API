@@ -12,7 +12,15 @@
         <menus>
           <Menu mnemonicParsing="false" style="-fx-text-fill: #E0E0E0;" text="Minhas Turmas">
             <items>
-              <MenuItem fx:id="menu_minhaturma" mnemonicParsing="false" onAction="#entra_minhaturma" text="Minhas Turmas btn" />
+              <MenuItem fx:id="menu_minhaturma" mnemonicParsing="false" onAction="#entra_minhaturma" text="Ver Turmas" />
+            </items>
+               <graphic>
+                  <Region prefHeight="115.0" prefWidth="0.0" />
+               </graphic>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Minhas Provas">
+            <items>
+              <MenuItem fx:id="minhas_provas" mnemonicParsing="false" onAction="#entra_listaprova" text="Lista de Provas" />
             </items>
                <graphic>
                   <Region prefHeight="115.0" prefWidth="0.0" />
@@ -20,26 +28,23 @@
           </Menu>
             <Menu mnemonicParsing="false" text="Dados Pessoais">
                <items>
-                  <MenuItem fx:id="menu_dados_pessoais_prof" mnemonicParsing="false" onAction="#entra_dados_pessoais_prof" text="Dados Pessoais btn" />
+                  <MenuItem fx:id="menu_dados_pessoais_prof" mnemonicParsing="false" onAction="#entra_dados_pessoais_prof" text="Ver Dados Pessoais" />
                </items>
                <graphic>
                   <Region prefHeight="36.0" prefWidth="0.0" />
                </graphic>
             </Menu>
-          <Menu mnemonicParsing="false" text="FAQ">
-            <items>
-              <MenuItem fx:id="menu_faq" mnemonicParsing="false" onAction="#entra_faq" text="faq btn" />
-            </items>
+            <Menu mnemonicParsing="false">
                <graphic>
-                  <Region prefHeight="115.0" prefWidth="0.0" />
+                  <Region prefHeight="36.0" prefWidth="184.0" />
                </graphic>
-          </Menu>
+            </Menu>
             <Menu mnemonicParsing="false" text="Sair">
                <items>
-                  <MenuItem fx:id="menu_sair_prof" mnemonicParsing="false" onAction="#deslogar_prof" text="Sair btn" />
+                  <MenuItem fx:id="menu_sair_prof" mnemonicParsing="false" onAction="#deslogar_prof" text="Sair" />
                </items>
                <graphic>
-                  <Region prefHeight="36.0" prefWidth="246.0" />
+                  <Region prefHeight="36.0" prefWidth="0.0" />
                </graphic>
             </Menu>
         </menus>

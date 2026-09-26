@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.VBox?>
 
 
-<AnchorPane prefHeight="502.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.PreviewFormularioController">
+<AnchorPane prefHeight="502.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.profControllers.PreviewFormularioController">
    <children>
       <ScrollPane fitToHeight="true" fitToWidth="true" layoutX="34.0" layoutY="89.0" prefHeight="283.0" prefWidth="511.0">
          <content>

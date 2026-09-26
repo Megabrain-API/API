@@ -14,7 +14,7 @@ public class App extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         // Carrega a tela inicial que está na raiz da pasta org.example
-        scene = new Scene(loadFXML("professorFluxo/CriaProva"), 640, 480);
+        scene = new Scene(loadFXML("telainicio"), 640, 480);
         stage.setScene(scene);
         stage.show();
     }

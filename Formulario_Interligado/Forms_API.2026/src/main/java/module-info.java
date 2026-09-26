@@ -3,7 +3,7 @@ module org.example {
     requires javafx.fxml;
     requires com.google.gson;
 
-    opens org.example to javafx.fxml;
+    opens org.example to javafx.fxml, com.google.gson;
     exports org.example;
     exports org.example.profControllers;
     opens org.example.profControllers to javafx.fxml;
