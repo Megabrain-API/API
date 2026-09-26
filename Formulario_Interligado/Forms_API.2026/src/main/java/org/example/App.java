@@ -5,17 +5,39 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+
 import java.io.IOException;
 
 public class App extends Application {
 
     private static Scene scene;
+    private static final double ASPECT_RATIO = 16.0 / 9.0;
+    private boolean resizing = false;
 
     @Override
     public void start(Stage stage) throws IOException {
-        // Carrega a tela inicial que está na raiz da pasta org.example
-        scene = new Scene(loadFXML("telainicio"), 640, 480);
+        // 1. Inicializa em 16:9 (960x540)
+        scene = new Scene(loadFXML("telainicio"), 960, 540);
         stage.setScene(scene);
+        stage.setMinWidth(360);
+        stage.setMinHeight(240);
+
+        // 2. Redimensiona a altura se puxar a largura
+        stage.widthProperty().addListener((obs, oldVal, newVal) -> {
+            if (resizing) return;
+            resizing = true;
+            stage.setHeight(newVal.doubleValue() / ASPECT_RATIO);
+            resizing = false;
+        });
+
+        // 3. Redimensiona a largura se puxar a altura
+        stage.heightProperty().addListener((obs, oldVal, newVal) -> {
+            if (resizing) return;
+            resizing = true;
+            stage.setWidth(newVal.doubleValue() * ASPECT_RATIO);
+            resizing = false;
+        });
+
         stage.show();
     }
 
@@ -24,8 +46,7 @@ public class App extends Application {
     }
 
     private static Parent loadFXML(String fxml) throws IOException {
-        // Com o "/org/example/", ele consegue buscar tanto na raiz quanto em subpastas (ex: "alunoFluxo/tela")
-        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("/org/example/" + fxml + ".fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
         return fxmlLoader.load();
     }
 

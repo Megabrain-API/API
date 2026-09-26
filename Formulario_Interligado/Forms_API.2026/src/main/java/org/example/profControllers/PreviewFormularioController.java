@@ -56,7 +56,7 @@ public class PreviewFormularioController {
     void VoltarLista(ActionEvent event) {
         try {
             // Carrega o FXML diretamente à força
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("ListaProva.fxml"));
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(org.example.App.class.getResource("professorFluxo/ListaProva.fxml"));
             javafx.scene.Parent root = loader.load();
 
             // Substitui o conteúdo da tela atual pela tela nova

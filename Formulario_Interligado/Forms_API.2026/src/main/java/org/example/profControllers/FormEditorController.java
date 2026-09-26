@@ -58,6 +58,7 @@ public class FormEditorController {
                 // Adiciona a questão lida à nossa prova
                 org.example.SessaoApp.provaAtual.getQuestoes().add(questaoObj);
             }
+
             // 4. Gera o ficheiro JSON usando Gson
             try {
                 Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -83,13 +84,6 @@ public class FormEditorController {
                 Path caminhoCompleto = pastaDestino.resolve(nomeDoFicheiro);
                 Files.writeString(caminhoCompleto, jsonFinal);
 
-                Alert alerta = new Alert(Alert.AlertType.INFORMATION);
-                alerta.setTitle("Sucesso!");
-                alerta.setHeaderText("Prova salva com sucesso!");
-                alerta.setContentText("O ficheiro foi salvo em:\n" + caminhoCompleto.toAbsolutePath());
-                alerta.showAndWait();
-                App.setRoot("professorFluxo/ListaProva");
-
             } catch (Exception e) {
                 Alert erro = new Alert(Alert.AlertType.ERROR);
                 erro.setTitle("Erro");
@@ -103,6 +97,11 @@ public class FormEditorController {
             }
         }
 
+        Alert alerta = new Alert(Alert.AlertType.INFORMATION);
+        alerta.setTitle("Sucesso!");
+        alerta.setHeaderText("Prova salva com sucesso!");
+        alerta.showAndWait();
+        App.setRoot("professorFluxo/ListaProva");
     }
 
     @FXML

@@ -3,6 +3,7 @@ package org.example.profControllers;
 import com.google.gson.Gson;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
@@ -155,11 +156,8 @@ public class ListaProvaController {
         // Se tiver selecionado, guarda na sessão global e muda de tela
         SessaoApp.provaAtual = provaSelecionadaTemporaria;
         try {
-            System.out.println("URL: " + App.class.getResource("PreviewFormulario.fxml"));
-            System.out.println("URL Lista: " + App.class.getResource("ListaProva.fxml"));
-
             // Carrega o FXML diretamente à força
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("PreviewFormulario.fxml"));
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(org.example.App.class.getResource("professorFluxo/PreviewFormulario.fxml"));
             javafx.scene.Parent root = loader.load();
 
             // Substitui o conteúdo da tela atual pela tela nova

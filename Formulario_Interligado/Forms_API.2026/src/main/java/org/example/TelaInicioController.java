@@ -14,7 +14,6 @@ public class TelaInicioController {
     @FXML
     private Button btn_docente;
 
-
     @FXML
     void entrar_aluno(ActionEvent event) throws IOException {
         App.setRoot("alunoFluxo/TelaLoginAlu");
