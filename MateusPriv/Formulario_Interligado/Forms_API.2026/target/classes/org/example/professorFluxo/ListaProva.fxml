@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane prefHeight="507.0" prefWidth="601.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.profControllers.ListaProvaController">
+   <children>
+      <ScrollPane fitToHeight="true" fitToWidth="true" layoutX="66.0" layoutY="70.0" prefHeight="277.0" prefWidth="451.0">
+         <content>
+            <VBox fx:id="vb_provacontainer" prefHeight="253.0" prefWidth="294.0" />
+         </content>
+      </ScrollPane>
+      <Label layoutX="66.0" layoutY="29.0" text="Provas Postadas" />
+      <Button fx:id="btn_acessar" layoutX="110.0" layoutY="389.0" mnemonicParsing="false" onAction="#AcessaProva" prefHeight="75.0" prefWidth="110.0" text="Acessar" />
+      <Button layoutX="235.0" layoutY="389.0" mnemonicParsing="false" onAction="#CriarProva" prefHeight="75.0" prefWidth="110.0" text="Criar Prova" />
+      <Button layoutX="361.0" layoutY="389.0" mnemonicParsing="false" onAction="#VoltarInicio" prefHeight="75.0" prefWidth="110.0" text="Voltar" />
+   </children>
+</AnchorPane>

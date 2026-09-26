@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <AnchorPane layoutX="64.0" layoutY="51.0" opacity="0.5" prefHeight="46.0" prefWidth="475.0" style="-fx-background-color: #D3D3D3;">
+         <children>
+            <Label layoutX="2.0" layoutY="26.0" prefHeight="17.0" prefWidth="472.0" text="Descreva as características do exame." textFill="#000000b2" />
+         </children></AnchorPane>
+      <MenuBar layoutY="1.0" prefHeight="26.0" prefWidth="600.0">
+        <menus>
+          <Menu mnemonicParsing="false" text="Criar prova">
+            <items>
+              <MenuItem mnemonicParsing="false" text="Close" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+      <Button fx:id="confirmCriarProva" layoutX="467.0" layoutY="344.0" mnemonicParsing="false" onAction="#confirmCriarProva" prefHeight="36.0" prefWidth="110.0" style="-fx-background-color: #4A7C59;" text="Confirmar" textAlignment="CENTER" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font>
+      </Button>
+      <Label layoutX="64.0" layoutY="49.0" prefHeight="30.0" prefWidth="118.0" text="Criar prova">
+         <font>
+            <Font name="System Bold" size="20.0" />
+         </font>
+      </Label>
+      <Label layoutX="63.0" layoutY="208.0" prefHeight="30.0" prefWidth="118.0" text="Disciplina">
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font>
+      </Label>
+      <ComboBox fx:id="selectDisciplina" layoutX="63.0" layoutY="238.0" opacity="0.85" prefHeight="26.0" prefWidth="472.0" promptText="Selecione a disciplina" />
+      <Label layoutX="63.0" layoutY="97.0" prefHeight="30.0" prefWidth="118.0" text="Nome da prova">
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font>
+      </Label>
+      <TextField fx:id="nomeProva" layoutX="63.0" layoutY="127.0" prefHeight="26.0" prefWidth="472.0" promptText="Ex: Prova 1 - Cálculo" />
+      <Label layoutX="63.0" layoutY="264.0" prefHeight="30.0" prefWidth="130.0" text="Tipo de questões ">
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font>
+      </Label>
+      <ComboBox fx:id="selectQuestoes" layoutX="65.0" layoutY="294.0" opacity="0.85" prefHeight="26.0" prefWidth="472.0" promptText="Selecione o tipo das questões" />
+      <Label layoutX="63.0" layoutY="153.0" prefHeight="30.0" prefWidth="183.0" text="Insira o prazo de entrega">
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font>
+      </Label>
+      <TextField fx:id="prazoEntrega" layoutX="63.0" layoutY="183.0" prefHeight="25.0" prefWidth="472.0" promptText="Ex: 23/05/2026" />
+   </children>
+</AnchorPane>
