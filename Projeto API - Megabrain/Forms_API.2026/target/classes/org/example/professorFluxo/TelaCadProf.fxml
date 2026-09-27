@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+
+<BorderPane prefHeight="400.0" prefWidth="600.0" styleClass="fundo-inicio" stylesheets="@../estilo.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.TelaCadProfController">
+   <center>
+      <StackPane layoutX="344.0" layoutY="255.0" minHeight="0.0" minWidth="0.0" prefHeight="384.0" prefWidth="570.0" styleClass="fundo-inicio">
+         <children>
+            <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="0.0" minWidth="0.0" prefHeight="382.0" prefWidth="278.0" spacing="5.0" style="-fx-background-color: #E0E0E0; -fx-background-radius: 15; -fx-padding: 25;" StackPane.alignment="CENTER">
+               <children>
+                  <ImageView fitHeight="90.0" fitWidth="87.0" opacity="0.5" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../Imagens/icon0.png" />
+                     </image>
+                  </ImageView>
+                  <TextField fx:id="cad_confirmar_senha_prof" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="32.0" prefWidth="197.0" promptText="Insira sua senha novamente" />
+                  <TextField fx:id="cad_matricula" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="32.0" prefWidth="197.0" promptText="Insira seu número de matrícula" />
+                  <TextField fx:id="cad_senha_prof" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="32.0" prefWidth="197.0" promptText="Insira sua senha" />
+                  <TextField fx:id="cad_nome_prof" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="32.0" prefWidth="197.0" promptText="Insira seu nome completo" />
+                  <Button fx:id="btn_cadastro_prof" maxHeight="-Infinity" maxWidth="-Infinity" mnemonicParsing="false" onAction="#cad_prof" prefHeight="26.0" prefWidth="150.0" style="-fx-background-radius: 8px; -fx-background-color: #4A7C59;" text="Cadastrar" textFill="WHITE">
+                     <font>
+                        <Font name="System Bold" size="18.0" />
+                     </font>
+                  </Button>
+                  <Hyperlink fx:id="hyper_entrar_prof" onAction="#entrar_login_prof" prefHeight="15.0" prefWidth="40.0" text="Login" />
+               </children>
+            </VBox>
+         </children>
+      </StackPane>
+   </center>
+</BorderPane>
