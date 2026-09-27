@@ -5,6 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+
 import java.io.IOException;
 
 public class App extends Application {
@@ -13,9 +14,19 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        // Carrega a tela inicial que está na raiz da pasta org.example
-        scene = new Scene(loadFXML("telainicio"), 640, 480);
+        // Inicializa a cena com a resolução padrão
+        scene = new Scene(loadFXML("telainicio"), 960, 540);
+
+        // Carrega o arquivo de estilos
+        scene.getStylesheets().add(App.class.getResource("estilo.css").toExternalForm());
+
+        // Configurações da janela
         stage.setScene(scene);
+        stage.setMinWidth(600);
+        stage.setMinHeight(400);
+        stage.setResizable(true);
+
+
         stage.show();
     }
 
@@ -24,12 +35,11 @@ public class App extends Application {
     }
 
     private static Parent loadFXML(String fxml) throws IOException {
-        // Com o "/org/example/", ele consegue buscar tanto na raiz quanto em subpastas (ex: "alunoFluxo/tela")
-        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("/org/example/" + fxml + ".fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
         return fxmlLoader.load();
     }
 
     public static void main(String[] args) {
-        launch();
+        launch(args);
     }
 }
