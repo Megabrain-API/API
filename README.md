@@ -1,4 +1,4 @@
-# 🧠 Megabrain — API 2º Semestre / 2026
+# 🧠 Megabrain — MegaTests — API 2º Semestre / 2026
 
 <p align="center">
   <b>Plataforma inteligente para gestão, aplicação e correção ágil de avaliações acadêmicas.</b>
@@ -6,13 +6,34 @@
 
 ---
 
-## 📋 Sobre o Projeto
+## 📋 Sobre o Projeto 
 
-O **Megabrain** é o projeto desenvolvido no âmbito da **API (Aprendizagem por Projetos Integrados)** do **2º semestre de 2026**. O sistema nasce para solucionar um dos maiores gargalos no ecossistema acadêmico: **a dificuldade, o tempo gasto e a complexidade na correção e gestão de avaliações pelos professores**, além de proporcionar transparência e acesso organizado para os alunos.
+O **MegaTests** é o projeto desenvolvido no âmbito da **API (Aprendizagem por Projetos Integrados)** do **2º semestre de 2026**. O sistema nasce para solucionar um dos maiores gargalos no ecossistema acadêmico: **a dificuldade, o tempo gasto e a complexidade na correção e gestão de avaliações pelos professores**, além de proporcionar transparência e acesso organizado para os alunos.
 
 A plataforma centraliza o cadastro de provas, gabaritos, pesos por avaliação, cálculo automatizado de médias e compartilhamento de materiais pedagógicos entre docentes para nivelamento de turmas.
 
 ---
+
+## 🎯 Problemática e Objetivos
+
+### O Problema do Cliente
+
+Professores enfrentam barreiras operacionais significativas na correção e acompanhamento de provas, o que gera sobrecarga de trabalho e dificulta o nivelamento pedagógico entre turmas de uma mesma disciplina. Além disso, falta uma visão centralizada do histórico de avaliações e flexibilidade para lidar com diferentes tipos de questões (múltipla escolha, dissertativas, associação).
+
+---
+
+## 📌 Backlog
+
+| # | User Story | Prioridade | Sprint |
+| :-: | :-- | :-: | :-: |
+| **1** | Como professor, quero poder aplicar minhas provas com seus gabaritos para os alunos, com o objetivo de facilitar o processo de aplicação de provas. | 🔴 ALTA | 2 |
+| **2** | Como aluno, quero fazer a prova na plataforma, e, em seguida, enviar a prova realizada ao professor para facilitar o processo de realização das avaliações. | 🔴 ALTA | 2 |
+| **3** | Como professor, quero poder enviar quantas provas eu quiser e com diferentes tipos de questão, com o objetivo de facilitar a elaboração do material. | 🔴 ALTA | 2 |
+| **4** | Como professor, quero poder visualizar as provas realizadas pelos alunos, corrigí-las, e retornar ao aluno, visando agilizar o processo de correção das avaliações. | 🟡 MÉDIA | 2 |
+| **5** | Como aluno, quero que seja possível visualizar o meu resultado e o gabarito das provas que fiz, com o objetivo de acompanhar meu desempenho durante o semestre. | 🟡 MÉDIA | 3 |
+| **6** | Como professor, quero que as provas que eu publicar no sistema tenham os pesos e informações da avaliação, com o objetivo de facilitar o cálculo da média de cada aluno. | 🟡 MÉDIA | 3 |
+| **7** | Como professor, quero ter acesso às provas aplicadas anteriormente em um histórico pensando em possíveis reutilizações. | 🟢 BAIXA | 3 |
+| **8** | Como professor, quero poder ter acesso às avaliações que os professores aplicam para as outras turmas com o objetivo de manter as turmas no mesmo nível. | 🟢 BAIXA | 3 |
 
 ## 👥 Equipe
 
@@ -39,12 +60,6 @@ A plataforma centraliza o cadastro de provas, gabaritos, pesos por avaliação, 
 | Sprint 3 — Núcleo funcional | 02/11/26 - 27/11/16           | Polimento e Interação                   | Validações, tratamento de erros, conclusão de funcionalidades faltantes, refinamento de funções de interação entre professores |
 
 ---
-
-## 🎯 Problemática e Objetivos
-
-### O Problema do Cliente
-
-Professores enfrentam barreiras operacionais significativas na correção e acompanhamento de provas, o que gera sobrecarga de trabalho e dificulta o nivelamento pedagógico entre turmas de uma mesma disciplina. Além disso, falta uma visão centralizada do histórico de avaliações e flexibilidade para lidar com diferentes tipos de questões (múltipla escolha, dissertativas, associação).
 
 ### Objetivos do Sistema
 
