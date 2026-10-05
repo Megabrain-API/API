@@ -196,7 +196,6 @@ O desenvolvimento é conduzido sob a metodologia **Scrum**, garantindo entregas 
 
 - [ ] **Manuais:** Documentação e manuais atualizados.
 - [ ] **README:** Atualizado quando houver mudança de setup ou execução.
-- [ ] **Contratos e APIs:** Mudanças que quebram contrato comunicadas e versionadas.
 
 ---
 
