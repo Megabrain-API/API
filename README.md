@@ -152,7 +152,6 @@ O desenvolvimento é conduzido sob a metodologia **Scrum**, garantindo entregas 
 - [ ] **Valor de negócio:** Objetivo e valor do item claros para todo o time.
 - [ ] **Critérios de aceite:** Detalhados e testáveis.
 - [ ] **Independência:** Item não depende de bloqueios externos (ex: dependência de uma User Story futura).
-- [ ] **Especificação técnica:** Endpoint(s) envolvidos definidos (método, rota e parâmetros).
 - [ ] **Regras de negócio:** Regras de validação e cenários de erro previstos.
 
 ---
