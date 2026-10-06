@@ -95,50 +95,6 @@ Para o Aluno:
 * **Transparência e Feedback Pedagógico:** Visualização detalhada do espelho da prova corrigida, permitindo consultar o gabarito oficial e ler as observações individuais deixadas pelos professores.
 * **Organização do Histórico Acadêmico:** Estruturação limpa do desempenho escolar categorizada por semestres e disciplinas, facilitando o acompanhamento da evolução acadêmica.
 
-### 🔄 Fluxo de Uso do Usuário
-
-🧑‍🏫 1. Fluxo do Professor
-
-1. **Autenticação e Seleção de Contexto:**
-   * O docente realiza o login no sistema e seleciona o semestre letivo, a turma e a disciplina correspondente.
-
-2. **Criação, Configuração e Agendamento de Provas:**
-   * Cadastra as questões (múltipla escolha, dissertativa ou associação), define os pesos das notas e insere o gabarito oficial.
-   * Configura os parâmetros de aplicação: data/hora de abertura e fechamento, tempo limite de duração e regras de liberação do gabarito.
-
-3. **Acompanhamento da Aplicação ao Vivo:**
-   * Acessa o painel de monitoramento durante o horário do exame para acompanhar em tempo real o status de cada aluno (*Não Iniciou*, *Em Andamento*, *Finalizada*, *Tempo Esgotado*).
-
-4. **Correção e Lançamento de Feedbacks:**
-   * Visualiza o resultado das questões objetivas já corrigidas automaticamente pela API.
-   * Realiza a correção interativa das questões dissertativas e de associação, insere notas parciais e adiciona observações pedagógicas individuais para cada estudante.
-
-5. **Nivelamento e Gestão de Acervo:**
-   * Consulta o acervo de provas anteriores para reutilizar estruturas de testes em novas turmas.
-   * Acessa a área de nivelamento institucional para visualizar exames elaborados por outros professores da mesma matéria.
-
-6. **Validação e Homologação Semestral:**
-   * O sistema valida se a disciplina cumpriu o requisito mínimo de 2 avaliações aplicadas e corrigidas para liberar o encerramento do semestre letivo.
-
-👨‍🎓 2. Fluxo do Aluno
-
-1. **Autenticação e Painel Acadêmico:**
-   * O discente realiza o login e acessa o seu dashboard principal, organizado por semestres e disciplinas.
-
-2. **Acesso à Avaliação Agendada:**
-   * Seleciona a prova disponível na agenda da disciplina, lê as instruções do exame e confirma o início da tentativa (disparando o cronômetro do sistema).
-
-3. **Resolução Digital Interativa:**
-   * Responde às questões no ambiente virtual (múltipla escolha, caixas de texto estruturadas e mecanismos de associação de itens).
-   * O sistema realiza o salvamento automático de rascunhos periodicamente para prevenir perda de dados em caso de instabilidade na conexão.
-
-4. **Submissão e Confirmação de Entrega:**
-   * Finaliza o envio da prova manualmente antes do encerramento ou automaticamente ao esgotar o tempo limite, recebendo o comprovante digital de submissão.
-
-5. **Consulta de Notas e Desempenho:**
-   * Após a liberação pelo professor, acessa o espelho da prova para conferir suas respostas contra o gabarito oficial, visualizar a nota obtida e ler as anotações pedagógicas recebidas.
-
----
 
 ## 🛠️ Metodologia e Tecnologias
 
