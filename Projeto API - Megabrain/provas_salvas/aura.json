@@ -1,0 +1,27 @@
+{
+  "nome": "aura",
+  "prazo": "12/12/2026",
+  "questoes": [
+    {
+      "enunciado": "oiii",
+      "alternativas": [
+        "???",
+        "ue"
+      ]
+    },
+    {
+      "enunciado": "olaa",
+      "alternativas": [
+        "hello",
+        "hii"
+      ]
+    },
+    {
+      "enunciado": "tchau",
+      "alternativas": [
+        "ok",
+        "beleza"
+      ]
+    }
+  ]
+}

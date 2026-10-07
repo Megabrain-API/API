@@ -12,3 +12,13 @@
     -fx-background-position: center center;
     -fx-background-size: cover;
 }
+
+.src .button {
+    -fx-cursor: hand;  /*Transforma a seta do mouse na mãozinha de clique*/
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+}
+
+.src .button:hover {
+    -fx-background-color: #004d3b; /* Efeito de destaque levemente mais escuro ao passar o mouse */
+}

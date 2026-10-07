@@ -1,56 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.alunoControllers.MenuAlunoController">
-   <children>
-      <MenuBar prefHeight="44.0" prefWidth="600.0" style="-fx-background-color: #6C757D;" stylesheets="@estilo.css">
-        <menus>
-          <Menu mnemonicParsing="false" text="Meu Curso">
-            <items>
-              <MenuItem fx:id="menu_meucurso" mnemonicParsing="false" onAction="#entra_meucurso" text="Meu Curso btn" />
-            </items>
-               <graphic>
-                  <Region prefHeight="36.0" prefWidth="0.0" />
-               </graphic>
-          </Menu>
-          <Menu mnemonicParsing="false" text="Dados Pessoais">
-            <items>
-              <MenuItem fx:id="dados_pessoais_alu" mnemonicParsing="false" onAction="#entra_dados_pessoais_alu" text="Dados Pessoais btn" />
-            </items>
-               <graphic>
-                  <Region prefHeight="36.0" prefWidth="0.0" />
-               </graphic>
-          </Menu>
-          <Menu mnemonicParsing="false" text="FAQ">
-            <items>
-              <MenuItem fx:id="menu_faq" mnemonicParsing="false" onAction="#entra_faq" text="faq btn" />
-            </items>
-               <graphic>
-                  <Region prefHeight="36.0" prefWidth="0.0" />
-               </graphic>
-          </Menu>
-            <Menu mnemonicParsing="false">
-               <items>
-                  <MenuItem mnemonicParsing="false" text="Close" />
-               </items>
-               <graphic>
-                  <Region prefHeight="36.0" prefWidth="280.0" />
-               </graphic>
-            </Menu>
-            <Menu mnemonicParsing="false" text="Sair">
-               <items>
-                  <MenuItem fx:id="menu_sair_aluno" mnemonicParsing="false" onAction="#deslogar_aluno" text="Sair btn" />
-               </items>
-               <graphic>
-                  <Region prefHeight="36.0" prefWidth="0.0" />
-               </graphic>
-            </Menu>
-        </menus>
-      </MenuBar>
-   </children>
-</AnchorPane>
+<BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.alunoControllers.MenuAlunoController">
+   <center>
+      <StackPane styleClass="fundo-inicio" stylesheets="@../../../../../../../../../../../estilo.css" BorderPane.alignment="CENTER">
+         <children>
+            <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="0.0" minWidth="0.0" prefHeight="34.0" prefWidth="600.0" style="-fx-background-radius: 15; -fx-padding: 25;" StackPane.alignment="CENTER">
+               <children>
+                  <MenuBar maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="34.0" prefWidth="600.0" style="-fx-background-color: #0066ff;" stylesheets="@../estilo.css">
+                    <menus>
+                      <Menu mnemonicParsing="false" style="-fx-text-fill: #E0E0E0;" text="Meu Curso">
+                        <items>
+                          <MenuItem fx:id="menu_meucurso" mnemonicParsing="false" onAction="#entra_meucurso" style="-fx-text-fill: #000000;" text="Ver Curso" />
+                        </items>
+                           <graphic>
+                              <Region prefHeight="115.0" prefWidth="0.0" />
+                           </graphic>
+                      </Menu>
+                      <Menu mnemonicParsing="false" text="Minhas Provas">
+                        <items>
+                          <MenuItem fx:id="minhas_provas_aluno" mnemonicParsing="false" onAction="#entra_menuprova_aluno" style="-fx-text-fill: #000000;" text="Ver Provas" />
+                        </items>
+                           <graphic>
+                              <Region prefHeight="115.0" prefWidth="0.0" />
+                           </graphic>
+                      </Menu>
+                        <Menu mnemonicParsing="false" text="Dados Pessoais">
+                           <items>
+                              <MenuItem fx:id="dados_pessoais_alu" mnemonicParsing="false" onAction="#entra_dados_pessoais_alu" style="-fx-text-fill: #000000;" text="Ver Dados Pessoais" />
+                           </items>
+                           <graphic>
+                              <Region prefHeight="36.0" prefWidth="0.0" />
+                           </graphic>
+                        </Menu>
+                        <Menu disable="true" mnemonicParsing="false">
+                           <graphic>
+                              <Region prefHeight="36.0" prefWidth="0.0">
+                                 <padding>
+                                    <Insets right="200.0" top="100.0" />
+                                 </padding>
+                              </Region>
+                           </graphic>
+                        </Menu>
+                        <Menu mnemonicParsing="false" text="Sair">
+                           <items>
+                              <MenuItem fx:id="menu_sair_aluno" mnemonicParsing="false" onAction="#deslogar_aluno" style="-fx-text-fill: #000000;" text="Sair" />
+                           </items>
+                           <graphic>
+                              <Region prefHeight="36.0" prefWidth="0.0" />
+                           </graphic>
+                        </Menu>
+                    </menus>
+                  </MenuBar>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#acd0ff" height="366.0" opacity="0.4" stroke="BLACK" strokeType="INSIDE" width="600.0" />
+               </children>
+            </VBox>
+         </children>
+      </StackPane>
+   </center>
+</BorderPane>

@@ -5,8 +5,10 @@ module org.example {
 
     opens org.example to javafx.fxml, com.google.gson;
     exports org.example;
-    exports org.example.profControllers;
-    opens org.example.profControllers to javafx.fxml;
-    exports org.example.alunoControllers;
-    opens org.example.alunoControllers to javafx.fxml;
+    exports org.example.controllers.profControllers;
+    opens org.example.controllers.profControllers to javafx.fxml, com.google.gson;
+    exports org.example.controllers.alunoControllers;
+    opens org.example.controllers.alunoControllers to javafx.fxml, com.google.gson;
+    exports org.example.entity.profEntity;
+    opens org.example.entity.profEntity to javafx.fxml, com.google.gson;
 }

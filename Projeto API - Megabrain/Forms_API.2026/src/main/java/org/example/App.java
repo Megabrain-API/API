@@ -22,8 +22,8 @@ public class App extends Application {
 
         // Configurações da janela
         stage.setScene(scene);
-        stage.setMinWidth(600);
-        stage.setMinHeight(400);
+        stage.setMinWidth(900);
+        stage.setMinHeight(600);
         stage.setResizable(true);
 
 

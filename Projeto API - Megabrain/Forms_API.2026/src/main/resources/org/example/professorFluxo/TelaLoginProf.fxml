@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
@@ -10,8 +12,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-
-<BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.profControllers.TelaLoginProfController">
+<BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.profControllers.TelaLoginProfController">
    <center>
       <StackPane styleClass="fundo-inicio" stylesheets="@../estilo.css">
          <children>
@@ -22,16 +23,28 @@
                         <Image url="@../Imagens/icon0.png" />
                      </image>
                   </ImageView>
-                  <TextField maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="32.0" prefWidth="197.0" promptText="Insira seu número de matrícula" />
+                  <TextField maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="32.0" prefWidth="197.0" promptText="Insira seu email" />
                   <TextField maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="32.0" prefWidth="197.0" promptText="Insira sua senha" />
                   <Button fx:id="entrar" mnemonicParsing="false" onAction="#entrar_prof" prefHeight="26.0" prefWidth="150.0" style="-fx-background-color: #4A7C59; -fx-background-radius: 12px;" text="Entrar" textFill="WHITE">
                      <font>
                         <Font name="System Bold" size="18.0" />
                      </font>
+                     <VBox.margin>
+                        <Insets top="7.0" />
+                     </VBox.margin>
                   </Button>
                   <Button fx:id="voltar" maxHeight="-Infinity" maxWidth="-Infinity" mnemonicParsing="false" onAction="#voltar_inicio" prefHeight="13.0" prefWidth="75.0" style="-fx-background-radius: 7px;" text="Voltar" />
-                  <Hyperlink fx:id="hyp_profcadastro" maxHeight="-Infinity" maxWidth="-Infinity" onAction="#hyper_prof_cadastro" text="Cadastrar" />
-                  <Hyperlink fx:id="forgetsenha" maxHeight="-Infinity" maxWidth="-Infinity" text="Esqueceu sua senha?" />
+                  <Hyperlink fx:id="hyp_profcadastro" maxHeight="-Infinity" maxWidth="-Infinity" onAction="#hyper_prof_cadastro" text="Cadastrar">
+                     <VBox.margin>
+                        <Insets top="5.0" />
+                     </VBox.margin>
+                     <graphic>
+                        <Label text="Não tem Login?">
+                           <padding>
+                              <Insets right="2.0" />
+                           </padding>
+                        </Label>
+                     </graphic></Hyperlink>
                </children>
             </VBox>
          </children>
