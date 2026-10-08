@@ -18,7 +18,7 @@
       </StackPane>
    </center>
    <left>
-      <VBox fx:id="barra_lateral" alignment="CENTER_LEFT" minHeight="200.0" minWidth="60.0" onMouseEntered="#expande_barra" onMouseExited="#minimiza_barra" prefHeight="400.0" prefWidth="60.0" style="-fx-background-color: #00674f;" styleClass="src" BorderPane.alignment="CENTER_LEFT">
+      <VBox fx:id="barra_lateral" alignment="CENTER_LEFT" minHeight="200.0" minWidth="60.0" onMouseEntered="#expande_barra" onMouseExited="#minimiza_barra" prefHeight="400.0" prefWidth="60.0" style="-fx-background-color: #00674f;" styleClass="barralateral" BorderPane.alignment="CENTER_LEFT">
          <children>
 
             <Button fx:id="menu_minhaturma" alignment="BASELINE_LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#entra_minhaturma" prefHeight="48.0" prefWidth="200.0" style="-fx-background-color: #00674f; -fx-padding: 0 0 0 10;" text="Minhas Turmas" textFill="WHITE">

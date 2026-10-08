@@ -11,6 +11,9 @@
 <?import javafx.scene.text.Font?>
 
 <BorderPane prefHeight="400.0" prefWidth="600.0" styleClass="fundo-inicio" stylesheets="@../estilo.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.profControllers.ListaProvaController">
+   <left>
+      <fx:include source="BarraLateralProf.fxml" />
+   </left>
    <center>
       <StackPane minHeight="0.0" minWidth="0.0">
          <children>
