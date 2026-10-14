@@ -1,25 +1,37 @@
+
 package org.example.profControllers;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
+import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+
 import org.example.App;
+import org.example.profControllers.Questao;
+import org.example.SessaoApp;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FormEditorController {
 
     @FXML
-    private VBox container_dinamico; // O VBox principal onde as questões entram
+    private VBox container_dinamico;
 
     @FXML
     private Button btn_adicionar;
@@ -27,132 +39,465 @@ public class FormEditorController {
     @FXML
     private Button btn_cancelar_form;
 
-    @FXML
-    void GeraJson(ActionEvent event) throws IOException {
-        // Limpa a lista de questões caso o utilizador clique em salvar duas vezes
-        org.example.SessaoApp.provaAtual.getQuestoes().clear();
+    private static final String MULTIPLA_ESCOLHA =
+            "MULTIPLA_ESCOLHA";
 
-        // Percorre cada VBox de questão que você adicionou no container_dinamico
-        for (Node nodeQuestao : container_dinamico.getChildren()) {
-            if (nodeQuestao instanceof VBox) {
-                VBox questaoBox = (VBox) nodeQuestao;
-                org.example.Questao questaoObj = new org.example.Questao();
+    private static final String CHECKLIST =
+            "CHECKLIST";
 
-                // 3. Percorre os elementos dentro do VBox da questão (TextFields, CheckBoxes...)
-                for (Node elemento : questaoBox.getChildren()) {
+    private static final String DISSERTATIVA =
+            "DISSERTATIVA";
 
-                    // Se for um TextField e for a Pergunta (primeiro campo)
-                    if (elemento instanceof TextField) {
-                        TextField tf = (TextField) elemento;
+    // Guarda os controles de cada questão criada na tela.
+    private final List<EditorQuestao> editores =
+            new ArrayList<>();
 
-                        if (tf.getPromptText().equals("Digite sua nova pergunta...")) {
-                            questaoObj.setEnunciado(tf.getText());
-                        } else if (tf.getPromptText().equals("digite alternativa")) {
-                            // Se for uma alternativa, adiciona na lista da questão
-                            questaoObj.getAlternativas().add(tf.getText());
-                        }
-                    }
-                    // Você também pode verificar os CheckBoxes aqui para saber qual é a correta
-                }
+    // Representa uma questão no editor.
+    private static class EditorQuestao {
 
-                // Adiciona a questão lida à nossa prova
-                org.example.SessaoApp.provaAtual.getQuestoes().add(questaoObj);
-            }
+        VBox painel;
+        TextField enunciado;
+        ComboBox<String> tipo;
+        VBox areaAlternativas;
+        TextArea respostaModelo;
 
-            // 4. Gera o ficheiro JSON usando Gson
-            try {
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                String jsonFinal = gson.toJson(org.example.SessaoApp.provaAtual);
+        List<EditorAlternativa> alternativas =
+                new ArrayList<>();
 
-                // 1. Proteção: Se a prova não tiver nome (ou for nulo), damos um nome padrão
-                String nomeOriginal = org.example.SessaoApp.provaAtual.getNome();
-                if (nomeOriginal == null || nomeOriginal.trim().isEmpty()) {
-                    nomeOriginal = "Prova_Sem_Nome";
-                }
+        EditorQuestao(
+                VBox painel,
+                TextField enunciado,
+                ComboBox<String> tipo,
+                VBox areaAlternativas,
+                TextArea respostaModelo) {
 
-                // 2. Limpa o nome de caracteres especiais
-                String nomeLimpo = nomeOriginal.replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
-                String nomeDoFicheiro = nomeLimpo + ".json";
-
-                // 3. Garante que a pasta existe (createDirectories no plural cria todas as pastas necessárias)
-                Path pastaDestino = Path.of("provas_salvas");
-                if (!Files.exists(pastaDestino)) {
-                    Files.createDirectories(pastaDestino);
-                }
-
-                // 4. Cria o caminho completo e guarda o ficheiro
-                Path caminhoCompleto = pastaDestino.resolve(nomeDoFicheiro);
-                Files.writeString(caminhoCompleto, jsonFinal);
-
-            } catch (Exception e) {
-                Alert erro = new Alert(Alert.AlertType.ERROR);
-                erro.setTitle("Erro");
-                erro.setHeaderText("Erro ao salvar a prova");
-
-                // Aqui adicionamos o nome da exceção (e.getClass()) para ser mais fácil descobrir futuros erros
-                erro.setContentText(e.getClass().getSimpleName() + ": " + e.getMessage());
-                erro.showAndWait();
-
-                e.printStackTrace();
-            }
+            this.painel = painel;
+            this.enunciado = enunciado;
+            this.tipo = tipo;
+            this.areaAlternativas = areaAlternativas;
+            this.respostaModelo = respostaModelo;
         }
+    }
 
-        Alert alerta = new Alert(Alert.AlertType.INFORMATION);
-        alerta.setTitle("Sucesso!");
-        alerta.setHeaderText("Prova salva com sucesso!");
-        alerta.showAndWait();
-        App.setRoot("professorFluxo/ListaProva");
+    // Representa uma alternativa dentro de uma questão.
+    private static class EditorAlternativa {
+
+        HBox painel;
+        Label numero;
+        TextField texto;
+        CheckBox correta;
+
+        EditorAlternativa(
+                HBox painel,
+                Label numero,
+                TextField texto,
+                CheckBox correta) {
+
+            this.painel = painel;
+            this.numero = numero;
+            this.texto = texto;
+            this.correta = correta;
+        }
     }
 
     @FXML
     private void adicionarQuestao() {
-        // Cria um pequeno container para a nova questão
-        VBox novaQuestaoBox = new VBox(5);
-        novaQuestaoBox.setStyle("-fx-border-color: #ccc; -fx-padding: 10; -fx-border-radius: 5;");
 
-        // Campo de texto para a pergunta
+        VBox painel = new VBox(8);
+
+        painel.setStyle(
+                "-fx-border-color: #cccccc;" +
+                        "-fx-border-radius: 6;" +
+                        "-fx-padding: 12;"
+        );
+
+        Label titulo = new Label("Nova questão");
+
         TextField txtPergunta = new TextField();
         txtPergunta.setPromptText("Digite sua nova pergunta...");
-        TextField txtAlternativa = new TextField();
-        txtAlternativa.setPromptText("Digite a Alternativa...");
+        txtPergunta.setMaxWidth(Double.MAX_VALUE);
 
+        ComboBox<String> cmbTipo = new ComboBox<>();
 
-        // Botão para remover esta questão específica (opcional, igual ao Forms)
-        Button btnRemover = new Button("Remover");
-        btnRemover.setOnAction(e -> container_dinamico.getChildren().remove(novaQuestaoBox));
+        cmbTipo.getItems().addAll(
+                "Múltipla escolha",
+                "Checklist numerado",
+                "Dissertativa"
+        );
 
+        cmbTipo.setValue("Múltipla escolha");
+        cmbTipo.setMaxWidth(Double.MAX_VALUE);
 
+        Label tituloAlternativas =
+                new Label("Alternativas / itens:");
 
-        // botao pra adicionar alternativa na questao
-        Button btnAddAlt = new Button("Adicionar Alternativa");
-        btnAddAlt.setOnAction(a -> {
+        VBox areaAlternativas = new VBox(6);
 
-            CheckBox check = new CheckBox();
-            novaQuestaoBox.getChildren().add(check);
-            TextField novo = new TextField();
-            novo.setPromptText("digite alternativa");
-            novaQuestaoBox.getChildren().add(novo);
+        Button btnAdicionarAlternativa =
+                new Button("Adicionar alternativa");
 
-            Button btnRemoveralt = new Button("Remover Alternativa");
-            btnRemoveralt.setOnAction(e -> {
-                novaQuestaoBox.getChildren().remove(check);
-                novaQuestaoBox.getChildren().remove(novo);
+        Label tituloModelo =
+                new Label("Resposta de referência (opcional):");
 
-                novaQuestaoBox.getChildren().remove(btnRemoveralt);
-            });
-            novaQuestaoBox.getChildren().add(btnRemoveralt);
+        TextArea txtRespostaModelo = new TextArea();
+
+        txtRespostaModelo.setPromptText(
+                "Digite uma resposta de referência..."
+        );
+
+        txtRespostaModelo.setWrapText(true);
+        txtRespostaModelo.setPrefRowCount(3);
+
+        EditorQuestao editor = new EditorQuestao(
+                painel,
+                txtPergunta,
+                cmbTipo,
+                areaAlternativas,
+                txtRespostaModelo
+        );
+
+        // Adiciona alternativas ao clicar no botão.
+        btnAdicionarAlternativa.setOnAction(event ->
+                adicionarAlternativa(editor)
+        );
+
+        // Atualiza os campos quando o tipo é alterado.
+        cmbTipo.setOnAction(event ->
+                atualizarTipo(
+                        editor,
+                        tituloAlternativas,
+                        btnAdicionarAlternativa,
+                        tituloModelo
+                )
+        );
+
+        Button btnRemover = new Button("Remover questão");
+
+        btnRemover.setOnAction(event -> {
+            container_dinamico.getChildren().remove(painel);
+            editores.remove(editor);
         });
 
-        // Adiciona os elementos dentro do bloco da questão
-        novaQuestaoBox.getChildren().addAll(txtPergunta, btnRemover, btnAddAlt);
+        painel.getChildren().addAll(
+                titulo,
+                new Label("Tipo de questão:"),
+                cmbTipo,
+                txtPergunta,
+                tituloAlternativas,
+                areaAlternativas,
+                btnAdicionarAlternativa,
+                tituloModelo,
+                txtRespostaModelo,
+                btnRemover
+        );
 
-        // Adiciona o bloco da questão no container principal da tela
-        container_dinamico.getChildren().add(novaQuestaoBox);
+        editores.add(editor);
+        container_dinamico.getChildren().add(painel);
+
+        atualizarTipo(
+                editor,
+                tituloAlternativas,
+                btnAdicionarAlternativa,
+                tituloModelo
+        );
     }
-    void adAlternativa(ActionEvent event){}
+
+    // Mostra somente os campos necessários para o tipo escolhido.
+    private void atualizarTipo(
+            EditorQuestao editor,
+            Label tituloAlternativas,
+            Button btnAdicionarAlternativa,
+            Label tituloModelo) {
+
+        String tipo = editor.tipo.getValue();
+
+        boolean dissertativa =
+                "Dissertativa".equals(tipo);
+
+        editor.areaAlternativas.setVisible(!dissertativa);
+        editor.areaAlternativas.setManaged(!dissertativa);
+
+        tituloAlternativas.setVisible(!dissertativa);
+        tituloAlternativas.setManaged(!dissertativa);
+
+        btnAdicionarAlternativa.setVisible(!dissertativa);
+        btnAdicionarAlternativa.setManaged(!dissertativa);
+
+        editor.respostaModelo.setVisible(dissertativa);
+        editor.respostaModelo.setManaged(dissertativa);
+
+        tituloModelo.setVisible(dissertativa);
+        tituloModelo.setManaged(dissertativa);
+    }
+
+    // Cria uma alternativa com um campo e uma caixa de seleção.
+    private void adicionarAlternativa(EditorQuestao editor) {
+
+        Label numero = new Label();
+
+        TextField txtAlternativa = new TextField();
+        txtAlternativa.setPromptText("Digite alternativa");
+        txtAlternativa.setMaxWidth(Double.MAX_VALUE);
+
+        HBox.setHgrow(
+                txtAlternativa,
+                Priority.ALWAYS
+        );
+
+        CheckBox chkCorreta = new CheckBox("Correta");
+
+        HBox linha = new HBox(8);
+        linha.setAlignment(Pos.CENTER_LEFT);
+
+        Button btnRemover = new Button("Remover");
+
+        EditorAlternativa alternativa =
+                new EditorAlternativa(
+                        linha,
+                        numero,
+                        txtAlternativa,
+                        chkCorreta
+                );
+
+        btnRemover.setOnAction(event -> {
+
+            editor.areaAlternativas.getChildren().remove(linha);
+            editor.alternativas.remove(alternativa);
+
+            atualizarNumeracao(editor);
+        });
+
+        linha.getChildren().addAll(
+                numero,
+                txtAlternativa,
+                chkCorreta,
+                btnRemover
+        );
+
+        editor.alternativas.add(alternativa);
+        editor.areaAlternativas.getChildren().add(linha);
+
+        atualizarNumeracao(editor);
+    }
+
+    // Numera as alternativas em sequência.
+    private void atualizarNumeracao(EditorQuestao editor) {
+
+        for (int i = 0; i < editor.alternativas.size(); i++) {
+
+            EditorAlternativa alternativa =
+                    editor.alternativas.get(i);
+
+            alternativa.numero.setText((i + 1) + ".");
+        }
+    }
 
     @FXML
-    void cancelaFormulario(ActionEvent event) throws IOException {
+    private void GeraJson(ActionEvent event) {
+
+        if (SessaoApp.provaAtual == null) {
+            mostrarErro("Nenhuma prova foi inicializada.");
+            return;
+        }
+
+        if (editores.isEmpty()) {
+            mostrarErro("Adicione pelo menos uma questão.");
+            return;
+        }
+
+        // Primeiro monta e valida tudo em memória.
+        List<Questao> questoesNovas = new ArrayList<>();
+
+        for (int i = 0; i < editores.size(); i++) {
+
+            EditorQuestao editor = editores.get(i);
+
+            String enunciado =
+                    editor.enunciado.getText().trim();
+
+            if (enunciado.isEmpty()) {
+                mostrarErro(
+                        "Preencha o enunciado da questão "
+                                + (i + 1) + "."
+                );
+                return;
+            }
+
+            Questao questao = new Questao();
+
+            questao.setEnunciado(enunciado);
+
+            String tipoSelecionado = editor.tipo.getValue();
+
+            if ("Múltipla escolha".equals(tipoSelecionado)) {
+
+                questao.setTipo(MULTIPLA_ESCOLHA);
+
+            } else if ("Checklist numerado".equals(tipoSelecionado)) {
+
+                questao.setTipo(CHECKLIST);
+
+            } else {
+
+                questao.setTipo(DISSERTATIVA);
+            }
+
+            // Questões objetivas precisam de alternativas.
+            if (!DISSERTATIVA.equals(questao.getTipo())) {
+
+                if (editor.alternativas.isEmpty()) {
+                    mostrarErro(
+                            "Adicione alternativas à questão "
+                                    + (i + 1) + "."
+                    );
+                    return;
+                }
+
+                int quantidadeCorretas = 0;
+
+                for (int j = 0;
+                     j < editor.alternativas.size();
+                     j++) {
+
+                    EditorAlternativa alternativa =
+                            editor.alternativas.get(j);
+
+                    String texto =
+                            alternativa.texto.getText().trim();
+
+                    if (texto.isEmpty()) {
+                        mostrarErro(
+                                "Preencha todas as alternativas da questão "
+                                        + (i + 1) + "."
+                        );
+                        return;
+                    }
+
+                    questao.getAlternativas().add(texto);
+
+                    if (alternativa.correta.isSelected()) {
+
+                        // O índice corresponde à posição na lista.
+                        questao.getRespostasCorretas().add(j);
+
+                        quantidadeCorretas++;
+                    }
+                }
+
+                if (quantidadeCorretas == 0) {
+                    mostrarErro(
+                            "Marque pelo menos uma alternativa correta " +
+                                    "na questão " + (i + 1) + "."
+                    );
+                    return;
+                }
+
+                // Múltipla escolha permite apenas uma correta.
+                if (MULTIPLA_ESCOLHA.equals(questao.getTipo())
+                        && quantidadeCorretas != 1) {
+
+                    mostrarErro(
+                            "A questão de múltipla escolha "
+                                    + (i + 1)
+                                    + " deve ter exatamente uma correta."
+                    );
+                    return;
+                }
+
+            } else {
+
+                // A dissertativa não precisa de alternativas.
+                questao.setRespostaModelo(
+                        editor.respostaModelo.getText().trim()
+                );
+            }
+
+            questoesNovas.add(questao);
+        }
+
+        // Salva a prova somente depois de validar todas as questões.
+        try {
+
+            SessaoApp.provaAtual.getQuestoes().clear();
+
+            SessaoApp.provaAtual.getQuestoes().addAll(
+                    questoesNovas
+            );
+
+            Gson gson = new GsonBuilder()
+                    .setPrettyPrinting()
+                    .create();
+
+            String json = gson.toJson(
+                    SessaoApp.provaAtual
+            );
+
+            String nome = SessaoApp.provaAtual.getNome();
+
+            if (nome == null || nome.trim().isEmpty()) {
+                nome = "Prova_Sem_Nome";
+            }
+
+            // Evita caracteres inválidos no nome do arquivo.
+            nome = nome.replaceAll(
+                    "[^a-zA-Z0-9._-]",
+                    "_"
+            );
+
+            Path pasta = Path.of("provas_salvas");
+
+            Files.createDirectories(pasta);
+
+            Path arquivo = pasta.resolve(nome + ".json");
+
+            Files.writeString(arquivo, json);
+
+            Alert alerta = new Alert(
+                    Alert.AlertType.INFORMATION
+            );
+
+            alerta.setTitle("Sucesso");
+            alerta.setHeaderText("Prova salva com sucesso!");
+
+            alerta.setContentText(
+                    "Arquivo salvo em:\n"
+                            + arquivo.toAbsolutePath()
+            );
+
+            alerta.showAndWait();
+
+            App.setRoot("professorFluxo/ListaProva");
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            mostrarErro(
+                    "Não foi possível salvar a prova:\n"
+                            + e.getClass().getSimpleName()
+                            + ": "
+                            + e.getMessage()
+            );
+        }
+    }
+
+    private void mostrarErro(String mensagem) {
+
+        Alert alerta = new Alert(
+                Alert.AlertType.ERROR
+        );
+
+        alerta.setTitle("Erro");
+        alerta.setHeaderText("Verifique a prova");
+        alerta.setContentText(mensagem);
+
+        alerta.showAndWait();
+    }
+
+    @FXML
+    private void cancelaFormulario(ActionEvent event)
+            throws IOException {
+
         App.setRoot("professorFluxo/ListaProva");
     }
 }

@@ -9,7 +9,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.event.ActionEvent;
 import org.example.Prova;
-import org.example.Questao;
+import org.example.profControllers.Questao;
 import org.example.SessaoApp;
 
 public class PreviewFormularioController {

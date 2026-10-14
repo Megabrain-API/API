@@ -1,6 +1,6 @@
 package org.example;
 
-import org.example.Questao;
+import org.example.profControllers.Questao;
 
 import java.util.ArrayList;
 import java.util.List;
