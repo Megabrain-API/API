@@ -99,7 +99,8 @@ public class MenuAlunoController implements Initializable {
     }
 
     @FXML
-    void entra_menuprova_aluno(ActionEvent event) {
+    void entra_menuprova_aluno(ActionEvent event) throws IOException {
+        App.setRoot("alunoFluxo/ProvasAluno");
 
     }
 
