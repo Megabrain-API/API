@@ -6,7 +6,7 @@ module org.example {
     opens org.example to javafx.fxml, com.google.gson;
     exports org.example;
     exports org.example.profControllers;
-    opens org.example.profControllers to javafx.fxml;
+    opens org.example.profControllers;
     exports org.example.alunoControllers;
     opens org.example.alunoControllers to javafx.fxml;
 }
