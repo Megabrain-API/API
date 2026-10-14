@@ -1,0 +1,19 @@
+{
+  "nome": "oiiiii",
+  "prazo": "",
+  "disciplina": "Matematica Discreta",
+  "questoes": [
+    {
+      "enunciado": "gente que doideira",
+      "alternativas": [
+        "aaa"
+      ]
+    },
+    {
+      "enunciado": "oi genteee",
+      "alternativas": [
+        "3"
+      ]
+    }
+  ]
+}

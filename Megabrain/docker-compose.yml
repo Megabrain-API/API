@@ -1,0 +1,26 @@
+# Requer :
+# Docker Desktop Instalado na Maquina
+# Abrir o terminal dentro da pasta principal do projeto: projeto_megabrain/Megabrain
+
+version: '3.8'
+
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: megabrain_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: megabrain_db
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: 12345
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Opcional: Se tiver scripts SQL para popular o banco na primeira execução, descomente a linha abaixo:
+      # - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./ddl.sql:/docker-entrypoint-initdb.d/ddl.sql
+
+volumes:
+  mysql_data:
