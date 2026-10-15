@@ -21,7 +21,7 @@ public class TelaCadAluController {
     private TextField cad_nome_alu;
 
     @FXML
-    private TextField cad_email_aluno;
+    private TextField cad_ra;
 
     @FXML
     private TextField cad_senha_alu;

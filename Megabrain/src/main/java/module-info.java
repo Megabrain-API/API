@@ -5,6 +5,8 @@ module org.example {
     requires java.sql;
     requires java.desktop;
     requires mysql.connector.j;
+    requires javafx.graphics;
+    requires javafx.base;
 
     opens org.example to javafx.fxml, com.google.gson;
     exports org.example;

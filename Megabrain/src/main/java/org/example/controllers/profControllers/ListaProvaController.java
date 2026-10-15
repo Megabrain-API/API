@@ -11,6 +11,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.geometry.Pos;
 import org.example.App;
+import org.example.dao.ProvaDAO;
+import org.example.entity.profEntity.ListaProva;
 import org.example.entity.profEntity.Prova;
 import org.example.entity.profEntity.SessaoApp;
 import javafx.geometry.Insets;
@@ -18,6 +20,7 @@ import javafx.geometry.Insets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
 public class ListaProvaController {
 
@@ -37,27 +40,18 @@ public class ListaProvaController {
         carregaProvasSalvas();
     }
 
+    // carregando as provas por meio do banco de dados
     private void carregaProvasSalvas() {
-        // Aponta para a pasta onde os JSONs estão guardados
-        File pasta = new File("provas_salvas");
+        //Cria o objeto da classe ProvaDAO
+        ProvaDAO dao = new ProvaDAO();
+        List<Prova> listaProvas = dao.listarNomeProvas();
 
-        // Verifica se a pasta existe
-        if (pasta.exists() && pasta.isDirectory()) {
+        vb_provacontainer.getChildren().clear();
 
-            // Pega apenas os arquivos que terminam com .json
-            File[] arquivosJson = pasta.listFiles((dir, nome) -> nome.endsWith(".json"));
 
-            if (arquivosJson != null) {
-                Gson gson = new Gson();
-
-                // Passa por cada arquivo JSON encontrado
-                for (File arquivo : arquivosJson) {
+                // Passa por cada nome de prova retornado do banco
+                for (Prova provaRecuperada : listaProvas) {
                     try {
-                        // Lê o texto do arquivo
-                        String conteudo = Files.readString(arquivo.toPath());
-
-                        // Transforma o texto JSON de volta no objeto Prova
-                        Prova provaRecuperada = gson.fromJson(conteudo, Prova.class);
 
                         // Cria o botão da prova
                         Button btnProva = new Button(provaRecuperada.getNome());
@@ -97,19 +91,7 @@ public class ListaProvaController {
 
                         // Define a ação do botão Remover (apagar ficheiro e remover do ecrã)
                         btnRemove.setOnAction(evento -> {
-                            try {
-                                // Apaga o ficheiro JSON da pasta 'provas_salvas'
-                                Files.delete(arquivo.toPath());
-
-                                // Remove o HBox inteiro (botão prova + botão remover) da tela
-                                vb_provacontainer.getChildren().remove(linhaDaProva);
-
-                                // Confirma a Criaçao da prova no Terminal
-                                System.out.println("Prova apagada com sucesso: " + arquivo.getName());
-                            } catch (Exception e) {
-                                System.out.println("Erro ao tentar apagar o ficheiro: " + arquivo.getName());
-                                e.printStackTrace();
-                            }
+                            //TODO: chamar o metodo de excluir prova
                         });
 
                         // Coloca os dois botões dentro do HBox
@@ -119,15 +101,11 @@ public class ListaProvaController {
                         vb_provacontainer.getChildren().add(linhaDaProva);
 
                     } catch (Exception e) {
-                        System.out.println("Erro ao ler o arquivo: " + arquivo.getName());
+                        System.out.println("Erro ao buscar prova");
                         e.printStackTrace();
                     }
                 }
-            }
-        } else {
-            System.out.println("A pasta provas_salvas ainda não existe ou está vazia.");
         }
-    }
 
 
     private void abrirProva(Prova provaSelecionada) {

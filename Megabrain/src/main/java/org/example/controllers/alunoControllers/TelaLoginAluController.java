@@ -21,7 +21,7 @@ public class TelaLoginAluController {
     private Hyperlink hyp_cadastraraluno;
 
     @FXML
-    private TextField txt_email_alu;
+    private TextField txt_ra;
 
     @FXML
     private TextField txt_senha_aluno;

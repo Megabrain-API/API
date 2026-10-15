@@ -11,6 +11,7 @@ public class Prova {
     private String prazo;
     private String disciplina;
     private String tipoQuestoes;
+    private int id;
 
     // Lista que vai guardar todas as questões desta prova
     private List<Questao> questoes;
@@ -60,5 +61,8 @@ public class Prova {
 
     public void setQuestoes(List<Questao> questoes) {
         this.questoes = questoes;
+    }
+
+    public void setId(int id) { this.id = id;
     }
 }

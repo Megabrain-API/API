@@ -4,6 +4,8 @@ import org.example.entity.profEntity.Prova;
 import org.example.entity.profEntity.Questao;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ProvaDAO {
 
@@ -53,7 +55,7 @@ public class ProvaDAO {
                 for (Questao q : prova.getQuestoes()){
                     long idQuestao = 0;
 
-                    // Insere a questão na tabela mg_questoes
+                    // Insere a questão objetiva na tabela mg_questoes
                     try (PreparedStatement stmtQuestao = conn.prepareStatement(sqlQuestao, Statement.RETURN_GENERATED_KEYS)) {
                         stmtQuestao.setString(1, "Objetiva"); // Ou "Dissertativa" dependendo do tipo
                         stmtQuestao.setString(2, q.getEnunciado());
@@ -91,4 +93,39 @@ public class ProvaDAO {
         }
     }
 
+    // Função para carregar uma lista com todas as provas
+    public List<Prova> listarNomeProvas() {
+        List<Prova> listaProvas = new ArrayList<>();
+        String sql = "SELECT * FROM mg_provas"; //Query para puxar todas as provas
+        //Query para puxar prova por disciplina seria
+        /* "SELECT
+                provas.nome AS nome_da_prova,
+                disciplinas.nome AS nome_da_disciplina
+            FROM
+                provas
+            INNER JOIN
+                disciplinas ON provas.id_disciplina = disciplinas.id;" */
+        //Implantar essa função futuramente.
+
+        try (Connection conn = new ConexaoDAO().conectaBD();
+             PreparedStatement statement = conn.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            //Percorre todos os resultados do SELECT
+            while (rs.next()) {
+                Prova prova = new Prova();
+                prova.setId(rs.getInt("id"));
+                prova.setNome(rs.getString("Nome"));
+                listaProvas.add(prova);
+            }
+
+        } catch (SQLException erro) {
+            erro.printStackTrace();
+        }
+        System.out.println("Total de provas carregadas: " + listaProvas.size());
+        return listaProvas;
+    } //Fecha listaNomeProvas
+
 }
+
+
+

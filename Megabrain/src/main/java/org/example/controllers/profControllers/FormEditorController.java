@@ -59,15 +59,7 @@ public class FormEditorController {
                 org.example.entity.profEntity.SessaoApp.provaAtual.getQuestoes().add(questaoObj);
             }
 
-            // Salvar a prova no banco de dados
-            try {
-                System.out.println("A tentar salvar a prova no banco de dados...");
-                org.example.dao.ProvaDAO provaDAO = new org.example.dao.ProvaDAO();
-                provaDAO.salvaProvaCompleta(org.example.entity.profEntity.SessaoApp.provaAtual);
-                System.out.println("Prova salva com sucesso!");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+
 
             // 4. Gera o ficheiro JSON usando Gson
             try {
@@ -105,6 +97,16 @@ public class FormEditorController {
 
                 e.printStackTrace();
             }
+        }
+
+        // Salvar a prova no banco de dados
+        try {
+            System.out.println("A tentar salvar a prova no banco de dados...");
+            org.example.dao.ProvaDAO provaDAO = new org.example.dao.ProvaDAO();
+            provaDAO.salvaProvaCompleta(org.example.entity.profEntity.SessaoApp.provaAtual);
+            System.out.println("Prova salva com sucesso!");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         Alert alerta = new Alert(Alert.AlertType.INFORMATION);
