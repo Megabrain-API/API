@@ -25,7 +25,7 @@
                   </Label>
                   <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="362.0" prefWidth="459.0">
                      <content>
-                        <VBox fx:id="vb_provacontainer_aluno" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="279.0" prefWidth="462.0">
+                        <VBox fx:id="vb_provacontainer_alunoconf" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="279.0" prefWidth="462.0">
                            <children>
                               <Label alignment="TOP_CENTER" text="Você quer começar a responder esta Prova?">
                                  <VBox.margin>

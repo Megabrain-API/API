@@ -119,7 +119,8 @@ public class ProvaConfirmaController implements Initializable{
     }
 
     @FXML
-    void iniciaprova(ActionEvent event) {
+    void iniciaprova(ActionEvent event) throws IOException {
+        App.setRoot("alunoFluxo/FazerProvaAlu");
 
     }
 
