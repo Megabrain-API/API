@@ -93,7 +93,8 @@ public class ProvasAlunoController implements Initializable {
     }
 
     @FXML
-    void AcessaProva_aluno(ActionEvent event) {
+    void AcessaProva_aluno(ActionEvent event) throws IOException {
+        App.setRoot("alunoFluxo/ProvaConfirma" );
 
     }
 
@@ -113,7 +114,8 @@ public class ProvasAlunoController implements Initializable {
     }
 
     @FXML
-    void entra_menuprova_aluno(ActionEvent event) {
+    void entra_menuprova_aluno(ActionEvent event) throws IOException {
+        App.setRoot("alunoFluxo/ProvasAluno");
 
     }
 

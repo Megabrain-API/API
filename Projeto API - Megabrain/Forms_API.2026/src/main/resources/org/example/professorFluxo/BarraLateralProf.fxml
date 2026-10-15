@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox fx:id="barra_lateral" alignment="CENTER_LEFT" minHeight="200.0" minWidth="60.0" onMouseEntered="#expande_barra" onMouseExited="#minimiza_barra" prefHeight="400.0" prefWidth="60.0" style="-fx-background-color: #00674f;" styleClass="src" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.profControllers.MenuProfController">
+<VBox fx:id="barra_lateral" alignment="CENTER_LEFT" minHeight="200.0" minWidth="60.0" onMouseEntered="#expande_barra" onMouseExited="#minimiza_barra" prefHeight="400.0" prefWidth="60.0" style="-fx-background-color: #00674f;" styleClass="barralateral" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.profControllers.MenuProfController">
    <children>
 
       <Button fx:id="menu_minhaturma" alignment="BASELINE_LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#entra_minhaturma" prefHeight="48.0" prefWidth="200.0" style="-fx-background-color: #00674f; -fx-padding: 0 0 0 10;" text="Minhas Turmas" textFill="WHITE">
