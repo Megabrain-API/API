@@ -2,8 +2,12 @@ package org.example.controllers.alunoControllers;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -11,15 +15,22 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 import org.example.App;
 import org.example.dao.ProvaDAO;
 import org.example.entity.profEntity.Prova;
+import java.io.IOException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ResourceBundle;
+
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
-public class ProvasAlunoController {
+public class ProvasAlunoController implements Initializable {
 
     @FXML
     private VBox barra_lateral;
@@ -38,6 +49,60 @@ public class ProvasAlunoController {
 
     @FXML
     private VBox vb_provacontainer_aluno;
+
+    private final Map<Button, String> textosOriginais = new HashMap<>();
+    private Button[] botoesMenu;
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        botoesMenu = new Button[]{menu_meucurso, minhas_provas_aluno, dados_pessoais_alu, menu_sair_aluno};
+
+        for (Button btn : botoesMenu) {
+            if (btn != null) {
+                textosOriginais.put(btn, btn.getText());
+            }
+        }
+
+        ocultarTextosBotoes();
+    }
+
+    @FXML
+    private void expande_barra() {
+        Timeline timeline = new Timeline();
+        KeyValue kv = new KeyValue(barra_lateral.prefWidthProperty(), 170.0);
+        KeyFrame kf = new KeyFrame(Duration.millis(130), kv);
+        timeline.getKeyFrames().add(kf);
+
+        timeline.setOnFinished(event -> mostrarTextosBotoes());
+        timeline.play();
+    }
+
+    @FXML
+    private void minimiza_barra() {
+        ocultarTextosBotoes();
+
+        Timeline timeline = new Timeline();
+        KeyValue kv = new KeyValue(barra_lateral.prefWidthProperty(), 60.0);
+        KeyFrame kf = new KeyFrame(Duration.millis(150), kv);
+        timeline.getKeyFrames().add(kf);
+        timeline.play();
+    }
+
+    private void ocultarTextosBotoes() {
+        for (Button btn : botoesMenu) {
+            if (btn != null) {
+                btn.setText("");
+            }
+        }
+    }
+
+    private void mostrarTextosBotoes() {
+        for (Button btn : botoesMenu) {
+            if (btn != null) {
+                btn.setText(textosOriginais.get(btn));
+            }
+        }
+    }
 
     // Variável para guardar qual prova que o usuario clicou
     private Prova provaSelecionadaTemporaria;
@@ -108,7 +173,8 @@ public class ProvasAlunoController {
     }
 
     @FXML
-    void AcessaProva_aluno(ActionEvent event) {
+    void AcessaProva_aluno(ActionEvent event) throws IOException {
+        App.setRoot("alunoFluxo/ProvaConfirma" );
 
     }
 
@@ -118,17 +184,17 @@ public class ProvasAlunoController {
     }
 
     @FXML
-    void deslogar_aluno(ActionEvent event) {
-
+    void deslogar_aluno(ActionEvent event) throws IOException {
+        App.setRoot("alunoFluxo/TelaLoginAlu");
     }
-
     @FXML
     void entra_dados_pessoais_alu(ActionEvent event) {
 
     }
 
     @FXML
-    void entra_menuprova_aluno(ActionEvent event) {
+    void entra_menuprova_aluno(ActionEvent event) throws IOException {
+        App.setRoot("alunoFluxo/ProvasAluno");
 
     }
 
@@ -137,14 +203,5 @@ public class ProvasAlunoController {
 
     }
 
-    @FXML
-    void expande_barra(MouseEvent event) {
-
-    }
-
-    @FXML
-    void minimiza_barra(MouseEvent event) {
-
-    }
 
 }

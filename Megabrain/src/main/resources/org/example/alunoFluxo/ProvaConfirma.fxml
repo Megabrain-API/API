@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane prefHeight="400.0" prefWidth="600.0" styleClass="fundo-inicio" stylesheets="@../estilo.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.alunoControllers.ProvaConfirmaController">
+   <center>
+      <StackPane minHeight="0.0" minWidth="0.0">
+         <children>
+            <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="402.0" prefWidth="459.0">
+               <children>
+                  <Label>
+                     <font>
+                        <Font name="System Bold" size="24.0" />
+                     </font>
+                  </Label>
+                  <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="362.0" prefWidth="459.0">
+                     <content>
+                        <VBox fx:id="vb_provacontainer_alunoconf" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="279.0" prefWidth="462.0">
+                           <children>
+                              <Label alignment="TOP_CENTER" text="Você quer começar a responder esta Prova?">
+                                 <VBox.margin>
+                                    <Insets top="30.0" />
+                                 </VBox.margin>
+                                 <font>
+                                    <Font name="System Bold Italic" size="14.0" />
+                                 </font>
+                              </Label>
+                              <Label text="Após clicar no Botão &quot;Responder&quot; o timer da prova será iniciado.">
+                                 <VBox.margin>
+                                    <Insets top="50.0" />
+                                 </VBox.margin>
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </Label>
+                              <Label prefHeight="22.0" prefWidth="375.0" text="Caso a prova não seja enviada dentro do tempo limite o formulário">
+                                 <VBox.margin>
+                                    <Insets top="20.0" />
+                                 </VBox.margin>
+                              </Label>
+                              <Label text=" será enviado apenas com as questões já respondidas!" />
+                              <HBox alignment="CENTER" prefHeight="56.0" prefWidth="462.0" spacing="50.0">
+                                 <children>
+                                    <Button mnemonicParsing="false" onAction="#cancelaprova" prefHeight="45.0" prefWidth="130.0" style="-fx-background-color: #C6131B; -fx-background-radius: 12px;" text="Voltar" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="15.0" />
+                                       </font>
+                                    </Button>
+                                    <Button mnemonicParsing="false" onAction="#iniciaprova" prefHeight="45.0" prefWidth="130.0" style="-fx-background-color: #4A7C59; -fx-background-radius: 12px;" text="Responder" textFill="WHITE">
+                                       <font>
+                                          <Font name="System Bold" size="15.0" />
+                                       </font>
+                                    </Button>
+                                 </children>
+                                 <VBox.margin>
+                                    <Insets top="40.0" />
+                                 </VBox.margin>
+                              </HBox>
+                           </children></VBox>
+                     </content>
+                  </ScrollPane>
+                  <HBox alignment="CENTER" prefHeight="90.0" prefWidth="459.0" spacing="50.0">
+                     <VBox.margin>
+                        <Insets top="20.0" />
+                     </VBox.margin>
+                  </HBox>
+               </children>
+            </VBox>
+         </children>
+      </StackPane>
+   </center>
+   <left>
+      <VBox fx:id="barra_lateral" alignment="CENTER_LEFT" minHeight="200.0" minWidth="60.0" onMouseEntered="#expande_barra" onMouseExited="#minimiza_barra" prefHeight="400.0" prefWidth="60.0" style="-fx-background-color: #0066ff;" styleClass="barralateral" BorderPane.alignment="CENTER">
+         <children>
+      
+            <Button fx:id="menu_meucurso" alignment="BASELINE_LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#entra_meucurso" prefHeight="48.0" prefWidth="200.0" style="-fx-background-color: #0066ff; -fx-padding: 0 0 0 10;" text="Meu Curso" textFill="WHITE">
+               <VBox.margin>
+                  <Insets bottom="25.0" top="30.0" />
+               </VBox.margin>
+               <graphic>
+                  <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../Imagens/turma.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+            </Button>
+      
+            <Button fx:id="minhas_provas_aluno" alignment="BASELINE_LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#entra_menuprova_aluno" prefHeight="48.0" prefWidth="200.0" style="-fx-background-color: #0066ff; -fx-padding: 0 0 0 10;" text="Ver Provas" textFill="WHITE">
+               <VBox.margin>
+                  <Insets bottom="25.0" top="30.0" />
+               </VBox.margin>
+               <graphic>
+                  <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../Imagens/prova.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+            </Button>
+      
+            <Button fx:id="dados_pessoais_alu" alignment="BASELINE_LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#entra_dados_pessoais_alu" prefHeight="48.0" prefWidth="200.0" style="-fx-background-color: #0066ff; -fx-padding: 0 0 0 10;" text="Dados Pessoais" textFill="WHITE">
+               <VBox.margin>
+                  <Insets bottom="25.0" top="30.0" />
+               </VBox.margin>
+               <graphic>
+                  <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../Imagens/dados.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+            </Button>
+      
+            <Button fx:id="menu_sair_aluno" alignment="BASELINE_LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#deslogar_aluno" prefHeight="48.0" prefWidth="200.0" style="-fx-background-color: #0066ff; -fx-padding: 0 0 0 10;" text="Sair" textFill="WHITE">
+               <VBox.margin>
+                  <Insets bottom="25.0" left="5.0" top="30.0" />
+               </VBox.margin>
+               <graphic>
+                  <ImageView fitHeight="42.0" fitWidth="39.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../Imagens/aa.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+            </Button>
+      
+         </children>
+      </VBox>
+   </left>
+</BorderPane>
