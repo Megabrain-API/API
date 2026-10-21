@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
+
+<BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.MenuProfController">
+   <center>
+      <StackPane styleClass="fundo-inicio" stylesheets="@../estilo.css" BorderPane.alignment="CENTER">
+         <children>
+            <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="0.0" minWidth="0.0" prefHeight="34.0" prefWidth="600.0" style="-fx-background-radius: 15; -fx-padding: 25;" StackPane.alignment="CENTER">
+               <children>
+                  <MenuBar maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="34.0" prefWidth="600.0" style="-fx-background-color: #6C757D;" stylesheets="@estilo.css">
+                    <menus>
+                      <Menu mnemonicParsing="false" style="-fx-text-fill: #E0E0E0;" text="Minhas Turmas">
+                        <items>
+                          <MenuItem fx:id="menu_minhaturma" mnemonicParsing="false" onAction="#entra_minhaturma" text="Ver Turmas" />
+                        </items>
+                           <graphic>
+                              <Region prefHeight="115.0" prefWidth="0.0" />
+                           </graphic>
+                      </Menu>
+                      <Menu mnemonicParsing="false" text="Minhas Provas">
+                        <items>
+                          <MenuItem fx:id="minhas_provas" mnemonicParsing="false" onAction="#entra_listaprova" text="Lista de Provas" />
+                        </items>
+                           <graphic>
+                              <Region prefHeight="115.0" prefWidth="0.0" />
+                           </graphic>
+                      </Menu>
+                        <Menu mnemonicParsing="false" text="Dados Pessoais">
+                           <items>
+                              <MenuItem fx:id="menu_dados_pessoais_prof" mnemonicParsing="false" onAction="#entra_dados_pessoais_prof" text="Ver Dados Pessoais" />
+                           </items>
+                           <graphic>
+                              <Region prefHeight="36.0" prefWidth="0.0" />
+                           </graphic>
+                        </Menu>
+                        <Menu disable="true" mnemonicParsing="false">
+                           <graphic>
+                              <Region prefHeight="36.0" prefWidth="0.0">
+                                 <padding>
+                                    <Insets right="200.0" top="100.0" />
+                                 </padding>
+                              </Region>
+                           </graphic>
+                        </Menu>
+                        <Menu mnemonicParsing="false" text="Sair">
+                           <items>
+                              <MenuItem fx:id="menu_sair_prof" mnemonicParsing="false" onAction="#deslogar_prof" text="Sair" />
+                           </items>
+                           <graphic>
+                              <Region prefHeight="36.0" prefWidth="0.0" />
+                           </graphic>
+                        </Menu>
+                    </menus>
+                  </MenuBar>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#6c757d" height="366.0" opacity="0.4" stroke="BLACK" strokeType="INSIDE" width="600.0" />
+               </children>
+            </VBox>
+         </children>
+      </StackPane>
+   </center>
+</BorderPane>

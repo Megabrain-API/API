@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane prefHeight="400.0" prefWidth="600.0" styleClass="fundo-inicio" stylesheets="@../estilo.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.profControllers.FormEditorController">
+   <center>
+      <StackPane>
+         <children>
+            <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="0.0" minWidth="0.0" prefHeight="400.0" prefWidth="448.0" StackPane.alignment="CENTER">
+               <children>
+                  <Label prefHeight="18.0" prefWidth="458.0" text="                    Criar Formulário">
+                     <font>
+                        <Font name="System Bold" size="24.0" />
+                     </font>
+                  </Label>
+                  <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="416.0" prefWidth="448.0">
+                     <content>
+                        <VBox fx:id="container_dinamico" prefHeight="0.0" prefWidth="448.0" />
+                     </content></ScrollPane>
+                  <HBox prefHeight="136.0" prefWidth="600.0" spacing="15.0">
+                     <children>
+                        <Button fx:id="btn_adicionar" mnemonicParsing="false" onAction="#adicionarQuestao" prefHeight="40.0" prefWidth="170.0" style="-fx-background-radius: 8px;" text="Adicionar Questão">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </Button>
+                        <Button fx:id="btn_finalizar" mnemonicParsing="false" onAction="#GeraJson" prefHeight="40.0" prefWidth="139.0" style="-fx-background-radius: 8px;" text="Finalizar">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </Button>
+                        <Button fx:id="btn_cancelar_form" mnemonicParsing="false" onAction="#cancelaFormulario" prefHeight="40.0" prefWidth="170.0" style="-fx-background-radius: 8px; -fx-background-color: #C6131B;" text="Cancelar" textFill="WHITE">
+                           <font>
+                              <Font name="System Bold" size="14.0" />
+                           </font>
+                        </Button>
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+         </children>
+      </StackPane>
+   </center>
+</BorderPane>
