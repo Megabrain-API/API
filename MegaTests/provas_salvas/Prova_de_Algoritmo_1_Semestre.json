@@ -1,0 +1,32 @@
+{
+  "nome": "Prova de Algoritmo 1 Semestre",
+  "prazo": "20/10/2026",
+  "disciplina": "Algoritmo",
+  "tipoQuestoes": "Múltipla escolha",
+  "id": 0,
+  "questoes": [
+    {
+      "tipo": "MULTIPLA_ESCOLHA",
+      "enunciado": "Como cria um construct no Java",
+      "alternativas": [
+        "public ClassName ( atributos ) {}",
+        "public void className () {}"
+      ],
+      "respostasCorretas": [
+        0
+      ]
+    },
+    {
+      "tipo": "MULTIPLA_ESCOLHA",
+      "enunciado": "O que é um método",
+      "alternativas": [
+        "é algo que pode manipular os atributos de um objeto de uma classe",
+        "é o que faz a ia rodar no codigo",
+        "é o que vende o codego para o cliente"
+      ],
+      "respostasCorretas": [
+        0
+      ]
+    }
+  ]
+}
