@@ -2,10 +2,7 @@ package org.example.controllers.alunoControllers;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import org.example.App;
 import org.example.controllers.profControllers.SessaoUsuarioController;
 import org.example.dao.AlunoDAO;
@@ -50,7 +47,11 @@ public class TelaLoginAluController {
             App.setRoot("alunoFluxo/MenuAluno");
         } else {
             // Falha: Exibe alerta de credenciais inválidas
-            System.out.println("E-mail ou senha inválidos!");
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erro");
+            alert.setHeaderText("Falha no login");
+            alert.setContentText("E-mail ou senha inválidos!");
+            alert.showAndWait();
             // Se tiver um Label de erro na tela, você pode fazer: labelErro.setText("E-mail ou senha inválidos!");
         }
 

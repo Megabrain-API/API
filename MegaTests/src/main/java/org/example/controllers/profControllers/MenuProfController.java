@@ -105,7 +105,9 @@ public class MenuProfController implements Initializable {
     }
 
     @FXML
-    void entra_minhaturma(ActionEvent event) {
-        // Lógica futura
+    void entra_minhaturma(ActionEvent event) throws IOException {
+        // Abre a navegação Disciplina -> Curso -> Prova -> Aluno.
+        TurmasProfessorController.limparContexto();
+        App.setRoot("professorFluxo/turmas_professor");
     }
 }

@@ -102,9 +102,9 @@ public class FormEditorController {
 
         ComboBox<String> cmbTipo = new ComboBox<>();
         cmbTipo.getItems().addAll(
-                "Múltipla escolha",
+                "Múltipla escolha"
                 //"Checklist numerado",
-                "Dissertativa"
+                //"Dissertativa"
         );
         cmbTipo.setValue("Múltipla escolha");
         cmbTipo.setMaxWidth(Double.MAX_VALUE);

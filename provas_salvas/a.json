@@ -1,0 +1,33 @@
+{
+  "nome": "a",
+  "prazo": "",
+  "disciplina": "Modelagem de Banco de Dados",
+  "tipoQuestoes": "Múltipla escolha",
+  "id": 0,
+  "questoes": [
+    {
+      "id": 0,
+      "tipo": "MULTIPLA_ESCOLHA",
+      "enunciado": "oi vc tem aura",
+      "alternativas": [
+        "sim tenho",
+        "nao sou beta"
+      ],
+      "respostasCorretas": [
+        0
+      ]
+    },
+    {
+      "id": 0,
+      "tipo": "MULTIPLA_ESCOLHA",
+      "enunciado": "vc farma 67?",
+      "alternativas": [
+        "nao eu farmo 42",
+        "farmo 67"
+      ],
+      "respostasCorretas": [
+        1
+      ]
+    }
+  ]
+}

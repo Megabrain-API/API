@@ -2,6 +2,7 @@ package org.example.controllers.profControllers;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import org.example.App;
@@ -37,8 +38,11 @@ public class TelaLoginProfController {
             App.setRoot("professorFluxo/MenuProf");
         } else {
             // Falha: Exibe alerta de credenciais inválidas
-            System.out.println("E-mail ou senha inválidos!");
-            // Se tiver um Label de erro na tela, você pode fazer: labelErro.setText("E-mail ou senha inválidos!");
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erro");
+            alert.setHeaderText("Falha no login");
+            alert.setContentText("E-mail ou senha inválidos!");
+            alert.showAndWait();            // Se tiver um Label de erro na tela, você pode fazer: labelErro.setText("E-mail ou senha inválidos!");
         }
     }
 

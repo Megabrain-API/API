@@ -1,0 +1,64 @@
+{
+  "nome": "sigma",
+  "prazo": "",
+  "disciplina": "Algoritmo",
+  "tipoQuestoes": "Múltipla escolha",
+  "id": 0,
+  "questoes": [
+    {
+      "tipo": "MULTIPLA_ESCOLHA",
+      "enunciado": "abluble",
+      "alternativas": [
+        "nao",
+        "fdsfgs"
+      ],
+      "respostasCorretas": [
+        1
+      ]
+    },
+    {
+      "tipo": "MULTIPLA_ESCOLHA",
+      "enunciado": "aura?",
+      "alternativas": [
+        "sss",
+        "nao"
+      ],
+      "respostasCorretas": [
+        0
+      ]
+    },
+    {
+      "tipo": "MULTIPLA_ESCOLHA",
+      "enunciado": "temos aura",
+      "alternativas": [
+        "s",
+        "n"
+      ],
+      "respostasCorretas": [
+        0
+      ]
+    },
+    {
+      "tipo": "MULTIPLA_ESCOLHA",
+      "enunciado": "67",
+      "alternativas": [
+        "67",
+        "sai"
+      ],
+      "respostasCorretas": [
+        1
+      ]
+    },
+    {
+      "tipo": "MULTIPLA_ESCOLHA",
+      "enunciado": "tororo",
+      "alternativas": [
+        "forntite",
+        "valoran"
+      ],
+      "respostasCorretas": [
+        0
+      ]
+    }
+  ]
+}

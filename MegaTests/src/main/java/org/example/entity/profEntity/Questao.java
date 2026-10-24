@@ -17,6 +17,7 @@ public class Questao {
     public static final String CHECKLIST = "CHECKLIST";
     public static final String DISSERTATIVA = "DISSERTATIVA";
 
+    private long id;
     private String tipo;
     private String enunciado;
     private List<String> alternativas;
@@ -26,6 +27,14 @@ public class Questao {
     public Questao() {
         this.alternativas = new ArrayList<>();
         this.respostasCorretas = new ArrayList<>();
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     public String getTipo() {

@@ -1,0 +1,33 @@
+{
+  "nome": "prova teste semestre 1",
+  "prazo": "",
+  "disciplina": "Algoritmo",
+  "tipoQuestoes": "Múltipla escolha",
+  "id": 0,
+  "questoes": [
+    {
+      "id": 0,
+      "tipo": "MULTIPLA_ESCOLHA",
+      "enunciado": "testando programa",
+      "alternativas": [
+        "bom dia",
+        "boa tarde"
+      ],
+      "respostasCorretas": [
+        1
+      ]
+    },
+    {
+      "id": 0,
+      "tipo": "MULTIPLA_ESCOLHA",
+      "enunciado": "tamo junto",
+      "alternativas": [
+        "tamo juntasso",
+        "nao tamo junto nao"
+      ],
+      "respostasCorretas": [
+        0
+      ]
+    }
+  ]
+}

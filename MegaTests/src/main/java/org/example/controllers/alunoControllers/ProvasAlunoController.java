@@ -3,26 +3,24 @@ package org.example.controllers.alunoControllers;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import org.example.App;
+import org.example.controllers.profControllers.SessaoUsuarioController;
 import org.example.dao.ProvaDAO;
 import org.example.entity.profEntity.Prova;
 
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,9 +49,23 @@ public class ProvasAlunoController implements Initializable {
     private final Map<Button, String> textosOriginais = new HashMap<>();
     private Button[] botoesMenu;
 
+    private Prova provaSelecionadaTemporaria;
+    private Button botaoSelecionadoAnteriormente;
+
+    private static Prova provaSelecionadaParaAbertura;
+
+    public static Prova getProvaSelecionadaParaAbertura() {
+        return provaSelecionadaParaAbertura;
+    }
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        botoesMenu = new Button[]{menu_meucurso, minhas_provas_aluno, dados_pessoais_alu, menu_sair_aluno};
+        botoesMenu = new Button[]{
+                menu_meucurso,
+                minhas_provas_aluno,
+                dados_pessoais_alu,
+                menu_sair_aluno
+        };
 
         for (Button btn : botoesMenu) {
             if (btn != null) {
@@ -62,14 +74,17 @@ public class ProvasAlunoController implements Initializable {
         }
 
         ocultarTextosBotoes();
+        carregaProvasSalvas();
     }
 
     @FXML
     private void expande_barra() {
-        Timeline timeline = new Timeline();
-        KeyValue kv = new KeyValue(barra_lateral.prefWidthProperty(), 170.0);
-        KeyFrame kf = new KeyFrame(Duration.millis(130), kv);
-        timeline.getKeyFrames().add(kf);
+        Timeline timeline = new Timeline(
+                new KeyFrame(
+                        Duration.millis(130),
+                        new KeyValue(barra_lateral.prefWidthProperty(), 170.0)
+                )
+        );
 
         timeline.setOnFinished(event -> mostrarTextosBotoes());
         timeline.play();
@@ -79,14 +94,21 @@ public class ProvasAlunoController implements Initializable {
     private void minimiza_barra() {
         ocultarTextosBotoes();
 
-        Timeline timeline = new Timeline();
-        KeyValue kv = new KeyValue(barra_lateral.prefWidthProperty(), 60.0);
-        KeyFrame kf = new KeyFrame(Duration.millis(150), kv);
-        timeline.getKeyFrames().add(kf);
+        Timeline timeline = new Timeline(
+                new KeyFrame(
+                        Duration.millis(150),
+                        new KeyValue(barra_lateral.prefWidthProperty(), 60.0)
+                )
+        );
+
         timeline.play();
     }
 
     private void ocultarTextosBotoes() {
+        if (botoesMenu == null) {
+            return;
+        }
+
         for (Button btn : botoesMenu) {
             if (btn != null) {
                 btn.setText("");
@@ -95,6 +117,10 @@ public class ProvasAlunoController implements Initializable {
     }
 
     private void mostrarTextosBotoes() {
+        if (botoesMenu == null) {
+            return;
+        }
+
         for (Button btn : botoesMenu) {
             if (btn != null) {
                 btn.setText(textosOriginais.get(btn));
@@ -102,77 +128,107 @@ public class ProvasAlunoController implements Initializable {
         }
     }
 
-    // Variável para guardar qual prova que o usuario clicou
-    private Prova provaSelecionadaTemporaria;
-
-    // Variável para guardar o botão clicado
-    private Button botaoSelecionadoAnteriormente;
-
-    public void initialize() {
-        carregaProvasSalvas();
-    }
-
-    // carregando as provas por meio do banco de dados
     private void carregaProvasSalvas() {
-        ProvaDAO dao = new ProvaDAO();
-        List<Prova> listaProvas = dao.listarNomeProvas();
+        if (vb_provacontainer_aluno == null) {
+            return;
+        }
 
         vb_provacontainer_aluno.getChildren().clear();
+        provaSelecionadaTemporaria = null;
+        provaSelecionadaParaAbertura = null;
+        botaoSelecionadoAnteriormente = null;
 
-        // Passa por cada nome de prova retornado do banco
-        for (Prova provaRecuperada : listaProvas) {
+        try {
+            Long raAlunoLogado = SessaoUsuarioController.getIdUsuarioLogado();
 
-            try {
-                // Cria o botão da prova
-                Button btnProva = new Button(provaRecuperada.getNome());
+            if (raAlunoLogado == null) {
+                throw new IllegalStateException("Nenhum aluno autenticado na sessão atual.");
+            }
+
+            ProvaDAO dao = new ProvaDAO();
+            // Mostra somente provas de disciplinas que pertencem ao curso deste aluno.
+            List<Prova> listaProvas = dao.listarProvasPorAluno(raAlunoLogado);
+
+            if (listaProvas == null || listaProvas.isEmpty()) {
+                return;
+            }
+
+            for (Prova provaRecuperada : listaProvas) {
+                String textoBotao = provaRecuperada.getNome();
+                if (provaRecuperada.getDisciplina() != null) {
+                    textoBotao += " - " + provaRecuperada.getDisciplina();
+                }
+
+                Button btnProva = new Button(textoBotao);
+
                 btnProva.setMaxWidth(Double.MAX_VALUE);
-                btnProva.setStyle("-fx-font-size: 14px; -fx-padding: 10px; -fx-cursor: hand; -fx-background-radius: 9px;");
+                btnProva.setStyle(
+                        "-fx-font-size: 14px;" +
+                                "-fx-padding: 10px;" +
+                                "-fx-cursor: hand;" +
+                                "-fx-background-radius: 9px;"
+                );
 
-                // Cria o botão de remover (adicionei uma cor vermelha para destacar)
-                Button btnRemove = new Button("Remover");
-                btnRemove.setStyle("-fx-font-size: 14px; -fx-padding: 10px; -fx-cursor: hand; -fx-background-radius: 9px; -fx-background-color: #ff4444; -fx-text-fill: white;");
-
-                // Cria a caixa horizontal (HBox) com um espaçamento de 10px entre os itens
                 HBox linhaDaProva = new HBox(10);
                 linhaDaProva.setAlignment(Pos.CENTER_LEFT);
-
-                //Dá um espaçamento interno nas bordas da linha (cima, direita, baixo, esquerda)
                 linhaDaProva.setPadding(new Insets(5, 15, 5, 15));
 
-                // Faz o botão da prova esticar para ocupar o espaço vazio, empurrando o "Remover" para a direita
                 HBox.setHgrow(btnProva, Priority.ALWAYS);
 
-                // Define a ação do botão da Prova (abrir)
                 btnProva.setOnAction(evento -> {
-                    // Guarda a prova selecionada na variável temporária
                     provaSelecionadaTemporaria = provaRecuperada;
 
-                    // Tira a cor "selecionada" do botão anterior (se houver)
                     if (botaoSelecionadoAnteriormente != null) {
-                        botaoSelecionadoAnteriormente.setStyle("-fx-font-size: 14px; -fx-padding: 10px; -fx-cursor: hand; -fx-background-radius: 9px;");
+                        botaoSelecionadoAnteriormente.setStyle(
+                                "-fx-font-size: 14px;" +
+                                        "-fx-padding: 10px;" +
+                                        "-fx-cursor: hand;" +
+                                        "-fx-background-radius: 9px;"
+                        );
                     }
-                    // Pinta o botão atual para mostrar que está selecionado (ex: azul claro)
-                    btnProva.setStyle("-fx-font-size: 14px; -fx-padding: 10px; -fx-cursor: hand; -fx-background-radius: 9px; -fx-background-color: #add8e6;");
 
-                    // Guarda este botão como o último selecionado
+                    btnProva.setStyle(
+                            "-fx-font-size: 14px;" +
+                                    "-fx-padding: 10px;" +
+                                    "-fx-cursor: hand;" +
+                                    "-fx-background-radius: 9px;" +
+                                    "-fx-background-color: #add8e6;"
+                    );
+
                     botaoSelecionadoAnteriormente = btnProva;
                 });
 
-                // Coloca o botão dentro do HBox
-                linhaDaProva.getChildren().addAll(btnProva);
-
-                // Adiciona o HBox (com os dois botões) ao VBox principal da tela
+                linhaDaProva.getChildren().add(btnProva);
                 vb_provacontainer_aluno.getChildren().add(linhaDaProva);
-            } catch (Exception e) {
-                System.out.println("Erro ao buscar prova");
-                e.printStackTrace();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            Alert alerta = new Alert(Alert.AlertType.ERROR);
+            alerta.setTitle("Erro");
+            alerta.setHeaderText("Não foi possível carregar as provas");
+            alerta.setContentText(
+                    "Verifique a conexão com o banco de dados e tente novamente."
+            );
+            alerta.showAndWait();
         }
     }
 
     @FXML
-    void AcessaProva_aluno(ActionEvent event) {
+    void AcessaProva_aluno(ActionEvent event) throws IOException {
+        if (provaSelecionadaTemporaria == null) {
+            Alert alerta = new Alert(Alert.AlertType.WARNING);
+            alerta.setTitle("Nenhuma prova selecionada");
+            alerta.setHeaderText("Selecione uma prova");
+            alerta.setContentText(
+                    "Clique no nome da prova que deseja acessar antes de continuar."
+            );
+            alerta.showAndWait();
+            return;
+        }
 
+        provaSelecionadaParaAbertura = provaSelecionadaTemporaria;
+        App.setRoot("alunoFluxo/FazerProvaAlu");
     }
 
     @FXML
@@ -187,18 +243,14 @@ public class ProvasAlunoController implements Initializable {
 
     @FXML
     void entra_dados_pessoais_alu(ActionEvent event) {
-
     }
 
     @FXML
     void entra_menuprova_aluno(ActionEvent event) throws IOException {
         App.setRoot("alunoFluxo/ProvasAluno");
-
     }
 
     @FXML
     void entra_meucurso(ActionEvent event) {
-
     }
-
 }

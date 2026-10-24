@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="400.0" prefWidth="600.0" styleClass="fundo-inicio" stylesheets="@../../../../../../../programaçao/faculdade codigos/api/Megabrain/Forms_API.2026/src/main/resources/org/example/estilo.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.alunoControllers.FazerProvaController">
+<BorderPane prefHeight="400.0" prefWidth="600.0" styleClass="fundo-inicio" stylesheets="@../estilo.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.alunoControllers.FazerProvaController">
    <center>
       <StackPane minHeight="0.0" minWidth="0.0">
          <children>
@@ -25,7 +25,11 @@
                   </Label>
                   <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="362.0" prefWidth="459.0">
                      <content>
-                        <VBox fx:id="vb_fazerprova_container" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="279.0" prefWidth="462.0" />
+                        <VBox fx:id="vb_fazerprova_container" alignment="TOP_LEFT" fillWidth="true" prefWidth="430.0" spacing="14.0">
+                           <padding>
+                              <Insets bottom="18.0" left="18.0" right="18.0" top="18.0" />
+                           </padding>
+                        </VBox>
                      </content>
                   </ScrollPane>
                   <HBox alignment="CENTER" prefHeight="90.0" prefWidth="459.0" spacing="50.0">
