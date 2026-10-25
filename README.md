@@ -78,6 +78,16 @@ Professores enfrentam barreiras operacionais significativas na correção e acom
 
 ---
 
+### Apresentação das Sprints
+
+| Sprints | Vídeos |
+| :--- | :--- |
+| **Sprint 1** | — |
+| **Sprint 2** | [Assistir Vídeo](https://youtu.be/l2n6J8ClnOI) |
+| **Sprint 3** | — |
+
+---
+
 ### Objetivos do Sistema
 
 Para o Professor:
