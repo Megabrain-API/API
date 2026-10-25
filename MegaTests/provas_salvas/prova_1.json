@@ -1,0 +1,33 @@
+{
+  "nome": "prova 1",
+  "prazo": "20/10/2026",
+  "disciplina": "Matematica Discreta",
+  "tipoQuestoes": "Múltipla escolha",
+  "id": 0,
+  "questoes": [
+    {
+      "id": 0,
+      "tipo": "MULTIPLA_ESCOLHA",
+      "enunciado": "ola",
+      "alternativas": [
+        "oi",
+        "tudo bem"
+      ],
+      "respostasCorretas": [
+        0
+      ]
+    },
+    {
+      "id": 0,
+      "tipo": "MULTIPLA_ESCOLHA",
+      "enunciado": "tchau",
+      "alternativas": [
+        "tchau pra vc",
+        "ola"
+      ],
+      "respostasCorretas": [
+        0
+      ]
+    }
+  ]
+}
