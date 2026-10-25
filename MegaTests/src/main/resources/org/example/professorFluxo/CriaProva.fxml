@@ -40,12 +40,6 @@
                         </font>
                     </Label>
                     <ComboBox fx:id="selectDisciplina" maxHeight="-Infinity" maxWidth="-Infinity" opacity="0.85" prefHeight="50.0" prefWidth="542.0" promptText="Selecione a disciplina" />
-                    <Label maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="26.0" prefWidth="144.0" text="Tipo de questões ">
-                        <font>
-                            <Font name="System Bold" size="16.0" />
-                        </font>
-                    </Label>
-                    <ComboBox fx:id="selectQuestoes" maxHeight="-Infinity" maxWidth="-Infinity" opacity="0.85" prefHeight="50.0" prefWidth="542.0" promptText="Selecione o tipo das questões" />
                     <Label maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="30.0" prefWidth="204.0" text="Insira o prazo de entrega">
                         <font>
                             <Font name="System Bold" size="16.0" />

@@ -1,6 +1,8 @@
 package org.example.controllers.profControllers;
 
 import com.google.gson.Gson;
+
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import javafx.event.ActionEvent;
@@ -52,6 +54,10 @@ public class ListaProvaController {
                 for (Prova provaRecuperada : listaProvas) {
                     try {
 
+                        // Pega o ID diretamente do objeto recuperado
+                        final long idDaProva = provaRecuperada.getId();
+
+
                         // Cria o botão da prova
                         Button btnProva = new Button(provaRecuperada.getNome());
                         btnProva.setMaxWidth(Double.MAX_VALUE);
@@ -90,7 +96,33 @@ public class ListaProvaController {
 
                         // Define a ação do botão Remover (apagar ficheiro e remover do ecrã)
                         btnRemove.setOnAction(evento -> {
-                            //TODO: chamar o metodo de excluir prova
+                            try {
+                                // Apagar do Banco de Dados usando o ProvaDAO
+                                ProvaDAO provaDAO = new ProvaDAO();
+                                boolean deletadoDoBanco = provaDAO.deletarProva(idDaProva); // Substitua 'idDaProva' pela variável real do ID
+
+                                if (deletadoDoBanco) {
+
+                                    // Busca o nome do arquivo
+                                    String nomeArquivoJson = provaRecuperada.getNome() + ".json";
+
+                                    // Apagar o arquivo JSON físico da pasta de provas salvas
+                                    File arquivoJson = new File("MegaTests/provas_salvas/" + nomeArquivoJson); // Ajuste o caminho do arquivo
+                                    if (arquivoJson.exists()) {
+                                        arquivoJson.delete();
+                                    }
+
+                                    // 3. Remover visualmente da tela (do VBox e do HBox)
+                                    vb_provacontainer.getChildren().remove(linhaDaProva);
+
+                                    System.out.println("Prova removida com sucesso do banco, dos arquivos e da tela!");
+                                } else {
+                                    System.out.println("Erro ao tentar remover a prova do banco de dados.");
+                                }
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         });
 
                         // Coloca os dois botões dentro do HBox

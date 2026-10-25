@@ -1,17 +1,17 @@
 {
-  "nome": "a",
-  "prazo": "",
-  "disciplina": "Modelagem de Banco de Dados",
+  "nome": "prova 1",
+  "prazo": "20/10/2026",
+  "disciplina": "Matematica Discreta",
   "tipoQuestoes": "Múltipla escolha",
   "id": 0,
   "questoes": [
     {
       "id": 0,
       "tipo": "MULTIPLA_ESCOLHA",
-      "enunciado": "oi vc tem aura",
+      "enunciado": "ola",
       "alternativas": [
-        "sim tenho",
-        "nao sou beta"
+        "oi",
+        "tudo bem"
       ],
       "respostasCorretas": [
         0
@@ -20,13 +20,13 @@
     {
       "id": 0,
       "tipo": "MULTIPLA_ESCOLHA",
-      "enunciado": "vc farma 67?",
+      "enunciado": "tchau",
       "alternativas": [
-        "nao eu farmo 42",
-        "farmo 67"
+        "tchau pra vc",
+        "ola"
       ],
       "respostasCorretas": [
-        1
+        0
       ]
     }
   ]

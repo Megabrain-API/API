@@ -280,6 +280,23 @@ public class ProvaDAO {
         return listaProvas;
     }
 
+    // Funçao para deletar provas pelo remove do ListaProvas.xml
+    public boolean deletarProva(long idProva) {
+        String sql = "DELETE FROM mg_provas WHERE id = ?";
+
+        try (Connection conn = new ConexaoDAO().conectaBD();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, idProva);
+            int linhasAfetadas = stmt.executeUpdate();
+            return linhasAfetadas > 0; // Retorna true se conseguiu apagar do banco
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     // Função para carregar uma lista com todas as provas
     public List<Prova> listarNomeProvas() {
         List<Prova> listaProvas = new ArrayList<>();

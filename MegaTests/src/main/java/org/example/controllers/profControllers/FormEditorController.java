@@ -305,7 +305,7 @@ public class FormEditorController {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             String json = gson.toJson(prova);
             String nome = sanitizarNomeArquivo(prova.getNome());
-            Path pasta = Path.of("provas_salvas");
+            Path pasta = Path.of("MegaTests",gi"provas_salvas");
             Files.createDirectories(pasta);
             Path arquivoFinal = pasta.resolve(nome + ".json");
             arquivoTemporario = pasta.resolve(nome + ".json.tmp");

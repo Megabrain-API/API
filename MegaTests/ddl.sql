@@ -124,15 +124,53 @@ PREPARE stmt_migrar_curso_disciplina FROM @sql_migrar_curso_disciplina;
 EXECUTE stmt_migrar_curso_disciplina;
 DEALLOCATE PREPARE stmt_migrar_curso_disciplina;
 
--- Dados de teste de disciplinas. INSERT IGNORE evita duplicação quando o script for executado novamente.
+-- (Mantenha todas as suas criações de tabelas e migrações que já estão no seu arquivo...)
+
+-- Dados de Cursos
+INSERT INTO mg_cursos (nome_curso)
+SELECT 'Logistica' WHERE NOT EXISTS (SELECT 1 FROM mg_cursos WHERE nome_curso = 'Logistica');
+
+INSERT INTO mg_cursos (nome_curso)
+SELECT 'Banco de Dados' WHERE NOT EXISTS (SELECT 1 FROM mg_cursos WHERE nome_curso = 'Banco de Dados');
+
+
+-- Dados de Disciplinas
 INSERT INTO mg_disciplina (nome)
-SELECT 'Matematica Discreta'
-WHERE NOT EXISTS (SELECT 1 FROM mg_disciplina WHERE nome = 'Matematica Discreta');
+SELECT 'Matematica Discreta' WHERE NOT EXISTS (SELECT 1 FROM mg_disciplina WHERE nome = 'Matematica Discreta');
 
 INSERT INTO mg_disciplina (nome)
-SELECT 'Modelagem de Banco de Dados'
-WHERE NOT EXISTS (SELECT 1 FROM mg_disciplina WHERE nome = 'Modelagem de Banco de Dados');
+SELECT 'Algoritmo' WHERE NOT EXISTS (SELECT 1 FROM mg_disciplina WHERE nome = 'Algoritmo');
 
 INSERT INTO mg_disciplina (nome)
-SELECT 'Algoritmo'
-WHERE NOT EXISTS (SELECT 1 FROM mg_disciplina WHERE nome = 'Algoritmo');
+SELECT 'Modelagem de Dados' WHERE NOT EXISTS (SELECT 1 FROM mg_disciplina WHERE nome = 'Modelagem de Dados');
+
+INSERT INTO mg_disciplina (nome)
+SELECT 'Logistica Verde' WHERE NOT EXISTS (SELECT 1 FROM mg_disciplina WHERE nome = 'Logistica Verde');
+
+
+-- Associações na tabela mg_curso_disciplina (Ligando disciplinas aos cursos corretos)
+-- Banco de Dados ID 2, Logistica ID 1 (ou usando subqueries para garantir que pega o ID certo pelo nome)
+
+INSERT INTO mg_curso_disciplina (id_curso, id_disciplina, ordem)
+SELECT c.id, d.id, 1
+FROM mg_cursos c, mg_disciplina d
+WHERE c.nome_curso = 'Banco de Dados' AND d.nome = 'Matematica Discreta'
+AND NOT EXISTS (SELECT 1 FROM mg_curso_disciplina x WHERE x.id_curso = c.id AND x.id_disciplina = d.id);
+
+INSERT INTO mg_curso_disciplina (id_curso, id_disciplina, ordem)
+SELECT c.id, d.id, 2
+FROM mg_cursos c, mg_disciplina d
+WHERE c.nome_curso = 'Banco de Dados' AND d.nome = 'Algoritmo'
+AND NOT EXISTS (SELECT 1 FROM mg_curso_disciplina x WHERE x.id_curso = c.id AND x.id_disciplina = d.id);
+
+INSERT INTO mg_curso_disciplina (id_curso, id_disciplina, ordem)
+SELECT c.id, d.id, 3
+FROM mg_cursos c, mg_disciplina d
+WHERE c.nome_curso = 'Banco de Dados' AND d.nome = 'Modelagem de Dados'
+AND NOT EXISTS (SELECT 1 FROM mg_curso_disciplina x WHERE x.id_curso = c.id AND x.id_disciplina = d.id);
+
+INSERT INTO mg_curso_disciplina (id_curso, id_disciplina, ordem)
+SELECT c.id, d.id, 1
+FROM mg_cursos c, mg_disciplina d
+WHERE c.nome_curso = 'Logistica' AND d.nome = 'Logistica Verde'
+AND NOT EXISTS (SELECT 1 FROM mg_curso_disciplina x WHERE x.id_curso = c.id AND x.id_disciplina = d.id);
