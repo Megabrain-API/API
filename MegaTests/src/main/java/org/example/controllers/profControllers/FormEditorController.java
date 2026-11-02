@@ -54,15 +54,24 @@ public class FormEditorController {
         private final Label tituloModelo;
         private final TextArea respostaModelo;
         private final List<EditorAlternativa> alternativas = new ArrayList<>();
+        private final VBox areaCorrespondencia;
+        private final VBox areaItensCorrespondencia;
+        private final VBox areaOpcoesCorrespondencia;
+        private final List<TextField> itensCorrespondencia = new ArrayList<>();
+        private final List<EditorCorrespondenciaOpcao> opcoesCorrespondencia = new ArrayList<>();
 
-        private EditorQuestao(VBox painel,
-                              TextField enunciado,
-                              ComboBox<String> tipo,
-                              VBox areaAlternativas,
-                              Label tituloAlternativas,
-                              Button btnAdicionarAlternativa,
-                              Label tituloModelo,
-                              TextArea respostaModelo) {
+        private EditorQuestao(
+                VBox painel,
+                TextField enunciado,
+                ComboBox<String> tipo,
+                VBox areaAlternativas,
+                Label tituloAlternativas,
+                Button btnAdicionarAlternativa,
+                VBox areaCorrespondencia,
+                VBox areaItensCorrespondencia,
+                VBox areaOpcoesCorrespondencia,
+                Label tituloModelo,
+                TextArea respostaModelo){
             this.painel = painel;
             this.enunciado = enunciado;
             this.tipo = tipo;
@@ -71,8 +80,26 @@ public class FormEditorController {
             this.btnAdicionarAlternativa = btnAdicionarAlternativa;
             this.tituloModelo = tituloModelo;
             this.respostaModelo = respostaModelo;
+            this.areaCorrespondencia = areaCorrespondencia;
+            this.areaItensCorrespondencia = areaItensCorrespondencia;
+            this.areaOpcoesCorrespondencia = areaOpcoesCorrespondencia;
         }
     }
+
+    private static class EditorCorrespondenciaOpcao {
+
+        private final TextField texto;
+        private final ComboBox<Integer> numeroCorreto;
+
+        private EditorCorrespondenciaOpcao(
+                TextField texto,
+                ComboBox<Integer> numeroCorreto
+        ) {
+            this.texto = texto;
+            this.numeroCorreto = numeroCorreto;
+        }
+    }
+
 
     private static class EditorAlternativa {
         private final HBox painel;
@@ -102,16 +129,19 @@ public class FormEditorController {
 
         ComboBox<String> cmbTipo = new ComboBox<>();
         cmbTipo.getItems().addAll(
-                "Múltipla escolha"
-                //"Checklist numerado",
-                //"Dissertativa"
+                "Múltipla escolha" ,
+                "Checklist numerado",
+                "Dissertativa" ,
+                "Correspondência"
         );
         cmbTipo.setValue("Múltipla escolha");
         cmbTipo.setMaxWidth(Double.MAX_VALUE);
 
         Label tituloAlternativas = new Label("Alternativas / itens:");
         VBox areaAlternativas = new VBox(6);
+
         Button btnAdicionarAlternativa = new Button("Adicionar alternativa");
+
 
         Label tituloModelo = new Label("Resposta de referência (opcional):");
         TextArea txtRespostaModelo = new TextArea();
@@ -119,12 +149,35 @@ public class FormEditorController {
         txtRespostaModelo.setWrapText(true);
         txtRespostaModelo.setPrefRowCount(3);
 
+        VBox areaCorrespondencia = new VBox(10);
+
+        Label tituloItens = new Label("Itens:");
+
+        VBox areaItensCorrespondencia = new VBox(6);
+
+        Button btnAdicionarItem = new Button("Adicionar item");
+
+        Label tituloOpcoes = new Label("Alternativas:");
+
+        VBox areaOpcoesCorrespondencia = new VBox(6);
+
+        Button btnAdicionarOpcao = new Button("Adicionar Opção");
+
+
         EditorQuestao editor = new EditorQuestao(
                 painel, txtPergunta, cmbTipo, areaAlternativas,
-                tituloAlternativas, btnAdicionarAlternativa,
-                tituloModelo, txtRespostaModelo
+                tituloAlternativas, btnAdicionarAlternativa,areaCorrespondencia, areaItensCorrespondencia,
+                areaOpcoesCorrespondencia, tituloModelo, txtRespostaModelo
+                );
+
+
+        btnAdicionarItem.setOnAction(
+                event -> adicionarItemCorrespondencia(editor)
         );
 
+        btnAdicionarOpcao.setOnAction(
+                event -> adicionarOpcaoCorrespondencia(editor)
+        );
         btnAdicionarAlternativa.setOnAction(event -> adicionarAlternativa(editor));
         cmbTipo.setOnAction(event -> atualizarTipo(editor));
 
@@ -135,6 +188,15 @@ public class FormEditorController {
             atualizarTitulosQuestoes();
         });
 
+        areaCorrespondencia.getChildren().addAll(
+                tituloItens,
+                areaItensCorrespondencia,
+                btnAdicionarItem,
+                tituloOpcoes,
+                areaOpcoesCorrespondencia,
+                btnAdicionarOpcao
+        );
+
         painel.getChildren().addAll(
                 titulo,
                 new Label("Tipo de questão:"),
@@ -143,6 +205,7 @@ public class FormEditorController {
                 tituloAlternativas,
                 areaAlternativas,
                 btnAdicionarAlternativa,
+                areaCorrespondencia,
                 tituloModelo,
                 txtRespostaModelo,
                 btnRemover
@@ -154,7 +217,12 @@ public class FormEditorController {
     }
 
     private void atualizarTipo(EditorQuestao editor) {
-        boolean dissertativa = "Dissertativa".equals(editor.tipo.getValue());
+        String tipo = editor.tipo.getValue();
+
+        boolean dissertativa = "Dissertativa".equals(tipo);
+
+        boolean correspondencia = "Correspondência".equals(tipo);
+
         editor.areaAlternativas.setVisible(!dissertativa);
         editor.areaAlternativas.setManaged(!dissertativa);
         editor.tituloAlternativas.setVisible(!dissertativa);
@@ -165,6 +233,58 @@ public class FormEditorController {
         editor.respostaModelo.setManaged(dissertativa);
         editor.tituloModelo.setVisible(dissertativa);
         editor.tituloModelo.setManaged(dissertativa);
+
+        editor.tituloAlternativas.setVisible(!correspondencia);
+        editor.tituloAlternativas.setManaged(!correspondencia);
+        editor.btnAdicionarAlternativa.setVisible(!correspondencia);
+        editor.btnAdicionarAlternativa.setManaged(!correspondencia);
+        editor.areaCorrespondencia.setVisible(correspondencia);
+        editor.areaCorrespondencia.setManaged(correspondencia);
+    }
+
+    private void atualizarComboCorrespondencia(EditorQuestao editor) {
+
+        int quantidadeItens =
+                editor.itensCorrespondencia.size();
+
+        for (EditorCorrespondenciaOpcao opcao :
+                editor.opcoesCorrespondencia) {
+
+            Integer selecionado =
+                    opcao.numeroCorreto.getValue();
+
+            opcao.numeroCorreto.getItems().clear();
+
+            for (int i = 1; i <= quantidadeItens; i++) {
+                opcao.numeroCorreto.getItems().add(i);
+            }
+
+            if (selecionado != null &&
+                    selecionado <= quantidadeItens) {
+
+                opcao.numeroCorreto.setValue(selecionado);
+            }
+        }
+    }
+
+    private void atualizarNumerosCorrespondencia(EditorQuestao editor) {
+
+        for (int i = 0;
+             i < editor.areaItensCorrespondencia
+                     .getChildren()
+                     .size();
+             i++) {
+
+            HBox linha =
+                    (HBox) editor.areaItensCorrespondencia
+                            .getChildren()
+                            .get(i);
+
+            Label numero =
+                    (Label) linha.getChildren().get(0);
+
+            numero.setText((i + 1) + ".");
+        }
     }
 
     private void adicionarAlternativa(EditorQuestao editor) {
@@ -192,6 +312,89 @@ public class FormEditorController {
         editor.alternativas.add(alternativa);
         editor.areaAlternativas.getChildren().add(linha);
         atualizarNumeracao(editor);
+    }
+
+    private void adicionarOpcaoCorrespondencia(EditorQuestao editor) {
+
+        HBox linha = new HBox(8);
+        linha.setAlignment(Pos.CENTER_LEFT);
+
+        ComboBox<Integer> numero = new ComboBox<>();
+
+        TextField texto = new TextField();
+        texto.setPromptText("Digite a alternativa...");
+        texto.setMaxWidth(Double.MAX_VALUE);
+
+        HBox.setHgrow(texto, Priority.ALWAYS);
+
+        EditorCorrespondenciaOpcao opcao =
+                new EditorCorrespondenciaOpcao(
+                        texto,
+                        numero
+                );
+
+        Button remover = new Button("Remover");
+
+        remover.setOnAction(event -> {
+
+            editor.areaOpcoesCorrespondencia
+                    .getChildren()
+                    .remove(linha);
+
+            editor.opcoesCorrespondencia.remove(opcao);
+        });
+
+        linha.getChildren().addAll(
+                numero,
+                texto,
+                remover
+        );
+
+        editor.opcoesCorrespondencia.add(opcao);
+        editor.areaOpcoesCorrespondencia.getChildren().add(linha);
+
+        atualizarComboCorrespondencia(editor);
+    }
+
+    private void adicionarItemCorrespondencia(EditorQuestao editor) {
+
+        HBox linha = new HBox(8);
+        linha.setAlignment(Pos.CENTER_LEFT);
+
+        Label numero = new Label(
+                (editor.itensCorrespondencia.size() + 1) + "."
+        );
+
+        TextField campo = new TextField();
+        campo.setPromptText("Digite o item...");
+        campo.setMaxWidth(Double.MAX_VALUE);
+
+        HBox.setHgrow(campo, Priority.ALWAYS);
+
+        Button remover = new Button("Remover");
+
+        remover.setOnAction(event -> {
+
+            editor.areaItensCorrespondencia
+                    .getChildren()
+                    .remove(linha);
+
+            editor.itensCorrespondencia.remove(campo);
+
+            atualizarNumerosCorrespondencia(editor);
+            atualizarComboCorrespondencia(editor);
+        });
+
+        linha.getChildren().addAll(
+                numero,
+                campo,
+                remover
+        );
+
+        editor.itensCorrespondencia.add(campo);
+        editor.areaItensCorrespondencia.getChildren().add(linha);
+
+        atualizarComboCorrespondencia(editor);
     }
 
     private void atualizarNumeracao(EditorQuestao editor) {

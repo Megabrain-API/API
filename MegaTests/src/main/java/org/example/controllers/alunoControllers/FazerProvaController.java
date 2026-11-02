@@ -8,14 +8,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
@@ -160,6 +154,11 @@ public class FazerProvaController implements Initializable {
             enunciado.setMaxWidth(Double.MAX_VALUE);
             blocoQuestao.getChildren().add(enunciado);
 
+            System.out.println(
+                    "QUESTÃO: " + questao.getEnunciado()
+                            + " | TIPO: " + questao.getTipo()
+            );
+
             String tipo = tipoNormalizado(questao.getTipo());
 
             Label tipoQuestao = new Label(textoTipo(tipo));
@@ -173,7 +172,7 @@ public class FazerProvaController implements Initializable {
                 campoResposta.setPrefRowCount(4);
                 campoResposta.setMaxWidth(Double.MAX_VALUE);
                 blocoQuestao.getChildren().add(campoResposta);
-                respostas.add(RespostaQuestao.dissertativa(numeroQuestao, questao.getId(), campoResposta));
+                respostas.add(RespostaQuestao.dissertativa(numeroQuestao, questao.getId(), campoResposta, null, null));
             } else if (Questao.CHECKLIST.equals(tipo)) {
                 List<CheckBox> itens = new ArrayList<>();
 
@@ -190,8 +189,109 @@ public class FazerProvaController implements Initializable {
                     blocoQuestao.getChildren().add(criarAvisoSemAlternativas());
                 }
 
-                respostas.add(RespostaQuestao.checklist(numeroQuestao, questao.getId(), itens));
-            } else {
+                respostas.add(RespostaQuestao.checklist(numeroQuestao, questao.getId(), itens, null, null));
+            }
+            if (Questao.DISSERTATIVA.equals(tipo)) {
+
+                TextArea campoResposta = new TextArea();
+                campoResposta.setPromptText("Digite sua resposta");
+                campoResposta.setWrapText(true);
+                campoResposta.setPrefRowCount(4);
+                campoResposta.setMaxWidth(Double.MAX_VALUE);
+
+                blocoQuestao.getChildren().add(campoResposta);
+
+                respostas.add(
+                        RespostaQuestao.dissertativa(numeroQuestao, questao.getId(), campoResposta, null, null)
+                );
+
+            } else if (Questao.CORRESPONDENCIA.equals(tipo)) {
+
+                VBox areaCorrespondencia = new VBox(10);
+
+                Label tituloItens = new Label("Itens:");
+                tituloItens.setStyle("-fx-font-weight: bold;");
+
+                areaCorrespondencia.getChildren().add(tituloItens);
+
+                List<String> itens =
+                        questao.getItensCorrespondencia();
+
+                for (int i = 0; i < itens.size(); i++) {
+
+                    Label item = new Label(
+                            (i + 1) + ". " + itens.get(i)
+                    );
+
+                    item.setWrapText(true);
+
+                    areaCorrespondencia.getChildren().add(item);
+                }
+
+                Label tituloAlternativas =
+                        new Label("Correspondências:");
+
+                tituloAlternativas.setStyle(
+                        "-fx-font-weight: bold;"
+                );
+
+                areaCorrespondencia
+                        .getChildren()
+                        .add(tituloAlternativas);
+
+                List<ComboBox<Integer>> respostasCorrespondencia =
+                        new ArrayList<>();
+
+                List<String> textosAlternativas =
+                        questao.getAlternativasCorrespondencia();
+
+                for (String alternativa : textosAlternativas) {
+
+                    HBox linha = new HBox(10);
+                    linha.setAlignment(Pos.CENTER_LEFT);
+
+                    ComboBox<Integer> numero =
+                            new ComboBox<>();
+
+                    numero.setPromptText("Nº");
+
+                    for (int i = 1; i <= itens.size(); i++) {
+                        numero.getItems().add(i);
+                    }
+
+                    Label textoAlternativa =
+                            new Label(alternativa);
+
+                    textoAlternativa.setWrapText(true);
+
+                    respostasCorrespondencia.add(numero);
+
+                    linha.getChildren().addAll(
+                            numero,
+                            textoAlternativa
+                    );
+
+                    areaCorrespondencia
+                            .getChildren()
+                            .add(linha);
+                }
+
+                blocoQuestao
+                        .getChildren()
+                        .add(areaCorrespondencia);
+
+                respostas.add(
+                        RespostaQuestao.correspondencia(
+                                numeroQuestao,
+                                questao.getId(),
+                                respostasCorrespondencia,
+                                textosAlternativas
+                        )
+                );
+
+            } else if (Questao.CHECKLIST.equals(tipo)) {
+
+                // seu código atual else {
                 ToggleGroup grupo = new ToggleGroup();
                 int quantidadeAlternativas = 0;
 
@@ -209,7 +309,7 @@ public class FazerProvaController implements Initializable {
                     blocoQuestao.getChildren().add(criarAvisoSemAlternativas());
                 }
 
-                respostas.add(RespostaQuestao.multiplaEscolha(numeroQuestao, questao.getId(), grupo, quantidadeAlternativas));
+                respostas.add(RespostaQuestao.multiplaEscolha(numeroQuestao, questao.getId(), grupo, quantidadeAlternativas, null ,null));
             }
 
             vb_fazerprova_container.getChildren().add(blocoQuestao);
@@ -239,6 +339,10 @@ public class FazerProvaController implements Initializable {
             return Questao.CHECKLIST;
         }
 
+        if ("CORRESPONDENCIA".equals(normalizado)) {
+            return Questao.CORRESPONDENCIA;
+        }
+
         return Questao.MULTIPLA_ESCOLHA;
     }
 
@@ -248,6 +352,9 @@ public class FazerProvaController implements Initializable {
         }
         if (Questao.CHECKLIST.equals(tipo)) {
             return "Selecione todas as alternativas que considerar corretas";
+        }
+        if (Questao.CORRESPONDENCIA.equals(tipo)) {
+            return "Relacione cada alternativa ao número correspondente";
         }
         return "Selecione uma alternativa";
     }
@@ -427,10 +534,14 @@ public class FazerProvaController implements Initializable {
         private final ToggleGroup grupo;
         private final List<CheckBox> checklist;
         private final int quantidadeAlternativas;
+        private final List<ComboBox<Integer>> correspondencia;
+        private final List<String> textosCorrespondencia;
 
         private RespostaQuestao(int numeroQuestao, long idQuestao, String tipo, TextArea texto,
                                 ToggleGroup grupo, List<CheckBox> checklist,
-                                int quantidadeAlternativas) {
+                                int quantidadeAlternativas, List<ComboBox<Integer>> correspondencia,
+                                List<String> textosCorrespondencia) {
+
             this.numeroQuestao = numeroQuestao;
             this.idQuestao = idQuestao;
             this.tipo = tipo;
@@ -438,24 +549,28 @@ public class FazerProvaController implements Initializable {
             this.grupo = grupo;
             this.checklist = checklist;
             this.quantidadeAlternativas = quantidadeAlternativas;
+            this.correspondencia = correspondencia;
+            this.textosCorrespondencia = textosCorrespondencia;
         }
 
-        private static RespostaQuestao dissertativa(int numeroQuestao, long idQuestao, TextArea texto) {
+        private static RespostaQuestao dissertativa(int numeroQuestao, long idQuestao, TextArea texto, List<ComboBox<Integer>> correspondencia, List<String> textosCorrespondencia ) {
             return new RespostaQuestao(numeroQuestao, idQuestao, Questao.DISSERTATIVA, texto,
-                    null, null, 0);
+                    null, null, 0, null, null);
         }
 
         private static RespostaQuestao multiplaEscolha(int numeroQuestao, long idQuestao,
-                                                        ToggleGroup grupo, int quantidadeAlternativas) {
+                                                        ToggleGroup grupo, int quantidadeAlternativas, List<ComboBox<Integer>> correspondencia, List<String> textosCorrespondencia) {
             return new RespostaQuestao(numeroQuestao, idQuestao, Questao.MULTIPLA_ESCOLHA, null,
-                    grupo, null, quantidadeAlternativas);
+                    grupo, null, quantidadeAlternativas , null, null);
         }
 
-        private static RespostaQuestao checklist(int numeroQuestao, long idQuestao, List<CheckBox> checklist) {
+        private static RespostaQuestao checklist(int numeroQuestao, long idQuestao, List<CheckBox> checklist, List<ComboBox<Integer>> correspondencia, List<String> textosCorrespondencia) {
             return new RespostaQuestao(numeroQuestao, idQuestao, Questao.CHECKLIST, null,
-                    null, checklist, checklist.size());
+                    null, checklist, checklist.size(), null, null);
         }
-
+        private static RespostaQuestao correspondencia(int numeroQuestao, long idQuestao, List<ComboBox<Integer>> correspondencia, List<String> textosCorrespondencia) {
+            return new RespostaQuestao(numeroQuestao, idQuestao, Questao.CORRESPONDENCIA, null, null, null, correspondencia.size(), correspondencia, textosCorrespondencia);
+        }
         private boolean foiRespondida() {
             if (Questao.DISSERTATIVA.equals(tipo)) {
                 return texto != null && texto.getText() != null && !texto.getText().trim().isEmpty();
@@ -463,6 +578,28 @@ public class FazerProvaController implements Initializable {
 
             if (quantidadeAlternativas == 0) {
                 return false;
+            }
+            if (Questao.CORRESPONDENCIA.equals(tipo)) {
+
+                if (correspondencia == null || correspondencia.isEmpty()) {
+                    return false;
+                }
+                List<Integer> numerosUsados = new ArrayList<>();
+
+                for (ComboBox<Integer> combo : correspondencia) {
+
+                    Integer numero = combo.getValue();
+
+                    if (numero == null) {
+                        return false;
+                    }
+
+                    if (numerosUsados.contains(numero)) {
+                        return false;
+                    }
+                    numerosUsados.add(numero);
+                }
+                return true;
             }
 
             if (Questao.CHECKLIST.equals(tipo)) {
@@ -488,7 +625,19 @@ public class FazerProvaController implements Initializable {
             if (Questao.DISSERTATIVA.equals(tipo)) {
                 return texto == null ? "" : texto.getText().trim();
             }
+            if (Questao.CORRESPONDENCIA.equals(tipo)) {
 
+                List<String> respostas = new ArrayList<>();
+
+                for (int i = 0; i < correspondencia.size(); i++) {
+
+                    Integer numero = correspondencia.get(i).getValue();
+
+                    respostas.add((i + 1) + "=" + numero);
+                }
+
+                return String.join(";", respostas);
+            }
             if (Questao.CHECKLIST.equals(tipo)) {
                 List<String> selecionadas = new ArrayList<>();
 

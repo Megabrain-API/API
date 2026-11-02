@@ -1,0 +1,20 @@
+{
+  "nome": "aaa",
+  "prazo": "",
+  "disciplina": "Algoritmo",
+  "tipoQuestoes": "Dissertativa",
+  "id": 0,
+  "questoes": [
+    {
+      "id": 0,
+      "itensCorrespondencia": [],
+      "alternativasCorrespondencia": [],
+      "gabaritoCorrespondencia": [],
+      "tipo": "DISSERTATIVA",
+      "enunciado": "RESPONDE",
+      "alternativas": [],
+      "respostasCorretas": [],
+      "respostaModelo": ""
+    }
+  ]
+}

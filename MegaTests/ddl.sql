@@ -76,6 +76,24 @@ CREATE TABLE IF NOT EXISTS mg_questao_alternativa (
     FOREIGN KEY (id_questao) REFERENCES mg_questoes(id) ON DELETE CASCADE
 );
 
+CREATE TABLE mg_questao_correspondencia_item (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id_questao BIGINT NOT NULL,
+    ordem INT NOT NULL,
+    texto VARCHAR(255) NOT NULL,
+    FOREIGN KEY (id_questao)
+    REFERENCES mg_questoes(id)
+    ON DELETE CASCADE
+);
+CREATE TABLE mg_questao_correspondencia_alternativa (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id_questao BIGINT NOT NULL,
+    texto VARCHAR(255) NOT NULL,
+    numero_correto INT NOT NULL,
+    FOREIGN KEY (id_questao)
+    REFERENCES mg_questoes(id)
+    ON DELETE CASCADE
+);
 -- Cada linha representa a resposta de um aluno para uma questão de uma prova.
 CREATE TABLE IF NOT EXISTS mg_resposta_aluno (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

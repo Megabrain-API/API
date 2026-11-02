@@ -110,12 +110,16 @@ public class AlunoDAO {
      * A chave do Map é o ID da questão e o valor é a resposta digitada/selecionada.
      */
     public void salvarRespostasProva(Long raAluno, int idProva, Map<Long, String> respostas) {
-        String sqlLimpaRespostas =
-                "DELETE FROM mg_resposta_aluno WHERE ra_aluno = ? AND id_prova = ?";
+
+        // Verifica se o aluno já respondeu essa prova.
+        String sqlVerificaResposta =
+                "SELECT COUNT(*) FROM mg_resposta_aluno " +
+                        "WHERE ra_aluno = ? AND id_prova = ?";
+
 
         String sqlResposta =
                 "INSERT INTO mg_resposta_aluno " +
-                "(ra_aluno, id_prova, id_questao, resposta_texto) VALUES (?, ?, ?, ?)";
+                        "(ra_aluno, id_prova, id_questao, resposta_texto) VALUES (?, ?, ?, ?)";
 
         if (raAluno == null) {
             throw new RuntimeException("Nenhum aluno autenticado para salvar as respostas.");
@@ -129,12 +133,21 @@ public class AlunoDAO {
             conn.setAutoCommit(false);
 
             try {
-                // Remove uma tentativa anterior da mesma prova para evitar respostas duplicadas.
-                // Assim, se o aluno reenviar durante o desenvolvimento, fica apenas o envio mais recente.
-                try (PreparedStatement stmtLimpa = conn.prepareStatement(sqlLimpaRespostas)) {
-                    stmtLimpa.setLong(1, raAluno);
-                    stmtLimpa.setInt(2, idProva);
-                    stmtLimpa.executeUpdate();
+                // Antes de salvar, verifica se esse aluno já respondeu essa prova.
+                try (PreparedStatement stmtVerifica =
+                             conn.prepareStatement(sqlVerificaResposta)) {
+
+                    stmtVerifica.setLong(1, raAluno);
+                    stmtVerifica.setInt(2, idProva);
+
+                    try (ResultSet rs = stmtVerifica.executeQuery()) {
+
+                        if (rs.next() && rs.getInt(1) > 0) {
+                            throw new RuntimeException(
+                                    "Esta prova já foi respondida."
+                            );
+                        }
+                    }
                 }
 
                 // Insere uma linha para cada questão respondida pelo aluno.

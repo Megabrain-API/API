@@ -16,8 +16,12 @@ public class Questao {
     public static final String MULTIPLA_ESCOLHA = "MULTIPLA_ESCOLHA";
     public static final String CHECKLIST = "CHECKLIST";
     public static final String DISSERTATIVA = "DISSERTATIVA";
+    public static final String CORRESPONDENCIA = "CORRESPONDENCIA";
 
     private long id;
+    private List<String> itensCorrespondencia;
+    private List<String> alternativasCorrespondencia;
+    private List<Integer> gabaritoCorrespondencia;
     private String tipo;
     private String enunciado;
     private List<String> alternativas;
@@ -27,8 +31,22 @@ public class Questao {
     public Questao() {
         this.alternativas = new ArrayList<>();
         this.respostasCorretas = new ArrayList<>();
+        this.itensCorrespondencia = new ArrayList<>();
+        this.alternativasCorrespondencia = new ArrayList<>();
+        this.gabaritoCorrespondencia = new ArrayList<>();
     }
 
+    public List<String> getItensCorrespondencia() {
+        return itensCorrespondencia;
+    }
+
+    public List<String> getAlternativasCorrespondencia() {
+        return alternativasCorrespondencia;
+    }
+
+    public List<Integer> getGabaritoCorrespondencia() {
+        return gabaritoCorrespondencia;
+    }
     public long getId() {
         return id;
     }
