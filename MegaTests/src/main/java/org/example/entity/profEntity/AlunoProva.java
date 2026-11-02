@@ -9,6 +9,7 @@ public class AlunoProva {
     private LocalDateTime dataInicio;
     private LocalDateTime dataEnvio;
     private String status;
+    private String nomeAluno;
 
     public AlunoProva() {}
 
@@ -59,4 +60,22 @@ public class AlunoProva {
     public void setStatus(String status) {
         this.status = status;
     }
+
+    public String getNomeAluno() {
+        return nomeAluno;
+    }
+
+    public void setNomeAluno(String nomeAluno) {
+        this.nomeAluno = nomeAluno;
+    }
+
+    // Métodos de compatibilidade para a tela do professor:
+    public String getNome() {
+        return nomeAluno;
+    }
+
+    public Long getRa() {
+        return getRaAluno();
+    }
+
 }

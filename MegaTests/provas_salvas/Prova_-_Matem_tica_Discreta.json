@@ -1,0 +1,47 @@
+{
+  "nome": "Prova - Matemática Discreta",
+  "dataInicial": {
+    "date": {
+      "year": 2026,
+      "month": 5,
+      "day": 12
+    },
+    "time": {
+      "hour": 12,
+      "minute": 0,
+      "second": 0,
+      "nano": 0
+    }
+  },
+  "dataLimite": {
+    "date": {
+      "year": 2026,
+      "month": 5,
+      "day": 13
+    },
+    "time": {
+      "hour": 0,
+      "minute": 0,
+      "second": 0,
+      "nano": 0
+    }
+  },
+  "duracaoMinutos": 300,
+  "disciplina": "Matematica Discreta",
+  "tipoQuestoes": "Múltipla escolha",
+  "id": 0,
+  "questoes": [
+    {
+      "id": 0,
+      "tipo": "MULTIPLA_ESCOLHA",
+      "enunciado": "Teste",
+      "alternativas": [
+        "Teste",
+        "Aaaaaaaa"
+      ],
+      "respostasCorretas": [
+        0
+      ]
+    }
+  ]
+}

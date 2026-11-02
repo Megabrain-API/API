@@ -5,11 +5,11 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import org.example.controllers.alunoControllers.FazerProvaController;
 import org.example.dao.ConexaoDAO;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.Statement;
 
 public class App extends Application {
 
@@ -65,11 +65,21 @@ public class App extends Application {
         stage.setMinHeight(600);
         stage.setResizable(true);
 
+        // --- SUBMISSÃO AUTOMÁTICA SE FECHAR A JANELA ---
+        stage.setOnCloseRequest(event -> {
+            if (FazerProvaController.isProvaEmAndamento()) {
+                FazerProvaController.submeterProvaAutomaticamenteNoEncerramento();
+            }
+        });
 
         stage.show();
     }
 
     public static void setRoot(String fxml) throws IOException {
+        // Se mudar de tela enquanto estiver a fazer a prova, submete automaticamente
+        if (FazerProvaController.isProvaEmAndamento()) {
+            FazerProvaController.submeterProvaAutomaticamenteNoEncerramento();
+        }
         scene.setRoot(loadFXML(fxml));
     }
 

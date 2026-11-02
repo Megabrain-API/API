@@ -30,6 +30,8 @@ import org.example.entity.profEntity.Questao;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -62,8 +64,44 @@ public class FazerProvaController implements Initializable {
     private Button[] botoesMenu;
     private Prova provaAtual;
 
+    // --- VARIÁVEIS DO CRONÓMETRO E CONTROLO DE FECHO ---
+    private Timeline cronometro;
+    private int segundosRestantes;
+    private Label lblTempoRestante;
+    private static boolean provaEmAndamento = false;
+    private static FazerProvaController instanciaAtiva;
+
+    public static boolean isProvaEmAndamento() {
+        return provaEmAndamento;
+    }
+
+    public static void submeterProvaAutomaticamenteNoEncerramento() {
+        if (instanciaAtiva != null && instanciaAtiva.provaAtual != null && provaEmAndamento) {
+            provaEmAndamento = false; // Evita loop de submissão
+            if (instanciaAtiva.cronometro != null) {
+                instanciaAtiva.cronometro.stop();
+            }
+
+            Long raAlunoLogado = SessaoUsuarioController.getIdUsuarioLogado();
+            if (raAlunoLogado != null) {
+                Map<Long, String> respostasParaSalvar = new LinkedHashMap<>();
+                for (RespostaQuestao resposta : instanciaAtiva.respostas) {
+                    respostasParaSalvar.put(resposta.idQuestao, resposta.obterRespostaTexto());
+                }
+
+                try {
+                    new AlunoDAO().salvarRespostasProva(raAlunoLogado, instanciaAtiva.provaAtual.getId(), respostasParaSalvar);
+                    System.out.println("Prova enviada automaticamente devido ao encerramento.");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        instanciaAtiva = this;
         botoesMenu = new Button[]{menu_meucurso, minhas_provas_aluno, dados_pessoais_alu, menu_sair_aluno};
 
         for (Button btn : botoesMenu) {
@@ -102,6 +140,7 @@ public class FazerProvaController implements Initializable {
                 return;
             }
 
+            provaEmAndamento = true;
             montarInterfaceDaProva();
         } catch (RuntimeException erro) {
             erro.printStackTrace();
@@ -128,10 +167,47 @@ public class FazerProvaController implements Initializable {
             vb_fazerprova_container.getChildren().add(disciplina);
         }
 
-        if (provaAtual.getDuracaoMinutos() != null) {
-            Label duracao = new Label("Duração: " + provaAtual.getDuracaoMinutos() + " minutos");
-            duracao.setStyle("-fx-text-fill: #1B1B1B; -fx-font-size: 13px;");
-            vb_fazerprova_container.getChildren().add(duracao);
+        // --- FORMATAR E EXIBIR PERÍODO DA PROVA ---
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String dataIniStr = provaAtual.getDataInicial() != null ? provaAtual.getDataInicial().format(fmt) : "Imediato";
+        String dataFimStr = provaAtual.getDataLimite() != null ? provaAtual.getDataLimite().format(fmt) : "Sem limite";
+
+        Label prazos = new Label("Período disponível: " + dataIniStr + " até " + dataFimStr);
+        prazos.setStyle("-fx-text-fill: #555555; -fx-font-size: 13px; -fx-font-weight: bold;");
+        vb_fazerprova_container.getChildren().add(prazos);
+
+        // --- CRONÓMETRO E DURAÇÃO (PERSISTENTE PELA HORA DE INÍCIO NO BANCO) ---
+        if (provaAtual.getDuracaoMinutos() != null && provaAtual.getDuracaoMinutos() > 0) {
+            lblTempoRestante = new Label("Tempo restante: Calculando...");
+            lblTempoRestante.setStyle("-fx-text-fill: #d32f2f; -fx-font-size: 15px; -fx-font-weight: bold;");
+            vb_fazerprova_container.getChildren().add(lblTempoRestante);
+
+            Long raAlunoLogado = SessaoUsuarioController.getIdUsuarioLogado();
+            AlunoDAO alunoDAO = new AlunoDAO();
+
+            LocalDateTime dataInicioAluno = null;
+            if (raAlunoLogado != null) {
+                dataInicioAluno = alunoDAO.buscarDataInicioProva(raAlunoLogado, provaAtual.getId());
+
+                if (dataInicioAluno == null) {
+                    dataInicioAluno = LocalDateTime.now();
+                    alunoDAO.registrarInicioProva(raAlunoLogado, provaAtual.getId(), dataInicioAluno);
+                }
+            } else {
+                dataInicioAluno = LocalDateTime.now();
+            }
+
+            long segundosDecorridos = java.time.Duration.between(dataInicioAluno, LocalDateTime.now()).getSeconds();
+            long duracaoTotalSegundos = provaAtual.getDuracaoMinutos() * 60L;
+
+            segundosRestantes = (int) (duracaoTotalSegundos - segundosDecorridos);
+
+            if (segundosRestantes <= 0) {
+                lblTempoRestante.setText("Tempo esgotado!");
+                submeterProvaPorTempoEsgotado();
+            } else {
+                iniciarCronometro();
+            }
         }
 
         if (provaAtual.getQuestoes() == null || provaAtual.getQuestoes().isEmpty()) {
@@ -151,7 +227,7 @@ public class FazerProvaController implements Initializable {
             blocoQuestao.setPadding(new Insets(15));
             blocoQuestao.setStyle(
                     "-fx-background-color: rgba(255,255,255,0.94);" +
-                    "-fx-background-radius: 10px;"
+                            "-fx-background-radius: 10px;"
             );
 
             Label enunciado = new Label(numeroQuestao + ". " + valorOuVazio(questao.getEnunciado()));
@@ -214,6 +290,66 @@ public class FazerProvaController implements Initializable {
 
             vb_fazerprova_container.getChildren().add(blocoQuestao);
             numeroQuestao++;
+        }
+    }
+
+    // --- LÓGICA DO CRONÓMETRO TEMPO REAL ---
+    private void iniciarCronometro() {
+        if (cronometro != null) {
+            cronometro.stop();
+        }
+
+        cronometro = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
+            segundosRestantes--;
+
+            if (segundosRestantes <= 0) {
+                lblTempoRestante.setText("Tempo esgotado!");
+                cronometro.stop();
+                submeterProvaPorTempoEsgotado();
+            } else {
+                lblTempoRestante.setText("Tempo restante: " + formatarTempo(segundosRestantes));
+            }
+        }));
+
+        cronometro.setCycleCount(Timeline.INDEFINITE);
+        cronometro.play();
+    }
+
+    // --- CONVERSOR UTILITÁRIO DE SEGUNDOS EM (HH:mm:ss OU mm:ss) ---
+    private String formatarTempo(int totalSegundos) {
+        int horas = totalSegundos / 3600;
+        int minutos = (totalSegundos % 3600) / 60;
+        int segundos = totalSegundos % 60;
+
+        if (horas > 0) {
+            return String.format("%02d:%02d:%02d h", horas, minutos, segundos);
+        } else {
+            return String.format("%02d:%02d min", minutos, segundos);
+        }
+    }
+
+    private void submeterProvaPorTempoEsgotado() {
+        provaEmAndamento = false;
+        Alert alerta = new Alert(Alert.AlertType.WARNING);
+        alerta.setTitle("Tempo Esgotado");
+        alerta.setHeaderText("O tempo limite para a realização da prova acabou");
+        alerta.setContentText("Suas respostas atuais foram enviadas automaticamente.");
+        alerta.showAndWait();
+
+        Long raAlunoLogado = SessaoUsuarioController.getIdUsuarioLogado();
+
+        if (raAlunoLogado != null && provaAtual != null) {
+            Map<Long, String> respostasParaSalvar = new LinkedHashMap<>();
+            for (RespostaQuestao resposta : respostas) {
+                respostasParaSalvar.put(resposta.idQuestao, resposta.obterRespostaTexto());
+            }
+
+            try {
+                new AlunoDAO().salvarRespostasProva(raAlunoLogado, provaAtual.getId(), respostasParaSalvar);
+                App.setRoot("alunoFluxo/MenuAluno");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -311,6 +447,7 @@ public class FazerProvaController implements Initializable {
 
     @FXML
     void Cancelar_Prova(ActionEvent event) throws IOException {
+        submeterProvaAutomaticamenteNoEncerramento();
         App.setRoot("alunoFluxo/ProvasAluno");
     }
 
@@ -359,13 +496,17 @@ public class FazerProvaController implements Initializable {
                 return;
             }
 
-            // Mantém a ordem das questões e prepara o conteúdo para o AlunoDAO.
             Map<Long, String> respostasParaSalvar = new LinkedHashMap<>();
             for (RespostaQuestao resposta : respostas) {
                 respostasParaSalvar.put(resposta.idQuestao, resposta.obterRespostaTexto());
             }
 
             try {
+                provaEmAndamento = false;
+                if (cronometro != null) {
+                    cronometro.stop();
+                }
+
                 AlunoDAO alunoDAO = new AlunoDAO();
                 alunoDAO.salvarRespostasProva(raAlunoLogado, provaAtual.getId(), respostasParaSalvar);
 
@@ -403,6 +544,7 @@ public class FazerProvaController implements Initializable {
 
     @FXML
     void deslogar_aluno(ActionEvent event) throws IOException {
+        submeterProvaAutomaticamenteNoEncerramento();
         App.setRoot("alunoFluxo/TelaLoginAlu");
     }
 
@@ -412,6 +554,7 @@ public class FazerProvaController implements Initializable {
 
     @FXML
     void entra_menuprova_aluno(ActionEvent event) throws IOException {
+        submeterProvaAutomaticamenteNoEncerramento();
         App.setRoot("alunoFluxo/ProvasAluno");
     }
 
@@ -446,7 +589,7 @@ public class FazerProvaController implements Initializable {
         }
 
         private static RespostaQuestao multiplaEscolha(int numeroQuestao, long idQuestao,
-                                                        ToggleGroup grupo, int quantidadeAlternativas) {
+                                                       ToggleGroup grupo, int quantidadeAlternativas) {
             return new RespostaQuestao(numeroQuestao, idQuestao, Questao.MULTIPLA_ESCOLHA, null,
                     grupo, null, quantidadeAlternativas);
         }
@@ -481,9 +624,6 @@ public class FazerProvaController implements Initializable {
             return grupo != null && grupo.getSelectedToggle() != null;
         }
 
-        /**
-         * Converte o componente JavaFX preenchido pelo aluno em texto para o banco.
-         */
         private String obterRespostaTexto() {
             if (Questao.DISSERTATIVA.equals(tipo)) {
                 return texto == null ? "" : texto.getText().trim();

@@ -1,0 +1,47 @@
+{
+  "nome": "P1",
+  "dataInicial": {
+    "date": {
+      "year": 2026,
+      "month": 11,
+      "day": 2
+    },
+    "time": {
+      "hour": 18,
+      "minute": 30,
+      "second": 0,
+      "nano": 0
+    }
+  },
+  "dataLimite": {
+    "date": {
+      "year": 2026,
+      "month": 11,
+      "day": 2
+    },
+    "time": {
+      "hour": 18,
+      "minute": 40,
+      "second": 0,
+      "nano": 0
+    }
+  },
+  "duracaoMinutos": 60,
+  "disciplina": "Algoritmo",
+  "tipoQuestoes": "Múltipla escolha",
+  "id": 0,
+  "questoes": [
+    {
+      "id": 0,
+      "tipo": "MULTIPLA_ESCOLHA",
+      "enunciado": "Teste",
+      "alternativas": [
+        "Certa",
+        "Errada"
+      ],
+      "respostasCorretas": [
+        0
+      ]
+    }
+  ]
+}
