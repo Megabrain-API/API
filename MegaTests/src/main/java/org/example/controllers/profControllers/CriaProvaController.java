@@ -54,18 +54,41 @@ public class CriaProvaController {
 
     @FXML
     void confirmCriarProva(ActionEvent event) throws IOException {
-        SessaoApp.provaAtual = new Prova();
-
         String disciplinaEscolhida = selectDisciplina.getValue();
         if (disciplinaEscolhida == null || disciplinaEscolhida.isEmpty()) {
             Alert erro = new Alert(Alert.AlertType.ERROR);
             erro.setTitle("Erro");
             erro.setHeaderText("Disciplina não selecionada");
+            erro.showAndWait();
+            return;
         }
 
+        if (nomeProva.getText() == null || nomeProva.getText().trim().isEmpty()) {
+            Alert erro = new Alert(Alert.AlertType.ERROR);
+            erro.setTitle("Erro");
+            erro.setHeaderText("Nome da prova não preenchido");
+            erro.showAndWait();
+            return;
+        }
+
+        int minutos = 0;
+        try {
+            minutos = Integer.parseInt(prazoEntrega.getText().trim());
+        } catch (NumberFormatException e) {
+            Alert erro = new Alert(Alert.AlertType.ERROR);
+            erro.setTitle("Erro");
+            erro.setHeaderText("Duração inválida");
+            erro.setContentText("Informe o tempo da prova em minutos utilizando apenas números.");
+            erro.showAndWait();
+            return;
+        }
+
+        SessaoApp.provaAtual = new Prova();
         SessaoApp.provaAtual.setNome(nomeProva.getText());
-        SessaoApp.provaAtual.setPrazo(prazoEntrega.getText());
         SessaoApp.provaAtual.setDisciplina(disciplinaEscolhida);
+        SessaoApp.provaAtual.setDuracaoMinutos(minutos);
+        SessaoApp.provaAtual.setDataInicial(null);
+        SessaoApp.provaAtual.setDataLimite(null);
 
         App.setRoot("professorFluxo/FormEditor");
     }

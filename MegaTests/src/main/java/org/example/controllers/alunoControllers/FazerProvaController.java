@@ -128,10 +128,10 @@ public class FazerProvaController implements Initializable {
             vb_fazerprova_container.getChildren().add(disciplina);
         }
 
-        if (provaAtual.getPrazo() != null && !provaAtual.getPrazo().trim().isEmpty()) {
-            Label prazo = new Label("Prazo: " + provaAtual.getPrazo());
-            prazo.setStyle("-fx-text-fill: #1B1B1B; -fx-font-size: 13px;");
-            vb_fazerprova_container.getChildren().add(prazo);
+        if (provaAtual.getDuracaoMinutos() != null) {
+            Label duracao = new Label("Duração: " + provaAtual.getDuracaoMinutos() + " minutos");
+            duracao.setStyle("-fx-text-fill: #1B1B1B; -fx-font-size: 13px;");
+            vb_fazerprova_container.getChildren().add(duracao);
         }
 
         if (provaAtual.getQuestoes() == null || provaAtual.getQuestoes().isEmpty()) {
