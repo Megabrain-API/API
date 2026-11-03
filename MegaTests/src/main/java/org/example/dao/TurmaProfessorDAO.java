@@ -181,13 +181,15 @@ public class TurmaProfessorDAO {
 
         String sqlQuestoes = "SELECT q.id, pq.ordem, q.tipo, q.enunciado, q.gabarito, " +
                 "r.resposta_texto, " +
-                "COALESCE(SUM(CASE WHEN alt.correta = TRUE THEN 1 ELSE 0 END), 0) AS quantidade_corretas " +
+                "COALESCE(SUM(CASE WHEN alt.correta = TRUE THEN 1 ELSE 0 END), 0) AS quantidade_corretas, " +
+                "COUNT(DISTINCT ci.id) AS quantidade_itens_correspondencia " +
                 "FROM mg_provas p " +
                 "INNER JOIN mg_prova_questao pq ON pq.id_prova = p.id " +
                 "INNER JOIN mg_questoes q ON q.id = pq.id_questao " +
                 "LEFT JOIN mg_resposta_aluno r ON r.id_prova = p.id " +
                 "    AND r.id_questao = q.id AND r.ra_aluno = ? " +
                 "LEFT JOIN mg_questao_alternativa alt ON alt.id_questao = q.id " +
+                "LEFT JOIN mg_questao_correspondencia_item ci ON ci.id_questao = q.id " +
                 "WHERE p.id = ? AND p.matricula_professor = ? " +
                 "GROUP BY q.id, pq.ordem, q.tipo, q.enunciado, q.gabarito, r.resposta_texto " +
                 "ORDER BY pq.ordem";
@@ -195,6 +197,8 @@ public class TurmaProfessorDAO {
         String sqlAlternativas = "SELECT texto, correta " +
                 "FROM mg_questao_alternativa " +
                 "WHERE id_questao = ? ORDER BY ordem";
+
+        String sqlQuantidadeItens = "SELECT COUNT(*) FROM mg_questao_correspondencia_item WHERE id_questao = ?";
 
         try (Connection conn = new ConexaoDAO().conectaBD();
              PreparedStatement stmtQuestoes = conn.prepareStatement(sqlQuestoes);
@@ -204,12 +208,14 @@ public class TurmaProfessorDAO {
             stmtQuestoes.setInt(2, idProva);
             stmtQuestoes.setLong(3, matriculaProfessor);
 
+            // Busca pelas questões checklist, multi escolha, dissertativa e correspondencia
             try (ResultSet rs = stmtQuestoes.executeQuery()) {
                 while (rs.next()) {
                     RespostaAlunoProva resposta = new RespostaAlunoProva();
                     long idQuestao = rs.getLong("id");
                     String tipoBanco = rs.getString("tipo");
                     int quantidadeCorretas = rs.getInt("quantidade_corretas");
+                    int quantidadeItensCorrespondencia = rs.getInt("quantidade_itens_correspondencia");
                     String respostaAluno = valorOuVazio(rs.getString("resposta_texto"));
                     String gabarito = valorOuVazio(rs.getString("gabarito"));
 
@@ -221,18 +227,19 @@ public class TurmaProfessorDAO {
 
                     if ("Dissertativa".equalsIgnoreCase(tipoBanco)) {
                         resposta.setTipo(Questao.DISSERTATIVA);
+                    } else if (quantidadeItensCorrespondencia > 0) {
+                        resposta.setTipo(Questao.CORRESPONDENCIA);
                     } else if (quantidadeCorretas > 1) {
                         resposta.setTipo(Questao.CHECKLIST);
                     } else {
                         resposta.setTipo(Questao.MULTIPLA_ESCOLHA);
                     }
 
-                    resposta.setCorreta(respostaEstaCorreta(
-                            resposta.getTipo(), respostaAluno, gabarito));
+                    resposta.setCorreta(respostaEstaCorreta(resposta.getTipo(), respostaAluno, gabarito));
 
                     // Para questões objetivas, carrega todas as alternativas para
-                    // mostrar visualmente o que foi marcado e o que era correto.
-                    if (!Questao.DISSERTATIVA.equals(resposta.getTipo())) {
+                    // mostrar visualmente o que foi marcado e o que era correto APENAS para Múltipla Escolha e Checklist
+                    if (!Questao.DISSERTATIVA.equals(resposta.getTipo()) && !Questao.CORRESPONDENCIA.equals(resposta.getTipo())) {
                         Set<String> selecionadas = separarRespostas(respostaAluno);
 
                         stmtAlternativas.setLong(1, idQuestao);

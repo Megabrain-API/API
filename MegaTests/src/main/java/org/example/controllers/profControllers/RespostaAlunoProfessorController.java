@@ -121,12 +121,16 @@ public class RespostaAlunoProfessorController implements Initializable {
                     "Resposta do aluno:", resposta.getRespostaAluno()));
             bloco.getChildren().add(criarTextoResposta(
                     "Gabarito:", resposta.getGabarito()));
+        } else if (Questao.CORRESPONDENCIA.equals(resposta.getTipo())) {
+            bloco.getChildren().add(criarTextoResposta(
+                    "Associações feitas pelo aluno:", resposta.getRespostaAluno()));
+            bloco.getChildren().add(criarTextoResposta(
+                    "Gabarito (Associações corretas):", resposta.getGabarito()));
         } else {
             for (RespostaAlunoProva.AlternativaCorrecao alternativa : resposta.getAlternativas()) {
                 bloco.getChildren().add(criarAlternativa(alternativa));
             }
         }
-
         Label resultado = new Label(
                 resposta.isCorreta() ? "✓ RESPOSTA CORRETA" : "✗ RESPOSTA INCORRETA");
         resultado.setFont(Font.font("System", FontWeight.BOLD, 12));
@@ -199,6 +203,9 @@ public class RespostaAlunoProfessorController implements Initializable {
         }
         if (Questao.CHECKLIST.equals(tipo)) {
             return "Questão de múltiplas respostas";
+        }
+        if (Questao.CORRESPONDENCIA.equals(tipo)) {
+            return "Correspondência";
         }
         return "Questão de múltipla escolha";
     }

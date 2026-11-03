@@ -35,7 +35,7 @@
                               <Font size="14.0" />
                            </font>
                         </Button>
-                        <Button fx:id="btn_finalizar" mnemonicParsing="false" onAction="#GeraJson" prefHeight="40.0" prefWidth="139.0" style="-fx-background-radius: 8px;" text="Finalizar">
+                        <Button fx:id="btn_finalizar" mnemonicParsing="false" onAction="#GeraProva" prefHeight="40.0" prefWidth="139.0" style="-fx-background-radius: 8px;" text="Finalizar">
                            <font>
                               <Font size="14.0" />
                            </font>

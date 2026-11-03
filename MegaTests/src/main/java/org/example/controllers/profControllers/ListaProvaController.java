@@ -107,15 +107,15 @@ public class ListaProvaController {
                                     String nomeArquivoJson = provaRecuperada.getNome() + ".json";
 
                                     // Apagar o arquivo JSON físico da pasta de provas salvas
-                                    File arquivoJson = new File("MegaTests/provas_salvas/" + nomeArquivoJson); // Ajuste o caminho do arquivo
+                                    /*File arquivoJson = new File("MegaTests/provas_salvas/" + nomeArquivoJson); // Ajuste o caminho do arquivo
                                     if (arquivoJson.exists()) {
                                         arquivoJson.delete();
-                                    }
+                                    }*/
 
                                     // 3. Remover visualmente da tela (do VBox e do HBox)
                                     vb_provacontainer.getChildren().remove(linhaDaProva);
 
-                                    System.out.println("Prova removida com sucesso do banco, dos arquivos e da tela!");
+                                    System.out.println("Prova removida com sucesso do banco e da tela!");
                                 } else {
                                     System.out.println("Erro ao tentar remover a prova do banco de dados.");
                                 }
@@ -186,17 +186,22 @@ public class ListaProvaController {
         }
 
         try {
-            // A consulta SQL existente lista os metadados das provas. Os detalhes
-            // das questões mistas são carregados do JSON completo gerado pelo editor.
-            Prova provaCompleta = carregarDetalhesLocais(provaSelecionadaTemporaria);
+            // Usa o métod exclusivo do professor que traz o gabarito
+            ProvaDAO provaDAO = new ProvaDAO();
+            Prova provaCompleta = provaDAO.buscarProvaCompletaParaProfessor((int) provaSelecionadaTemporaria.getId());
+
+            if (provaCompleta == null) {
+                throw new Exception("Prova não encontrada no banco de dados.");
+            }
+
             SessaoApp.provaAtual = provaCompleta;
             App.setRoot("professorFluxo/PreviewFormulario");
+
         } catch (Exception e) {
             Alert erro = new Alert(Alert.AlertType.ERROR);
             erro.setTitle("Detalhes da prova indisponíveis");
             erro.setHeaderText("Não foi possível abrir esta prova");
-            erro.setContentText("O registro existe no banco, mas não foi possível localizar/carregar "
-                    + "o arquivo JSON com as questões mistas.\n\n" + e.getMessage());
+            erro.setContentText("Ocorreu um erro ao carregar os dados da prova.\n\n" + e.getMessage());
             erro.showAndWait();
             e.printStackTrace();
         }

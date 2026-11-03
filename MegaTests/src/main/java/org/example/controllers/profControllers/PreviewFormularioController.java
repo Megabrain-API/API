@@ -24,11 +24,15 @@ public class PreviewFormularioController {
 
     @FXML
     public void initialize() {
+
         if (vb_formulario == null) {
             return;
         }
         vb_formulario.getChildren().clear();
+
+        // Declara e obtém a prova atual da sessão de forma local e segura
         Prova prova = SessaoApp.provaAtual;
+
         if (prova == null) {
             vb_formulario.getChildren().add(new Label("Nenhuma prova foi selecionada."));
             return;
@@ -40,16 +44,8 @@ public class PreviewFormularioController {
         titulo.setWrapText(true);
         vb_formulario.getChildren().add(titulo);
 
-        if (prova.getQuestoes() == null || prova.getQuestoes().isEmpty()) {
-            Label semQuestoes = new Label(
-                    "Não há detalhes das questões disponíveis para esta prova. "
-                    + "Para provas mistas, é necessário o arquivo JSON salvo em 'provas_salvas'.");
-            semQuestoes.setWrapText(true);
-            vb_formulario.getChildren().add(semQuestoes);
-            return;
-        }
-
         int numeroQuestao = 1;
+
         for (Questao questao : prova.getQuestoes()) {
             VBox bloco = new VBox(7);
             bloco.setPadding(new Insets(10, 0, 12, 0));
@@ -65,36 +61,69 @@ public class PreviewFormularioController {
             bloco.getChildren().add(rotuloTipo);
 
             if (Questao.DISSERTATIVA.equals(tipo)) {
-                TextArea resposta = new TextArea();
-                resposta.setPromptText("Resposta do aluno (pré-visualização)");
-                resposta.setWrapText(true);
-                resposta.setPrefRowCount(3);
-                resposta.setEditable(false);
-                resposta.setDisable(true);
-                bloco.getChildren().add(resposta);
-
                 String modelo = questao.getRespostaModelo();
                 if (modelo != null && !modelo.trim().isEmpty()) {
-                    Label respostaModelo = new Label("Resposta de referência: " + modelo.trim());
+                    Label respostaModelo = new Label("Resposta de referência (Gabarito): " + modelo.trim());
                     respostaModelo.setWrapText(true);
-                    respostaModelo.setStyle("-fx-text-fill: #555555;");
+                    respostaModelo.setStyle("-fx-text-fill: #2e7d32; -fx-font-weight: bold;");
                     bloco.getChildren().add(respostaModelo);
                 }
+            } else if (Questao.CORRESPONDENCIA.equals(tipo)) {
+                Label lblItens = new Label("Itens para relacionar:");
+                lblItens.setStyle("-fx-font-weight: bold; -fx-text-fill: #444444;");
+                bloco.getChildren().add(lblItens);
+
+                int idx = 1;
+                for (String itemTexto : questao.getItensCorrespondencia()) {
+                    Label itemLbl = new Label("  " + idx + ". " + itemTexto);
+                    bloco.getChildren().add(itemLbl);
+                    idx++;
+                }
+
+                Label lblGabarito = new Label("Gabarito (Associações corretas):");
+                lblGabarito.setStyle("-fx-font-weight: bold; -fx-text-fill: #2e7d32; -fx-padding: 5 0 0 0;");
+                bloco.getChildren().add(lblGabarito);
+
+                for (int i = 0; i < questao.getAlternativasCorrespondencia().size(); i++) {
+                    String opcaoTexto = questao.getAlternativasCorrespondencia().get(i);
+                    Integer numCorreto = questao.getGabaritoCorrespondencia().get(i);
+
+                    Label gabLbl = new Label("  - " + opcaoTexto + " ──> Item [" + numCorreto + "]");
+                    gabLbl.setStyle("-fx-font-weight: bold; -fx-text-fill: #2e7d32;");
+                    bloco.getChildren().add(gabLbl);
+                }
+
             } else if (Questao.CHECKLIST.equals(tipo)) {
+                int indice = 0;
                 for (String alternativa : questao.getAlternativas()) {
                     CheckBox item = new CheckBox(alternativa);
                     item.setPadding(new Insets(0, 0, 5, 20));
                     item.setDisable(true);
+
+                    // Destaca se for alternativa correta
+                    if (questao.getRespostasCorretas() != null && questao.getRespostasCorretas().contains(indice)) {
+                        item.setText(alternativa + " ✓ (Correta)");
+                        item.setStyle("-fx-font-weight: bold; -fx-text-fill: #2e7d32;");
+                    }
                     bloco.getChildren().add(item);
+                    indice++;
                 }
             } else {
                 ToggleGroup grupo = new ToggleGroup();
+                int indice = 0;
                 for (String alternativa : questao.getAlternativas()) {
                     RadioButton opcao = new RadioButton(alternativa);
                     opcao.setToggleGroup(grupo);
                     opcao.setPadding(new Insets(0, 0, 5, 20));
                     opcao.setDisable(true);
+
+                    // Destaca se for alternativa correta
+                    if (questao.getRespostasCorretas() != null && questao.getRespostasCorretas().contains(indice)) {
+                        opcao.setText(alternativa + " ✓ (Correta)");
+                        opcao.setStyle("-fx-font-weight: bold; -fx-text-fill: #2e7d32;");
+                    }
                     bloco.getChildren().add(opcao);
+                    indice++;
                 }
             }
 
@@ -105,7 +134,6 @@ public class PreviewFormularioController {
 
     private String tipoNormalizado(String tipo) {
         if (tipo == null) {
-            // Compatibilidade com provas antigas, que não guardavam o tipo.
             return Questao.MULTIPLA_ESCOLHA;
         }
         String normalizado = tipo.trim().toUpperCase();
@@ -115,12 +143,16 @@ public class PreviewFormularioController {
         if ("CHECKLIST".equals(normalizado)) {
             return Questao.CHECKLIST;
         }
+        if ("CORRESPONDENCIA".equals(normalizado) || "CORRESPONDÊNCIA".equals(normalizado) || (Questao.CORRESPONDENCIA != null && Questao.CORRESPONDENCIA.equalsIgnoreCase(tipo))) {
+            return Questao.CORRESPONDENCIA;
+        }
         return Questao.MULTIPLA_ESCOLHA;
     }
 
     private String textoTipo(String tipo) {
         if (Questao.DISSERTATIVA.equals(tipo)) return "Dissertativa";
         if (Questao.CHECKLIST.equals(tipo)) return "Checklist numerado";
+        if (Questao.CORRESPONDENCIA.equals(tipo)) return "Correspondência";
         return "Múltipla escolha";
     }
 
