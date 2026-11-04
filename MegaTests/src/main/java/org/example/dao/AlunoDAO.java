@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -103,6 +105,52 @@ public class AlunoDAO {
         }
 
         return null;
+    }
+
+    /**
+     * Busca a data de início da prova para um determinado aluno na tabela mg_aluno_prova.
+     * Se o aluno já tiver iniciado a prova anteriormente, retorna a data/hora registrada.
+     */
+    public LocalDateTime buscarDataInicioProva(long raAluno, int idProva) {
+        String sql = "SELECT data_inicio FROM mg_aluno_prova WHERE ra_aluno = ? AND id_prova = ?";
+
+        try (Connection conn = new ConexaoDAO().conectaBD();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, raAluno);
+            stmt.setInt(2, idProva);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next() && rs.getTimestamp("data_inicio") != null) {
+                    return rs.getTimestamp("data_inicio").toLocalDateTime();
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    /**
+     * Registra ou mantém a data de início da prova pelo aluno.
+     * Garante a persistência do cronômetro entre trocas de tela ou reinícios.
+     */
+    public void registrarInicioProva(long raAluno, int idProva, LocalDateTime dataInicio) {
+        String sql = "INSERT INTO mg_aluno_prova (ra_aluno, id_prova, data_inicio, status) " +
+                "VALUES (?, ?, ?, 'EM_ANDAMENTO') " +
+                "ON DUPLICATE KEY UPDATE data_inicio = COALESCE(data_inicio, VALUES(data_inicio))";
+
+        try (Connection conn = new ConexaoDAO().conectaBD();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, raAluno);
+            stmt.setInt(2, idProva);
+            stmt.setTimestamp(3, Timestamp.valueOf(dataInicio));
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

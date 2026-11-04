@@ -13,7 +13,7 @@ public class ProvaDAO {
     public void salvaProvaCompleta(Prova prova) {
         // Queries usadas durante o salvamento completo da prova.
         String sqlBuscaDisciplina = "SELECT id FROM mg_disciplina WHERE nome = ?";
-        String sqlProva = "INSERT INTO mg_provas (nome, data_inicial, data_limite, id_disciplina, matricula_professor) VALUES (?, ?, ?, ?, ?)";
+        String sqlProva = "INSERT INTO mg_provas (nome, data_inicial, data_limite, duracao_minutos, id_disciplina, matricula_professor) VALUES (?, ?, ?, ?, ?, ?)";
         String sqlQuestao = "INSERT INTO mg_questoes (tipo, enunciado, gabarito) VALUES (?, ?, ?)";
         String sqlAssociativa = "INSERT INTO mg_prova_questao (id_prova, id_questao, ordem) VALUES (?, ?, ?)";
         String sqlAlternativa = "INSERT INTO mg_questao_alternativa (id_questao, ordem, texto, correta) VALUES (?, ?, ?, ?)";
@@ -50,10 +50,27 @@ public class ProvaDAO {
                 // Salva os dados principais da prova e recupera o ID gerado.
                 try (PreparedStatement stmtProva = conn.prepareStatement(sqlProva, Statement.RETURN_GENERATED_KEYS)) {
                     stmtProva.setString(1, prova.getNome());
-                    stmtProva.setNull(2, Types.DATE);
-                    stmtProva.setNull(3, Types.DATE);
-                    stmtProva.setLong(4, idDisciplina);
-                    stmtProva.setLong(5, matriculaProfessorLogado);
+
+                    if (prova.getDataInicial() != null) {
+                        stmtProva.setTimestamp(2, Timestamp.valueOf(prova.getDataInicial()));
+                    } else {
+                        stmtProva.setNull(2, Types.TIMESTAMP);
+                    }
+
+                    if (prova.getDataLimite() != null) {
+                        stmtProva.setTimestamp(3, Timestamp.valueOf(prova.getDataLimite()));
+                    } else {
+                        stmtProva.setNull(3, Types.TIMESTAMP);
+                    }
+
+                    if (prova.getDuracaoMinutos() != null) {
+                        stmtProva.setInt(4, prova.getDuracaoMinutos());
+                    } else {
+                        stmtProva.setNull(4, Types.INTEGER);
+                    }
+
+                    stmtProva.setLong(5, idDisciplina);
+                    stmtProva.setLong(6, matriculaProfessorLogado);
                     stmtProva.executeUpdate();
 
                     try (ResultSet rsKeys = stmtProva.getGeneratedKeys()) {
@@ -271,7 +288,7 @@ public class ProvaDAO {
     }
 
     public Prova buscarProvaCompleta(int idProva) {
-        String sqlProva = "SELECT p.id, p.nome, p.data_limite, d.nome AS disciplina " +
+        String sqlProva = "SELECT p.id, p.nome, p.data_inicial, p.data_limite, p.duracao_minutos, d.nome AS disciplina " +
                 "FROM mg_provas p " +
                 "INNER JOIN mg_disciplina d ON p.id_disciplina = d.id " +
                 "WHERE p.id = ?";
@@ -314,10 +331,16 @@ public class ProvaDAO {
                         prova.setId(rs.getInt("id"));
                         prova.setNome(rs.getString("nome"));
                         prova.setDisciplina(rs.getString("disciplina"));
+                        prova.setDuracaoMinutos(rs.getInt("duracao_minutos"));
 
-                        Date dataLimite = rs.getDate("data_limite");
+                        Timestamp dataInicial = rs.getTimestamp("data_inicial");
+                        if (dataInicial != null) {
+                            prova.setDataInicial(dataInicial.toLocalDateTime());
+                        }
+
+                        Timestamp dataLimite = rs.getTimestamp("data_limite");
                         if (dataLimite != null) {
-                            prova.setPrazo(dataLimite.toLocalDate().toString());
+                            prova.setDataLimite(dataLimite.toLocalDateTime());
                         }
                     }
                 }
@@ -434,7 +457,7 @@ public class ProvaDAO {
     public List<Prova> listarProvasPorAluno(long raAluno) {
         List<Prova> listaProvas = new ArrayList<>();
 
-        String sql = "SELECT DISTINCT p.id, p.nome, d.nome AS disciplina " +
+        String sql = "SELECT DISTINCT p.id, p.nome, p.data_inicial, p.data_limite, p.duracao_minutos, d.nome AS disciplina " +
                 "FROM mg_aluno a " +
                 "INNER JOIN mg_curso_disciplina cd ON cd.id_curso = a.id_curso " +
                 "INNER JOIN mg_disciplina d ON d.id = cd.id_disciplina " +
@@ -458,6 +481,18 @@ public class ProvaDAO {
                     prova.setId(rs.getInt("id"));
                     prova.setNome(rs.getString("nome"));
                     prova.setDisciplina(rs.getString("disciplina"));
+                    prova.setDuracaoMinutos(rs.getInt("duracao_minutos"));
+
+                    Timestamp dataInicial = rs.getTimestamp("data_inicial");
+                    if (dataInicial != null) {
+                        prova.setDataInicial(dataInicial.toLocalDateTime());
+                    }
+
+                    Timestamp dataLimite = rs.getTimestamp("data_limite");
+                    if (dataLimite != null) {
+                        prova.setDataLimite(dataLimite.toLocalDateTime());
+                    }
+
                     listaProvas.add(prova);
                 }
             }
@@ -510,6 +545,18 @@ public class ProvaDAO {
                 Prova prova = new Prova();
                 prova.setId(rs.getInt("id"));
                 prova.setNome(rs.getString("Nome"));
+                prova.setDuracaoMinutos(rs.getInt("duracao_minutos"));
+
+                Timestamp dataInicial = rs.getTimestamp("data_inicial");
+                if (dataInicial != null) {
+                    prova.setDataInicial(dataInicial.toLocalDateTime());
+                }
+
+                Timestamp dataLimite = rs.getTimestamp("data_limite");
+                if (dataLimite != null) {
+                    prova.setDataLimite(dataLimite.toLocalDateTime());
+                }
+
                 listaProvas.add(prova);
             }
 
@@ -521,6 +568,3 @@ public class ProvaDAO {
     } //Fecha listaNomeProvas
 
 }
-
-
-

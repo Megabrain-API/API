@@ -155,10 +155,12 @@ public class TurmaProfessorDAO {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    alunos.add(new AlunoProva(
-                            rs.getLong("ra"),
-                            rs.getString("nome")
-                    ));
+                    AlunoProva aluno = new AlunoProva();
+                    aluno.setRaAluno(rs.getLong("ra"));
+                    // Se a sua entidade AlunoProva não tiver o campo nomeAluno,
+                    // defina o raAluno diretamente:
+                    aluno.setNomeAluno(rs.getString("nome"));
+                    alunos.add(aluno);
                 }
             }
         } catch (SQLException erro) {
