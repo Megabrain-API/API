@@ -181,7 +181,7 @@ public class RespostaAlunoProfessorController implements Initializable {
             corTexto = "#8C1D18";
         } else if (alternativa.isCorreta()) {
             prefixo = "✓ Alternativa correta: ";
-            fundo = "#EAF4ED";
+            fundo = "";
             corTexto = "#285A36";
         }
 

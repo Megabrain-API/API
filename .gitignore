@@ -3,6 +3,7 @@ target/
 .class
 
 # Configurações locais do IntelliJ
+.run/
 .idea/
 *.iml
 *.iws
