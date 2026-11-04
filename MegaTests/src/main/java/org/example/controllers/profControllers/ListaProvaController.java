@@ -139,40 +139,6 @@ public class ListaProvaController {
         }
 
 
-    private void abrirProva(Prova provaSelecionada) {
-        // Guarda a prova selecionada na sessão para a próxima tela usar
-        SessaoApp.provaAtual = provaSelecionada;
-
-        Alert aviso = new Alert(Alert.AlertType.INFORMATION);
-        aviso.setTitle("Prova Selecionada");
-        aviso.setHeaderText("Você clicou na prova: " + provaSelecionada.getNome());
-        aviso.setContentText("A disciplina é: " + provaSelecionada.getDisciplina() +
-                "\nTotal de questões: " + provaSelecionada.getQuestoes().size());
-        aviso.showAndWait();
-
-        // Aqui você pode usar o App.setRoot("SuaProximaTela"); para mudar de tela
-
-    }
-
-    private Prova carregarDetalhesLocais(Prova provaDoBanco) throws IOException {
-        String nome = provaDoBanco.getNome();
-        if (nome == null || nome.trim().isEmpty()) {
-            throw new IOException("A prova selecionada não possui nome.");
-        }
-        String nomeArquivo = nome.trim().replaceAll("[^a-zA-Z0-9._-]", "_");
-        Path caminho = Path.of("provas_salvas", nomeArquivo + ".json");
-        if (!Files.isRegularFile(caminho)) {
-            throw new IOException("Arquivo não encontrado: " + caminho.toAbsolutePath());
-        }
-        String json = Files.readString(caminho, StandardCharsets.UTF_8);
-        Prova provaCompleta = new Gson().fromJson(json, Prova.class);
-        if (provaCompleta == null) {
-            throw new IOException("O arquivo JSON está vazio ou inválido.");
-        }
-        provaCompleta.setId(provaDoBanco.getId());
-        return provaCompleta;
-    }
-
     @FXML
     void AcessaProva(ActionEvent event) {
         // Verifica se o utilizador clicou numa prova antes de clicar em Acessar
