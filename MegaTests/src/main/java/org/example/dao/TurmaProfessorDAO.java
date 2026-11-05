@@ -196,6 +196,12 @@ public class TurmaProfessorDAO {
                 "GROUP BY q.id, pq.ordem, q.tipo, q.enunciado, q.gabarito, r.resposta_texto " +
                 "ORDER BY pq.ordem";
 
+        String sqlItensCorrespondencia =
+                "SELECT ordem, texto " +
+                        "FROM mg_questao_correspondencia_item " +
+                        "WHERE id_questao = ? " +
+                        "ORDER BY ordem";
+
         String sqlAlternativas = "SELECT texto, correta " +
                 "FROM mg_questao_alternativa " +
                 "WHERE id_questao = ? ORDER BY ordem";
@@ -227,14 +233,32 @@ public class TurmaProfessorDAO {
                     resposta.setRespostaAluno(respostaAluno);
                     resposta.setGabarito(gabarito);
 
-                    if ("Dissertativa".equalsIgnoreCase(tipoBanco)) {
-                        resposta.setTipo(Questao.DISSERTATIVA);
-                    } else if (quantidadeItensCorrespondencia > 0) {
+                    if (quantidadeItensCorrespondencia > 0) {
                         resposta.setTipo(Questao.CORRESPONDENCIA);
+                    } else if ("Dissertativa".equalsIgnoreCase(tipoBanco)) {
+                        resposta.setTipo(Questao.DISSERTATIVA);
                     } else if (quantidadeCorretas > 1) {
                         resposta.setTipo(Questao.CHECKLIST);
                     } else {
                         resposta.setTipo(Questao.MULTIPLA_ESCOLHA);
+                    }
+
+                    if (Questao.CORRESPONDENCIA.equals(resposta.getTipo())) {
+
+                        try (PreparedStatement stmtItens =
+                                     conn.prepareStatement(sqlItensCorrespondencia)) {
+
+                            stmtItens.setLong(1, idQuestao);
+
+                            try (ResultSet rsItens = stmtItens.executeQuery()) {
+
+                                while (rsItens.next()) {
+                                    resposta.getItensCorrespondencia().add(
+                                            rsItens.getString("texto")
+                                    );
+                                }
+                            }
+                        }
                     }
 
                     resposta.setCorreta(respostaEstaCorreta(resposta.getTipo(), respostaAluno, gabarito));

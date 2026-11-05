@@ -5,6 +5,8 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
@@ -119,13 +121,60 @@ public class RespostaAlunoProfessorController implements Initializable {
         if (Questao.DISSERTATIVA.equals(resposta.getTipo())) {
             bloco.getChildren().add(criarTextoResposta(
                     "Resposta do aluno:", resposta.getRespostaAluno()));
+
             bloco.getChildren().add(criarTextoResposta(
                     "Gabarito:", resposta.getGabarito()));
+
         } else if (Questao.CORRESPONDENCIA.equals(resposta.getTipo())) {
+
+            List<String> itens = resposta.getItensCorrespondencia();
+
+            StringBuilder textoItens = new StringBuilder();
+
+            for (int i = 0; i < itens.size(); i++) {
+                textoItens.append(i + 1)
+                        .append(". ")
+                        .append(itens.get(i))
+                        .append("\n");}
+
+            VBox caixaItens = criarTextoResposta(
+                    "Itens:",
+                    textoItens.toString()
+            );
+
+            Label lblItens = (Label) caixaItens.getChildren().get(1);
+
+            lblItens.setWrapText(true);
+            lblItens.setMaxWidth(Double.MAX_VALUE);
+            lblItens.setMinWidth(0);
+
+            ScrollPane scrollItens = new ScrollPane(lblItens);
+
+            scrollItens.setFitToWidth(true);
+            scrollItens.setPrefHeight(90);
+            scrollItens.setMinHeight(90);
+            scrollItens.setMaxHeight(90);
+
+            scrollItens.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+            scrollItens.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+            scrollItens.setStyle(
+                    "-fx-background-color: #F1F1F1;" +
+                            "-fx-background: #F1F1F1;" +
+                            "-fx-border-color: transparent;"
+            );
+
+// Substitui o Label pelo ScrollPane dentro da caixa
+            caixaItens.getChildren().set(1, scrollItens);
+
+            bloco.getChildren().add(caixaItens);
+
             bloco.getChildren().add(criarTextoResposta(
                     "Associações feitas pelo aluno:", resposta.getRespostaAluno()));
             bloco.getChildren().add(criarTextoResposta(
                     "Gabarito (Associações corretas):", resposta.getGabarito()));
+
+
         } else {
             for (RespostaAlunoProva.AlternativaCorrecao alternativa : resposta.getAlternativas()) {
                 bloco.getChildren().add(criarAlternativa(alternativa));

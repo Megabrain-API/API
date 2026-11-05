@@ -185,7 +185,7 @@ public class ProvaDAO {
 
                 String texto = questao.getAlternativasCorrespondencia().get(i);
 
-                Integer numero = questao.getGabaritoCorrespondencia().get(i);
+                String numero = questao.getItensCorrespondencia().get(i);
 
                 partes.add(texto + "=" + numero);
             }

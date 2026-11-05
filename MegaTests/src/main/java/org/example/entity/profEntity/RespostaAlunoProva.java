@@ -18,6 +18,12 @@ public class RespostaAlunoProva {
     private boolean correta;
     private final List<AlternativaCorrecao> alternativas = new ArrayList<>();
 
+    private List<String> itensCorrespondencia = new ArrayList<>();
+    public List<String> getItensCorrespondencia() {
+        return itensCorrespondencia;
+    }
+
+
     public long getIdQuestao() {
         return idQuestao;
     }
