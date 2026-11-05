@@ -27,6 +27,7 @@ public class Questao {
     private List<String> alternativas;
     private List<Integer> respostasCorretas;
     private String respostaModelo;
+    private double pontos = 1.0; // Pontuação/Valor atribuído à questão
 
     public Questao() {
         this.alternativas = new ArrayList<>();
@@ -36,17 +37,35 @@ public class Questao {
         this.gabaritoCorrespondencia = new ArrayList<>();
     }
 
+    public double getPontos() {
+        return pontos;
+    }
+
+    public void setPontos(double pontos) {
+        this.pontos = pontos;
+    }
+
     public List<String> getItensCorrespondencia() {
+        if (itensCorrespondencia == null) {
+            itensCorrespondencia = new ArrayList<>();
+        }
         return itensCorrespondencia;
     }
 
     public List<String> getAlternativasCorrespondencia() {
+        if (alternativasCorrespondencia == null) {
+            alternativasCorrespondencia = new ArrayList<>();
+        }
         return alternativasCorrespondencia;
     }
 
     public List<Integer> getGabaritoCorrespondencia() {
+        if (gabaritoCorrespondencia == null) {
+            gabaritoCorrespondencia = new ArrayList<>();
+        }
         return gabaritoCorrespondencia;
     }
+
     public long getId() {
         return id;
     }
