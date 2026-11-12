@@ -18,7 +18,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      # - mysql_data:/var/lib/mysql
       # Opcional: Se tiver scripts SQL para popular o banco na primeira execução, descomente a linha abaixo:
       # - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./ddl.sql:/docker-entrypoint-initdb.d/ddl.sql

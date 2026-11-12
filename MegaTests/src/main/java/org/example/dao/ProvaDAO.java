@@ -14,7 +14,8 @@ public class ProvaDAO {
         // Queries usadas durante o salvamento completo da prova.
         String sqlBuscaDisciplina = "SELECT id FROM mg_disciplina WHERE nome = ?";
         String sqlProva = "INSERT INTO mg_provas (nome, data_inicial, data_limite, duracao_minutos, id_disciplina, matricula_professor) VALUES (?, ?, ?, ?, ?, ?)";
-        String sqlQuestao = "INSERT INTO mg_questoes (tipo, enunciado, gabarito) VALUES (?, ?, ?)";
+        // Incluída a coluna 'pontos' na gravação das questões
+        String sqlQuestao = "INSERT INTO mg_questoes (tipo, enunciado, gabarito, pontos) VALUES (?, ?, ?, ?)";
         String sqlAssociativa = "INSERT INTO mg_prova_questao (id_prova, id_questao, ordem) VALUES (?, ?, ?)";
         String sqlAlternativa = "INSERT INTO mg_questao_alternativa (id_questao, ordem, texto, correta) VALUES (?, ?, ?, ?)";
 
@@ -100,6 +101,7 @@ public class ProvaDAO {
                         stmtQuestao.setString(1, tipoBanco);
                         stmtQuestao.setString(2, q.getEnunciado());
                         stmtQuestao.setString(3, gabarito);
+                        stmtQuestao.setDouble(4, q.getPontos()); // Persiste os pontos salvos na Questao
                         stmtQuestao.executeUpdate();
 
                         try (ResultSet rsQuestaoKeys = stmtQuestao.getGeneratedKeys()) {
@@ -223,7 +225,7 @@ public class ProvaDAO {
                         }
                     }
                 }
-                // Se for Múltipla Escolha ou Checklist, AGORA EXECUTA O SELECT E CARREGA AS CORRETAS aaaaaaaa
+                // Se for Múltipla Escolha ou Checklist, AGORA EXECUTA O SELECT E CARREGA AS CORRETAS
                 else {
                     questao.getRespostasCorretas().clear();
 
@@ -256,14 +258,28 @@ public class ProvaDAO {
                 "INNER JOIN mg_disciplina d ON p.id_disciplina = d.id " +
                 "WHERE p.id = ?";
 
-        String sqlQuestoes = "SELECT q.id, q.tipo, q.enunciado, " +
-                "COALESCE(SUM(CASE WHEN a.correta = TRUE THEN 1 ELSE 0 END), 0) AS quantidade_corretas " +
-                "FROM mg_prova_questao pq " +
-                "INNER JOIN mg_questoes q ON pq.id_questao = q.id " +
-                "LEFT JOIN mg_questao_alternativa a ON a.id_questao = q.id " +
-                "WHERE pq.id_prova = ? " +
-                "GROUP BY q.id, q.tipo, q.enunciado, pq.ordem " +
-                "ORDER BY pq.ordem";
+        String sqlQuestoes =
+                "SELECT q.id, q.tipo, q.enunciado, q.pontos, " +
+                        "COALESCE(SUM(CASE WHEN a.correta = TRUE THEN 1 ELSE 0 END), 0) AS quantidade_corretas, " +
+                        "COUNT(DISTINCT ci.id) AS quantidade_itens_correspondencia " +
+                        "FROM mg_prova_questao pq " +
+                        "INNER JOIN mg_questoes q ON pq.id_questao = q.id " +
+                        "LEFT JOIN mg_questao_alternativa a ON a.id_questao = q.id " +
+                        "LEFT JOIN mg_questao_correspondencia_item ci ON ci.id_questao = q.id " +
+                        "WHERE pq.id_prova = ? " +
+                        "GROUP BY q.id, q.tipo, q.enunciado, q.pontos, pq.ordem " +
+                        "ORDER BY pq.ordem";
+        String sqlItensCorrespondencia =
+                "SELECT ordem, texto " +
+                        "FROM mg_questao_correspondencia_item " +
+                        "WHERE id_questao = ? " +
+                        "ORDER BY ordem";
+
+        String sqlAlternativasCorrespondencia =
+                "SELECT texto, numero_correto " +
+                        "FROM mg_questao_correspondencia_alternativa " +
+                        "WHERE id_questao = ? " +
+                        "ORDER BY id";
 
         String sqlAlternativas = "SELECT texto FROM mg_questao_alternativa " +
                 "WHERE id_questao = ? ORDER BY ordem";
@@ -311,9 +327,10 @@ public class ProvaDAO {
                         int quantidadeCorretas = rsQuestoes.getInt("quantidade_corretas");
 
                         Questao questao = new Questao();
-                        // Guarda o ID para que a resposta do aluno possa ser ligada à questão correta.
+                        // Guarda o ID e a pontuação da questão trazida do MySQL
                         questao.setId(idQuestao);
                         questao.setEnunciado(rsQuestoes.getString("enunciado"));
+                        questao.setPontos(rsQuestoes.getDouble("pontos"));
 
                         if ("Dissertativa".equalsIgnoreCase(tipoBanco)) {
                             questao.setTipo(Questao.DISSERTATIVA);
@@ -421,15 +438,6 @@ public class ProvaDAO {
     public List<Prova> listarNomeProvas() {
         List<Prova> listaProvas = new ArrayList<>();
         String sql = "SELECT * FROM mg_provas"; //Query para puxar todas as provas
-        //Query para puxar prova por disciplina
-       /*  "SELECT
-                provas.nome AS nome_da_prova,
-                disciplinas.nome AS nome_da_disciplina
-            FROM
-                provas
-            INNER JOIN
-                disciplinas ON provas.id_disciplina = disciplinas.id;"*/
-        //Implantar essa função futuramente.
 
         try (Connection conn = new ConexaoDAO().conectaBD();
              PreparedStatement statement = conn.prepareStatement(sql);
@@ -459,6 +467,6 @@ public class ProvaDAO {
         }
         System.out.println("Total de provas carregadas: " + listaProvas.size());
         return listaProvas;
-    } //Fecha listaNomeProvas
+    }
 
 }
