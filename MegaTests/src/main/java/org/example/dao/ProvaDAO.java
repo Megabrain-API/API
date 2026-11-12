@@ -277,6 +277,13 @@ public class ProvaDAO {
                 "INNER JOIN mg_disciplina d ON d.id = cd.id_disciplina " +
                 "INNER JOIN mg_provas p ON p.id_disciplina = d.id " +
                 "WHERE a.ra = ? " +
+                "AND (p.data_inicial IS NULL OR p.data_inicial <= NOW()) " +
+                "AND (p.data_limite IS NULL OR p.data_limite >= NOW()) " +
+                "AND NOT EXISTS (" +
+                "SELECT 1 FROM mg_resposta_aluno r " +
+                "WHERE r.ra_aluno = a.ra " +
+                "AND r.id_prova = p.id" +
+                ") " +
                 "ORDER BY d.nome, p.nome";
 
         try (Connection conn = new ConexaoDAO().conectaBD();
