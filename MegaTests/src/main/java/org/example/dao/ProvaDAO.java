@@ -164,6 +164,91 @@ public class ProvaDAO {
         return String.join(" | ", alternativasCorretas);
     }
 
+    public Prova buscarProvaCompletaParaProfessor(int idProva) {
+        // Reutiliza a lógica base de buscar a prova
+        Prova prova = buscarProvaCompleta(idProva);
+        if (prova == null) {
+            return null;
+        }
+
+        String sqlAlternativasComGabarito = "SELECT texto, correta FROM mg_questao_alternativa " +
+                "WHERE id_questao = ? ORDER BY ordem";
+
+        String sqlItensCorrespondencia = "SELECT ordem, texto FROM mg_questao_correspondencia_item " +
+                "WHERE id_questao = ? ORDER BY ordem";
+
+        String sqlAlternativasCorrespondencia = "SELECT texto, numero_correto FROM mg_questao_correspondencia_alternativa " +
+                "WHERE id_questao = ? ORDER BY id";
+
+        try (Connection conn = new ConexaoDAO().conectaBD()) {
+            for (Questao questao : prova.getQuestoes()) {
+
+                // Se for Múltipla Escolha ou Checklist, carrega as corretas
+                if (Questao.DISSERTATIVA.equals(questao.getTipo())) {
+                    String gabaritoDissertativa = "";
+                    // Tem um select proprio pra referencia da dissertativa
+                    try (PreparedStatement stmtGab = conn.prepareStatement("SELECT gabarito FROM mg_questoes WHERE id = ?")) {
+                        stmtGab.setLong(1, questao.getId());
+
+                        try (ResultSet rsGab = stmtGab.executeQuery()) {
+                            if (rsGab.next()) {
+                                gabaritoDissertativa = rsGab.getString("gabarito");
+                            }
+                        }
+                    }
+                    questao.setRespostaModelo(gabaritoDissertativa);
+                }
+                //Se for Correspondência, garante que os itens e o gabarito vêm preenchidos
+                else if (Questao.CORRESPONDENCIA.equals(questao.getTipo())) {
+                    questao.getItensCorrespondencia().clear();
+                    questao.getAlternativasCorrespondencia().clear();
+                    questao.getGabaritoCorrespondencia().clear();
+
+                    try (PreparedStatement stmtItens = conn.prepareStatement(sqlItensCorrespondencia)) {
+                        stmtItens.setLong(1, questao.getId());
+                        try (ResultSet rs = stmtItens.executeQuery()) {
+                            while (rs.next()) {
+                                questao.getItensCorrespondencia().add(rs.getString("texto"));
+                            }
+                        }
+                    }
+
+                    try (PreparedStatement stmtOpcoes = conn.prepareStatement(sqlAlternativasCorrespondencia)) {
+                        stmtOpcoes.setLong(1, questao.getId());
+                        try (ResultSet rs = stmtOpcoes.executeQuery()) {
+                            while (rs.next()) {
+                                questao.getAlternativasCorrespondencia().add(rs.getString("texto"));
+                                questao.getGabaritoCorrespondencia().add(rs.getInt("numero_correto"));
+                            }
+                        }
+                    }
+                }
+                // Se for Múltipla Escolha ou Checklist, AGORA EXECUTA O SELECT E CARREGA AS CORRETAS aaaaaaaa
+                else {
+                    questao.getRespostasCorretas().clear();
+
+                    try (PreparedStatement stmt = conn.prepareStatement(sqlAlternativasComGabarito)) {
+                        stmt.setLong(1, questao.getId());
+
+                        try (ResultSet rs = stmt.executeQuery()) {
+                            int indice = 0;
+                            while (rs.next()) {
+                                boolean correta = rs.getBoolean("correta");
+                                if (correta) {
+                                    questao.getRespostasCorretas().add(indice);
+                                }
+                                indice++;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return prova;
+    }
 
     public Prova buscarProvaCompleta(int idProva) {
         String sqlProva = "SELECT p.id, p.nome, p.data_inicial, p.data_limite, p.duracao_minutos, d.nome AS disciplina " +
