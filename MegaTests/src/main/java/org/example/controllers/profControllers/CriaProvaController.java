@@ -131,64 +131,90 @@ public class CriaProvaController {
     void confirmCriarProva(ActionEvent event) throws IOException {
         String disciplinaEscolhida = selectDisciplina.getValue();
         if (disciplinaEscolhida == null || disciplinaEscolhida.isEmpty()) {
-            Alert erro = new Alert(Alert.AlertType.ERROR);
-            erro.setTitle("Erro");
-            erro.setHeaderText("Disciplina não selecionada");
-            erro.showAndWait();
+            mostrarErro("Disciplina não selecionada", "Selecione uma disciplina para a prova.");
             return;
         }
 
         if (nomeProva.getText() == null || nomeProva.getText().trim().isEmpty()) {
-            Alert erro = new Alert(Alert.AlertType.ERROR);
-            erro.setTitle("Erro");
-            erro.setHeaderText("Nome da prova não preenchido");
-            erro.showAndWait();
+            mostrarErro("Nome da prova não preenchido", "Informe o nome da prova.");
             return;
         }
 
         int minutos = 0;
         try {
             minutos = Integer.parseInt(tempoMinutos.getText().trim());
+            if (minutos <= 0) {
+                mostrarErro("Duração inválida", "O tempo da prova deve ser maior que zero.");
+                return;
+            }
         } catch (NumberFormatException e) {
-            Alert erro = new Alert(Alert.AlertType.ERROR);
-            erro.setTitle("Erro");
-            erro.setHeaderText("Duração inválida");
-            erro.setContentText("Informe o tempo da prova em minutos utilizando apenas números.");
-            erro.showAndWait();
+            mostrarErro("Duração inválida", "Informe o tempo da prova em minutos utilizando apenas números.");
+            return;
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm")
+                .withResolverStyle(java.time.format.ResolverStyle.STRICT);
+        LocalDateTime agora = LocalDateTime.now();
+        LocalDateTime dataInicialParsed = null;
+        LocalDateTime dataLimiteParsed = null;
+
+        String strDataIni = dataInicio.getText() == null ? "" : dataInicio.getText().trim();
+        String strHoraIni = horarioInicio.getText() == null ? "" : horarioInicio.getText().trim();
+        String strDataFim = dataFim.getText() == null ? "" : dataFim.getText().trim();
+        String strHoraFim = horarioFim.getText() == null ? "" : horarioFim.getText().trim();
+
+        // Valida se preencheu apenas data ou apenas hora
+        if (strDataIni.isEmpty() != strHoraIni.isEmpty()) {
+            mostrarErro("Início incompleto", "Preencha tanto a data quanto o horário inicial, ou deixe ambos em branco.");
+            return;
+        }
+        if (strDataFim.isEmpty() != strHoraFim.isEmpty()) {
+            mostrarErro("Prazo final incompleto", "Preencha tanto a data quanto o horário limite, ou deixe ambos em branco.");
+            return;
+        }
+
+        try {
+            if (!strDataIni.isEmpty()) {
+                dataInicialParsed = LocalDateTime.parse(strDataIni + " " + strHoraIni, formatter);
+                if (dataInicialParsed.isBefore(agora)) {
+                    mostrarErro("Data inicial inválida", "A data e o horário inicial não podem estar no passado.");
+                    return;
+                }
+            }
+
+            if (!strDataFim.isEmpty()) {
+                dataLimiteParsed = LocalDateTime.parse(strDataFim + " " + strHoraFim, formatter);
+                if (dataLimiteParsed.isBefore(agora)) {
+                    mostrarErro("Data limite inválida", "A data e o horário limite não podem estar no passado.");
+                    return;
+                }
+            }
+
+            if (dataInicialParsed != null && dataLimiteParsed != null && !dataLimiteParsed.isAfter(dataInicialParsed)) {
+                mostrarErro("Intervalo inválido", "A data e o horário limite devem ser posteriores ao início da prova.");
+                return;
+            }
+        } catch (Exception e) {
+            mostrarErro("Formato de data/horário inválido", "Verifique se a data existe e use o formato DD/MM/AAAA e HH:MM.");
             return;
         }
 
         SessaoApp.provaAtual = new Prova();
-        SessaoApp.provaAtual.setNome(nomeProva.getText());
+        SessaoApp.provaAtual.setNome(nomeProva.getText().trim());
         SessaoApp.provaAtual.setDisciplina(disciplinaEscolhida);
         SessaoApp.provaAtual.setDuracaoMinutos(minutos);
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
-        try {
-            if (dataInicio.getText() != null && !dataInicio.getText().trim().isEmpty() &&
-                    horarioInicio.getText() != null && !horarioInicio.getText().trim().isEmpty()) {
-
-                String dataHoraIni = dataInicio.getText().trim() + " " + horarioInicio.getText().trim();
-                SessaoApp.provaAtual.setDataInicial(LocalDateTime.parse(dataHoraIni, formatter));
-            }
-
-            if (dataFim.getText() != null && !dataFim.getText().trim().isEmpty() &&
-                    horarioFim.getText() != null && !horarioFim.getText().trim().isEmpty()) {
-
-                String dataHoraFim = dataFim.getText().trim() + " " + horarioFim.getText().trim();
-                SessaoApp.provaAtual.setDataLimite(LocalDateTime.parse(dataHoraFim, formatter));
-            }
-        } catch (Exception e) {
-            Alert erro = new Alert(Alert.AlertType.ERROR);
-            erro.setTitle("Erro");
-            erro.setHeaderText("Formato de data/horário inválido");
-            erro.setContentText("Use o formato DD/MM/AAAA para datas e HH:MM para horários.");
-            erro.showAndWait();
-            return;
-        }
+        SessaoApp.provaAtual.setDataInicial(dataInicialParsed);
+        SessaoApp.provaAtual.setDataLimite(dataLimiteParsed);
 
         App.setRoot("professorFluxo/FormEditor");
+    }
+
+    private void mostrarErro(String cabecalho, String conteudo) {
+        Alert erro = new Alert(Alert.AlertType.ERROR);
+        erro.setTitle("Erro");
+        erro.setHeaderText(cabecalho);
+        erro.setContentText(conteudo);
+        erro.showAndWait();
     }
 
     @FXML

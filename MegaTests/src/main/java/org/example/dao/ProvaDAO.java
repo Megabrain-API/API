@@ -17,8 +17,6 @@ public class ProvaDAO {
         String sqlQuestao = "INSERT INTO mg_questoes (tipo, enunciado, gabarito) VALUES (?, ?, ?)";
         String sqlAssociativa = "INSERT INTO mg_prova_questao (id_prova, id_questao, ordem) VALUES (?, ?, ?)";
         String sqlAlternativa = "INSERT INTO mg_questao_alternativa (id_questao, ordem, texto, correta) VALUES (?, ?, ?, ?)";
-        String sqlItemCorrespondencia = "INSERT INTO mg_questao_correspondencia_item (id_questao, ordem, texto) VALUES (?, ?, ?)";
-        String sqlOpcaoCorrespondencia = "INSERT INTO mg_questao_correspondencia_alternativa (id_questao, texto, numero_correto) VALUES (?, ?, ?)";
 
         try (Connection conn = new ConexaoDAO().conectaBD()) {
             // Tudo é salvo dentro de uma única transação. Se qualquer etapa falhar,
@@ -119,43 +117,20 @@ public class ProvaDAO {
                         stmtAssoc.setInt(3, ordemQuestao++);
                         stmtAssoc.executeUpdate();
                     }
-                    // Tratamento isolado por tipo de questão (Evita duplicação e usa as queries certas)
-                    if (Questao.CORRESPONDENCIA.equals(q.getTipo())) {
-                        // Salva os itens numerados da correspondência
-                        for (int i = 0; i < q.getItensCorrespondencia().size(); i++) {
-                            try (PreparedStatement stmt = conn.prepareStatement(sqlItemCorrespondencia)) {
-                                stmt.setLong(1, idQuestao);
-                                stmt.setInt(2, i + 1);
-                                stmt.setString(3, q.getItensCorrespondencia().get(i));
-                                stmt.executeUpdate();
-                            }
-                        }
 
-                        // Salva as opções e o número correto da correspondência
-                        for (int i = 0; i < q.getAlternativasCorrespondencia().size(); i++) {
-                            try (PreparedStatement stmt = conn.prepareStatement(sqlOpcaoCorrespondencia)) {
-                                stmt.setLong(1, idQuestao);
-                                stmt.setString(2, q.getAlternativasCorrespondencia().get(i));
-                                stmt.setInt(3, q.getGabaritoCorrespondencia().get(i));
-                                stmt.executeUpdate();
-                            }
-                        }
-                    }
-                    else if (!Questao.DISSERTATIVA.equals(q.getTipo())) {
-                        // Salva as alternativas comuns APENAS UMA VEZ para Múltipla Escolha e Checklist
-                        List<String> alternativas = q.getAlternativas();
-                        List<Integer> respostasCorretas = q.getRespostasCorretas();
+                    // Salva as alternativas das questões objetivas/checklist.
+                    List<String> alternativas = q.getAlternativas();
+                    List<Integer> respostasCorretas = q.getRespostasCorretas();
 
-                        for (int i = 0; i < alternativas.size(); i++) {
-                            boolean correta = respostasCorretas.contains(i);
+                    for (int i = 0; i < alternativas.size(); i++) {
+                        boolean correta = respostasCorretas.contains(i);
 
-                            try (PreparedStatement stmtAlternativa = conn.prepareStatement(sqlAlternativa)) {
-                                stmtAlternativa.setLong(1, idQuestao);
-                                stmtAlternativa.setInt(2, i + 1);
-                                stmtAlternativa.setString(3, alternativas.get(i));
-                                stmtAlternativa.setBoolean(4, correta);
-                                stmtAlternativa.executeUpdate();
-                            }
+                        try (PreparedStatement stmtAlternativa = conn.prepareStatement(sqlAlternativa)) {
+                            stmtAlternativa.setLong(1, idQuestao);
+                            stmtAlternativa.setInt(2, i + 1);
+                            stmtAlternativa.setString(3, alternativas.get(i));
+                            stmtAlternativa.setBoolean(4, correta);
+                            stmtAlternativa.executeUpdate();
                         }
                     }
                 }
@@ -178,19 +153,7 @@ public class ProvaDAO {
         if (Questao.DISSERTATIVA.equalsIgnoreCase(questao.getTipo())) {
             return questao.getRespostaModelo() == null ? "" : questao.getRespostaModelo();
         }
-        if (Questao.CORRESPONDENCIA.equals(questao.getTipo())) {
-            List<String> partes = new ArrayList<>();
 
-            for (int i = 0; i < questao.getAlternativasCorrespondencia().size(); i++) {
-
-                String texto = questao.getAlternativasCorrespondencia().get(i);
-
-                Integer numero = questao.getGabaritoCorrespondencia().get(i);
-
-                partes.add(texto + "=" + numero);
-            }
-            return String.join(" | ", partes);
-        }
         List<String> alternativasCorretas = new ArrayList<>();
         List<String> alternativas = questao.getAlternativas();
         for (Integer indice : questao.getRespostasCorretas()) {
@@ -201,91 +164,6 @@ public class ProvaDAO {
         return String.join(" | ", alternativasCorretas);
     }
 
-    public Prova buscarProvaCompletaParaProfessor(int idProva) {
-        // Reutiliza a lógica base de buscar a prova
-        Prova prova = buscarProvaCompleta(idProva);
-        if (prova == null) {
-            return null;
-        }
-
-        String sqlAlternativasComGabarito = "SELECT texto, correta FROM mg_questao_alternativa " +
-                "WHERE id_questao = ? ORDER BY ordem";
-
-        String sqlItensCorrespondencia = "SELECT ordem, texto FROM mg_questao_correspondencia_item " +
-                "WHERE id_questao = ? ORDER BY ordem";
-
-        String sqlAlternativasCorrespondencia = "SELECT texto, numero_correto FROM mg_questao_correspondencia_alternativa " +
-                "WHERE id_questao = ? ORDER BY id";
-
-        try (Connection conn = new ConexaoDAO().conectaBD()) {
-            for (Questao questao : prova.getQuestoes()) {
-
-                // Se for Múltipla Escolha ou Checklist, carrega as corretas
-                if (Questao.DISSERTATIVA.equals(questao.getTipo())) {
-                    String gabaritoDissertativa = "";
-                    // Tem um select proprio pra referencia da dissertativa
-                    try (PreparedStatement stmtGab = conn.prepareStatement("SELECT gabarito FROM mg_questoes WHERE id = ?")) {
-                        stmtGab.setLong(1, questao.getId());
-
-                        try (ResultSet rsGab = stmtGab.executeQuery()) {
-                            if (rsGab.next()) {
-                                gabaritoDissertativa = rsGab.getString("gabarito");
-                            }
-                        }
-                    }
-                    questao.setRespostaModelo(gabaritoDissertativa);
-                }
-                //Se for Correspondência, garante que os itens e o gabarito vêm preenchidos
-                else if (Questao.CORRESPONDENCIA.equals(questao.getTipo())) {
-                    questao.getItensCorrespondencia().clear();
-                    questao.getAlternativasCorrespondencia().clear();
-                    questao.getGabaritoCorrespondencia().clear();
-
-                    try (PreparedStatement stmtItens = conn.prepareStatement(sqlItensCorrespondencia)) {
-                        stmtItens.setLong(1, questao.getId());
-                        try (ResultSet rs = stmtItens.executeQuery()) {
-                            while (rs.next()) {
-                                questao.getItensCorrespondencia().add(rs.getString("texto"));
-                            }
-                        }
-                    }
-
-                    try (PreparedStatement stmtOpcoes = conn.prepareStatement(sqlAlternativasCorrespondencia)) {
-                        stmtOpcoes.setLong(1, questao.getId());
-                        try (ResultSet rs = stmtOpcoes.executeQuery()) {
-                            while (rs.next()) {
-                                questao.getAlternativasCorrespondencia().add(rs.getString("texto"));
-                                questao.getGabaritoCorrespondencia().add(rs.getInt("numero_correto"));
-                            }
-                        }
-                    }
-                }
-                // Se for Múltipla Escolha ou Checklist, AGORA EXECUTA O SELECT E CARREGA AS CORRETAS aaaaaaaa
-                else {
-                    questao.getRespostasCorretas().clear();
-
-                    try (PreparedStatement stmt = conn.prepareStatement(sqlAlternativasComGabarito)) {
-                        stmt.setLong(1, questao.getId());
-
-                        try (ResultSet rs = stmt.executeQuery()) {
-                            int indice = 0;
-                            while (rs.next()) {
-                                boolean correta = rs.getBoolean("correta");
-                                if (correta) {
-                                    questao.getRespostasCorretas().add(indice);
-                                }
-                                indice++;
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return prova;
-    }
 
     public Prova buscarProvaCompleta(int idProva) {
         String sqlProva = "SELECT p.id, p.nome, p.data_inicial, p.data_limite, p.duracao_minutos, d.nome AS disciplina " +
@@ -293,28 +171,14 @@ public class ProvaDAO {
                 "INNER JOIN mg_disciplina d ON p.id_disciplina = d.id " +
                 "WHERE p.id = ?";
 
-        String sqlQuestoes =
-                "SELECT q.id, q.tipo, q.enunciado, " +
-                        "COALESCE(SUM(CASE WHEN a.correta = TRUE THEN 1 ELSE 0 END), 0) AS quantidade_corretas, " +
-                        "COUNT(DISTINCT ci.id) AS quantidade_itens_correspondencia " +
-                        "FROM mg_prova_questao pq " +
-                        "INNER JOIN mg_questoes q ON pq.id_questao = q.id " +
-                        "LEFT JOIN mg_questao_alternativa a ON a.id_questao = q.id " +
-                        "LEFT JOIN mg_questao_correspondencia_item ci ON ci.id_questao = q.id " +
-                        "WHERE pq.id_prova = ? " +
-                        "GROUP BY q.id, q.tipo, q.enunciado, pq.ordem " +
-                        "ORDER BY pq.ordem";
-        String sqlItensCorrespondencia =
-                "SELECT ordem, texto " +
-                        "FROM mg_questao_correspondencia_item " +
-                        "WHERE id_questao = ? " +
-                        "ORDER BY ordem";
-
-        String sqlAlternativasCorrespondencia =
-                "SELECT texto, numero_correto " +
-                        "FROM mg_questao_correspondencia_alternativa " +
-                        "WHERE id_questao = ? " +
-                        "ORDER BY id";
+        String sqlQuestoes = "SELECT q.id, q.tipo, q.enunciado, " +
+                "COALESCE(SUM(CASE WHEN a.correta = TRUE THEN 1 ELSE 0 END), 0) AS quantidade_corretas " +
+                "FROM mg_prova_questao pq " +
+                "INNER JOIN mg_questoes q ON pq.id_questao = q.id " +
+                "LEFT JOIN mg_questao_alternativa a ON a.id_questao = q.id " +
+                "WHERE pq.id_prova = ? " +
+                "GROUP BY q.id, q.tipo, q.enunciado, pq.ordem " +
+                "ORDER BY pq.ordem";
 
         String sqlAlternativas = "SELECT texto FROM mg_questao_alternativa " +
                 "WHERE id_questao = ? ORDER BY ordem";
@@ -366,71 +230,21 @@ public class ProvaDAO {
                         questao.setId(idQuestao);
                         questao.setEnunciado(rsQuestoes.getString("enunciado"));
 
-                        int quantidadeItensCorrespondencia =
-                                rsQuestoes.getInt("quantidade_itens_correspondencia");
-
                         if ("Dissertativa".equalsIgnoreCase(tipoBanco)) {
-
                             questao.setTipo(Questao.DISSERTATIVA);
-
-                        } else if (quantidadeItensCorrespondencia > 0) {
-
-                            questao.setTipo(Questao.CORRESPONDENCIA);
-
                         } else if (quantidadeCorretas > 1) {
-
                             questao.setTipo(Questao.CHECKLIST);
-
                         } else {
-
                             questao.setTipo(Questao.MULTIPLA_ESCOLHA);
-                        }if (Questao.CORRESPONDENCIA.equals(questao.getTipo())) {
+                        }
 
-                            try (PreparedStatement stmt =
-                                         conn.prepareStatement(sqlItensCorrespondencia)) {
-
-                                stmt.setLong(1, idQuestao);
-
-                                try (ResultSet rs = stmt.executeQuery()) {
-
-                                    while (rs.next()) {
-                                        questao.getItensCorrespondencia()
-                                                .add(rs.getString("texto"));
-                                    }
-                                }
-                            }
-
-                            try (PreparedStatement stmt =
-                                         conn.prepareStatement(sqlAlternativasCorrespondencia)) {
-
-                                stmt.setLong(1, idQuestao);
-
-                                try (ResultSet rs = stmt.executeQuery()) {
-
-                                    while (rs.next()) {
-
-                                        questao.getAlternativasCorrespondencia()
-                                                .add(rs.getString("texto"));
-
-                                        questao.getGabaritoCorrespondencia()
-                                                .add(rs.getInt("numero_correto"));
-                                    }
-                                }
-                            }
-
-                        } else if (!Questao.DISSERTATIVA.equals(questao.getTipo())) {
-
-                            try (PreparedStatement stmtAlternativas =
-                                         conn.prepareStatement(sqlAlternativas)) {
-
+                        if (!Questao.DISSERTATIVA.equals(questao.getTipo())) {
+                            try (PreparedStatement stmtAlternativas = conn.prepareStatement(sqlAlternativas)) {
                                 stmtAlternativas.setLong(1, idQuestao);
 
-                                try (ResultSet rsAlternativas =
-                                             stmtAlternativas.executeQuery()) {
-
+                                try (ResultSet rsAlternativas = stmtAlternativas.executeQuery()) {
                                     while (rsAlternativas.next()) {
-                                        questao.getAlternativas()
-                                                .add(rsAlternativas.getString("texto"));
+                                        questao.getAlternativas().add(rsAlternativas.getString("texto"));
                                     }
                                 }
                             }
@@ -463,11 +277,6 @@ public class ProvaDAO {
                 "INNER JOIN mg_disciplina d ON d.id = cd.id_disciplina " +
                 "INNER JOIN mg_provas p ON p.id_disciplina = d.id " +
                 "WHERE a.ra = ? " +
-                "AND NOT EXISTS (" +
-                "SELECT 1 FROM mg_resposta_aluno r " +
-                "WHERE r.ra_aluno = a.ra " +
-                "AND r.id_prova = p.id" +
-                ") " +
                 "ORDER BY d.nome, p.nome";
 
         try (Connection conn = new ConexaoDAO().conectaBD();
