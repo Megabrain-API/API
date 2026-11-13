@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * Guarda tudo o que o professor precisa para corrigir visualmente uma questão:
- * enunciado, resposta do aluno, gabarito e alternativas.
+ * enunciado, resposta do aluno, gabarito, alternativas, valor máximo e nota obtida.
  */
 public class RespostaAlunoProva {
 
@@ -15,7 +15,11 @@ public class RespostaAlunoProva {
     private String enunciado;
     private String respostaAluno;
     private String gabarito;
+    private double pontosQuestao = 1.0;
+    private double nota;
     private boolean correta;
+    private boolean corrigida;
+    private String detalheCorrecao;
     private final List<AlternativaCorrecao> alternativas = new ArrayList<>();
 
     public long getIdQuestao() {
@@ -66,12 +70,48 @@ public class RespostaAlunoProva {
         this.gabarito = gabarito;
     }
 
+    public double getPontosQuestao() {
+        return pontosQuestao;
+    }
+
+    public void setPontosQuestao(double pontosQuestao) {
+        this.pontosQuestao = pontosQuestao;
+    }
+
+    public double getNota() {
+        return nota;
+    }
+
+    public void setNota(double nota) {
+        this.nota = nota;
+    }
+
     public boolean isCorreta() {
         return correta;
     }
 
     public void setCorreta(boolean correta) {
         this.correta = correta;
+    }
+
+    public boolean isCorrigida() {
+        return corrigida;
+    }
+
+    public void setCorrigida(boolean corrigida) {
+        this.corrigida = corrigida;
+    }
+
+    public String getDetalheCorrecao() {
+        return detalheCorrecao;
+    }
+
+    public void setDetalheCorrecao(String detalheCorrecao) {
+        this.detalheCorrecao = detalheCorrecao;
+    }
+
+    public boolean isParcial() {
+        return corrigida && nota > 0.0001 && nota < (pontosQuestao - 0.0001);
     }
 
     public List<AlternativaCorrecao> getAlternativas() {

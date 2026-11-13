@@ -174,6 +174,61 @@ PREPARE stmt_mg_provas_duracao FROM @sql_mg_provas_duracao;
 EXECUTE stmt_mg_provas_duracao;
 DEALLOCATE PREPARE stmt_mg_provas_duracao;
 
+-- Coluna 'pontos' em mg_questoes (garante compatibilidade caso o banco seja antigo)
+SET @mg_questoes_tem_pontos = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_questoes'
+      AND COLUMN_NAME = 'pontos'
+);
+SET @sql_mg_questoes_pontos = IF(
+    @mg_questoes_tem_pontos = 0,
+    'ALTER TABLE mg_questoes ADD COLUMN pontos DECIMAL(3,2) NOT NULL DEFAULT 1.00',
+    'SELECT 1'
+);
+PREPARE stmt_mg_questoes_pontos FROM @sql_mg_questoes_pontos;
+EXECUTE stmt_mg_questoes_pontos;
+DEALLOCATE PREPARE stmt_mg_questoes_pontos;
+
+-- Coluna 'correta' em mg_resposta_aluno (NULL = pendente de correção manual, 1 = correta/parcial, 0 = incorreta)
+SET @mg_resp_tem_correta = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_resposta_aluno'
+      AND COLUMN_NAME = 'correta'
+);
+SET @sql_mg_resp_correta = IF(
+    @mg_resp_tem_correta = 0,
+    'ALTER TABLE mg_resposta_aluno ADD COLUMN correta TINYINT(1) NULL DEFAULT NULL',
+    'SELECT 1'
+);
+PREPARE stmt_mg_resp_correta FROM @sql_mg_resp_correta;
+EXECUTE stmt_mg_resp_correta;
+DEALLOCATE PREPARE stmt_mg_resp_correta;
+
+-- Coluna 'nota_total' em mg_aluno_prova para devolver a nota final calculada ao aluno
+SET @mg_ap_tem_nota_total = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_aluno_prova'
+      AND COLUMN_NAME = 'nota_total'
+);
+SET @sql_mg_ap_nota_total = IF(
+    @mg_ap_tem_nota_total = 0,
+    'ALTER TABLE mg_aluno_prova ADD COLUMN nota_total DECIMAL(5,2) NULL DEFAULT NULL',
+    'SELECT 1'
+);
+PREPARE stmt_mg_ap_nota_total FROM @sql_mg_ap_nota_total;
+EXECUTE stmt_mg_ap_nota_total;
+DEALLOCATE PREPARE stmt_mg_ap_nota_total;
+
+-- Atualiza o ENUM de status em mg_aluno_prova para aceitar 'CORRIGIDA'
+ALTER TABLE mg_aluno_prova
+    MODIFY COLUMN status ENUM('EM_ANDAMENTO', 'FINALIZADA', 'EXPIRADA', 'CORRIGIDA') NOT NULL DEFAULT 'EM_ANDAMENTO';
+
 -- (Mantenha todas as suas criações de tabelas e migrações que já estão no seu arquivo...)
 
 -- Dados de Cursos
