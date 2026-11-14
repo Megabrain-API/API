@@ -252,7 +252,7 @@ public class TurmasProfessorController implements Initializable {
         alunoSelecionado = aluno;
 
         try {
-            App.setRoot("professorFluxo/resposta_aluno_professor");
+            App.setRoot("professorFluxo/TelaCorrecao");
         } catch (IOException erro) {
             tratarErroCarregamento("Não foi possível abrir a prova respondida.", erro);
         }

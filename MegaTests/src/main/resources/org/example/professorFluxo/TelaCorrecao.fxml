@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane prefHeight="650.0" prefWidth="980.0" styleClass="fundo-inicio" stylesheets="@../estilo.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.profControllers.TelaCorrecaoController">
+
+    <left>
+        <fx:include source="BarraLateralProf.fxml" />
+    </left>
+
+    <center>
+        <BorderPane>
+            <top>
+                <VBox spacing="10.0" style="-fx-background-color: rgba(255,255,255,0.95); -fx-border-color: transparent transparent #dce1e7 transparent;">
+                    <padding>
+                        <Insets bottom="14.0" left="24.0" right="24.0" top="16.0" />
+                    </padding>
+
+                    <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1B1B1B;" text="Correção de prova" />
+
+                    <HBox alignment="CENTER_LEFT" spacing="28.0">
+                        <VBox spacing="2.0">
+                            <Label style="-fx-text-fill: #687386; -fx-font-size: 11px;" text="Aluno" />
+                            <Label fx:id="lblNomeAluno" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1B1B1B;" text="Nome do aluno" />
+                        </VBox>
+
+                        <VBox spacing="2.0">
+                            <Label style="-fx-text-fill: #687386; -fx-font-size: 11px;" text="RA" />
+                            <Label fx:id="lblRaAluno" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1B1B1B;" text="000000" />
+                        </VBox>
+
+                        <VBox spacing="2.0">
+                            <Label style="-fx-text-fill: #687386; -fx-font-size: 11px;" text="Prova" />
+                            <Label fx:id="lblNomeProva" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1B1B1B;" text="Nome da prova" />
+                        </VBox>
+                    </HBox>
+                </VBox>
+            </top>
+
+            <center>
+                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent;">
+                    <content>
+                        <VBox fx:id="vboxQuestoes" fillWidth="true" spacing="14.0">
+                            <padding>
+                                <Insets bottom="20.0" left="24.0" right="24.0" top="20.0" />
+                            </padding>
+                        </VBox>
+                    </content>
+                </ScrollPane>
+            </center>
+
+            <bottom>
+                <VBox style="-fx-background-color: rgba(255,255,255,0.96); -fx-border-color: #dce1e7 transparent transparent transparent;">
+                    <padding>
+                        <Insets bottom="14.0" left="24.0" right="24.0" top="14.0" />
+                    </padding>
+
+                    <HBox alignment="CENTER_LEFT" spacing="16.0">
+                        <Label fx:id="lblQuestoesCorrigidas" style="-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #1B1B1B;" text="Questões corrigidas: 0/0" />
+                        <Label fx:id="lblNotaTotal" style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #285A36; -fx-background-color: #DDEEE2; -fx-background-radius: 6px; -fx-padding: 5px 10px;" text="Nota total: 0,00 / 0,00" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnVoltar" onAction="#voltarParaTurmas" prefHeight="36.0" prefWidth="140.0" style="-fx-background-radius: 8px; -fx-cursor: hand;" text="Voltar aos alunos" />
+                        <Button fx:id="btnSalvar" onAction="#salvarRascunhoCorrecao" prefHeight="36.0" prefWidth="135.0" style="-fx-background-radius: 8px; -fx-cursor: hand;" text="Salvar rascunho" />
+                        <Button fx:id="btnFinalizar" onAction="#finalizarCorrecao" prefHeight="36.0" prefWidth="175.0" style="-fx-background-color: #4A7C59; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-cursor: hand;" text="Finalizar correção" />
+                    </HBox>
+                </VBox>
+            </bottom>
+        </BorderPane>
+    </center>
+
+</BorderPane>

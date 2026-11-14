@@ -102,6 +102,7 @@ public class ProvaDAO {
                         stmtQuestao.setString(1, tipoBanco);
                         stmtQuestao.setString(2, q.getEnunciado());
                         stmtQuestao.setString(3, gabarito);
+                        stmtQuestao.setDouble(4, q.getPontos()); // Persiste os pontos salvos na Questao
                         stmtQuestao.executeUpdate();
 
                         try (ResultSet rsQuestaoKeys = stmtQuestao.getGeneratedKeys()) {
@@ -362,15 +363,15 @@ public class ProvaDAO {
                         int quantidadeCorretas = rsQuestoes.getInt("quantidade_corretas");
 
                         Questao questao = new Questao();
-                        // Guarda o ID para que a resposta do aluno possa ser ligada à questão correta.
+                        // Guarda o ID e a pontuação da questão trazida do MySQL
                         questao.setId(idQuestao);
                         questao.setEnunciado(rsQuestoes.getString("enunciado"));
+                        questao.setPontos(rsQuestoes.getDouble("pontos"));
 
                         int quantidadeItensCorrespondencia =
                                 rsQuestoes.getInt("quantidade_itens_correspondencia");
 
                         if ("Dissertativa".equalsIgnoreCase(tipoBanco)) {
-
                             questao.setTipo(Questao.DISSERTATIVA);
 
                         } else if (quantidadeItensCorrespondencia > 0) {
@@ -463,6 +464,13 @@ public class ProvaDAO {
                 "INNER JOIN mg_disciplina d ON d.id = cd.id_disciplina " +
                 "INNER JOIN mg_provas p ON p.id_disciplina = d.id " +
                 "WHERE a.ra = ? " +
+                "AND (p.data_inicial IS NULL OR p.data_inicial <= NOW()) " +
+                "AND (p.data_limite IS NULL OR p.data_limite >= NOW()) " +
+                "AND NOT EXISTS (" +
+                "SELECT 1 FROM mg_resposta_aluno r " +
+                "WHERE r.ra_aluno = a.ra " +
+                "AND r.id_prova = p.id" +
+                ") " +
                 "ORDER BY d.nome, p.nome";
 
         try (Connection conn = new ConexaoDAO().conectaBD();
@@ -560,6 +568,6 @@ public class ProvaDAO {
         }
         System.out.println("Total de provas carregadas: " + listaProvas.size());
         return listaProvas;
-    } //Fecha listaNomeProvas
+    }
 
 }
