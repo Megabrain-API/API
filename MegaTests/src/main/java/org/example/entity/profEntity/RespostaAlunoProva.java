@@ -17,16 +17,17 @@ public class RespostaAlunoProva {
     private String gabarito;
     private double pontosQuestao = 1.0;
     private double nota;
+    private double notaAutomatica;
     private boolean correta;
     private boolean corrigida;
     private String detalheCorrecao;
     private final List<AlternativaCorrecao> alternativas = new ArrayList<>();
 
     private List<String> itensCorrespondencia = new ArrayList<>();
+
     public List<String> getItensCorrespondencia() {
         return itensCorrespondencia;
     }
-
 
     public long getIdQuestao() {
         return idQuestao;
@@ -90,6 +91,14 @@ public class RespostaAlunoProva {
 
     public void setNota(double nota) {
         this.nota = nota;
+    }
+
+    public double getNotaAutomatica() {
+        return notaAutomatica;
+    }
+
+    public void setNotaAutomatica(double notaAutomatica) {
+        this.notaAutomatica = notaAutomatica;
     }
 
     public boolean isCorreta() {

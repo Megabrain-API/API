@@ -14,7 +14,7 @@ public class ProvaDAO {
         // Queries usadas durante o salvamento completo da prova.
         String sqlBuscaDisciplina = "SELECT id FROM mg_disciplina WHERE nome = ?";
         String sqlProva = "INSERT INTO mg_provas (nome, data_inicial, data_limite, duracao_minutos, id_disciplina, matricula_professor) VALUES (?, ?, ?, ?, ?, ?)";
-        String sqlQuestao = "INSERT INTO mg_questoes (tipo, enunciado, gabarito) VALUES (?, ?, ?)";
+        String sqlQuestao = "INSERT INTO mg_questoes (tipo, enunciado, gabarito, pontos) VALUES (?, ?, ?, ?)";
         String sqlAssociativa = "INSERT INTO mg_prova_questao (id_prova, id_questao, ordem) VALUES (?, ?, ?)";
         String sqlAlternativa = "INSERT INTO mg_questao_alternativa (id_questao, ordem, texto, correta) VALUES (?, ?, ?, ?)";
         String sqlItemCorrespondencia = "INSERT INTO mg_questao_correspondencia_item (id_questao, ordem, texto) VALUES (?, ?, ?)";
@@ -295,7 +295,7 @@ public class ProvaDAO {
                 "WHERE p.id = ?";
 
         String sqlQuestoes =
-                "SELECT q.id, q.tipo, q.enunciado, " +
+                "SELECT q.id, q.tipo, q.enunciado, q.pontos, " +
                         "COALESCE(SUM(CASE WHEN a.correta = TRUE THEN 1 ELSE 0 END), 0) AS quantidade_corretas, " +
                         "COUNT(DISTINCT ci.id) AS quantidade_itens_correspondencia " +
                         "FROM mg_prova_questao pq " +
@@ -303,7 +303,7 @@ public class ProvaDAO {
                         "LEFT JOIN mg_questao_alternativa a ON a.id_questao = q.id " +
                         "LEFT JOIN mg_questao_correspondencia_item ci ON ci.id_questao = q.id " +
                         "WHERE pq.id_prova = ? " +
-                        "GROUP BY q.id, q.tipo, q.enunciado, pq.ordem " +
+                        "GROUP BY q.id, q.tipo, q.enunciado, q.pontos, pq.ordem " +
                         "ORDER BY pq.ordem";
         String sqlItensCorrespondencia =
                 "SELECT ordem, texto " +

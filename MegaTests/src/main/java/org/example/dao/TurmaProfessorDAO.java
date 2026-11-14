@@ -14,8 +14,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -158,7 +160,7 @@ public class TurmaProfessorDAO {
      * Carrega a prova respondida pelo aluno e calcula a pontuação por questão:
      * - Múltipla escolha: tudo ou nada
      * - Checklist: proporcional aos acertos líquidos
-     * - Correspondência: proporcional aos pares corretos
+     * - Correspondência: proporcional aos pares corretos (interpretando número e texto do item)
      * - Dissertativa: carrega a nota manual salva ou deixa pendente para avaliação
      */
     public List<RespostaAlunoProva> buscarRespostasDoAluno(int idProva,
@@ -187,11 +189,15 @@ public class TurmaProfessorDAO {
                         "WHERE id_questao = ? " +
                         "ORDER BY ordem";
 
+        String sqlOpcoesCorrespondencia =
+                "SELECT texto, numero_correto " +
+                        "FROM mg_questao_correspondencia_alternativa " +
+                        "WHERE id_questao = ? " +
+                        "ORDER BY id";
+
         String sqlAlternativas = "SELECT texto, correta " +
                 "FROM mg_questao_alternativa " +
                 "WHERE id_questao = ? ORDER BY ordem";
-
-        String sqlQuantidadeItens = "SELECT COUNT(*) FROM mg_questao_correspondencia_item WHERE id_questao = ?";
 
         try (Connection conn = new ConexaoDAO().conectaBD();
              PreparedStatement stmtQuestoes = conn.prepareStatement(sqlQuestoes);
@@ -233,25 +239,42 @@ public class TurmaProfessorDAO {
                     }
 
                     if (Questao.CORRESPONDENCIA.equals(resposta.getTipo())) {
+                        Map<Integer, String> itensPorOrdem = new LinkedHashMap<>();
 
-                        try (PreparedStatement stmtItens =
-                                     conn.prepareStatement(sqlItensCorrespondencia)) {
-
+                        try (PreparedStatement stmtItens = conn.prepareStatement(sqlItensCorrespondencia)) {
                             stmtItens.setLong(1, idQuestao);
-
                             try (ResultSet rsItens = stmtItens.executeQuery()) {
-
                                 while (rsItens.next()) {
-                                    resposta.getItensCorrespondencia().add(
-                                            rsItens.getString("texto")
-                                    );
+                                    int ordemItem = rsItens.getInt("ordem");
+                                    String textoItem = rsItens.getString("texto");
+                                    itensPorOrdem.put(ordemItem, textoItem);
+                                    resposta.getItensCorrespondencia().add(textoItem);
                                 }
                             }
                         }
-                    }
 
+                        Map<String, Integer> numeroCorretoPorOpcao = new LinkedHashMap<>();
+                        try (PreparedStatement stmtOpcoes = conn.prepareStatement(sqlOpcoesCorrespondencia)) {
+                            stmtOpcoes.setLong(1, idQuestao);
+                            try (ResultSet rsOpcoes = stmtOpcoes.executeQuery()) {
+                                while (rsOpcoes.next()) {
+                                    String opcao = rsOpcoes.getString("texto");
+                                    int numCorreto = rsOpcoes.getInt("numero_correto");
+                                    numeroCorretoPorOpcao.put(opcao, numCorreto);
+                                }
+                            }
+                        }
 
-                    if (Questao.DISSERTATIVA.equals(resposta.getTipo())) {
+                        resposta.setCorrigida(true);
+                        avaliarCorrespondencia(
+                                resposta,
+                                respostaAluno,
+                                gabarito,
+                                itensPorOrdem,
+                                numeroCorretoPorOpcao,
+                                pontosQuestao
+                        );
+                    } else if (Questao.DISSERTATIVA.equals(resposta.getTipo())) {
                         Object corretaSalvaObj = rs.getObject("correta_salva");
                         BigDecimal notaSalva = rs.getBigDecimal("nota_salva");
 
@@ -301,6 +324,123 @@ public class TurmaProfessorDAO {
         return respostas;
     }
 
+    /**
+     * Interpreta os números escolhidos pelo aluno (ex: "Mr. Raiado=3") cruzando com
+     * os itens numerados ("3 -> Amigo") e calcula a pontuação proporcional.
+     */
+    private void avaliarCorrespondencia(RespostaAlunoProva resposta,
+                                        String respostaAluno,
+                                        String gabaritoBruto,
+                                        Map<Integer, String> itensPorOrdem,
+                                        Map<String, Integer> numeroCorretoPorOpcao,
+                                        double pontosQuestao) {
+        Map<String, String> numeroEsperadoPorOpcao = new LinkedHashMap<>();
+        Map<String, String> textoEsperadoPorOpcao = new LinkedHashMap<>();
+        List<String> gabaritoLegivel = new ArrayList<>();
+
+        if (!numeroCorretoPorOpcao.isEmpty()) {
+            for (Map.Entry<String, Integer> entry : numeroCorretoPorOpcao.entrySet()) {
+                String opcao = entry.getKey();
+                int numCorreto = entry.getValue();
+                String nomeItem = itensPorOrdem.getOrDefault(numCorreto, String.valueOf(numCorreto));
+
+                String chaveOpcao = normalizar(opcao);
+                numeroEsperadoPorOpcao.put(chaveOpcao, String.valueOf(numCorreto));
+                textoEsperadoPorOpcao.put(chaveOpcao, normalizar(nomeItem));
+                gabaritoLegivel.add(opcao + " = " + numCorreto + " (" + nomeItem + ")");
+            }
+        } else if (!gabaritoBruto.isEmpty()) {
+            // Fallback caso a tabela de alternativas não tenha registros e o gabarito esteja só na coluna texto
+            Map<String, Integer> ordemPorTextoItem = new LinkedHashMap<>();
+            for (Map.Entry<Integer, String> item : itensPorOrdem.entrySet()) {
+                ordemPorTextoItem.put(normalizar(item.getValue()), item.getKey());
+            }
+
+            for (String par : gabaritoBruto.split("\\s*\\|\\s*|\\r?\\n")) {
+                String[] partes = par.split("=", 2);
+                if (partes.length == 2) {
+                    String opcao = partes[0].trim();
+                    String valorGab = partes[1].trim();
+                    String chaveOpcao = normalizar(opcao);
+
+                    Integer numEncontrado = ordemPorTextoItem.get(normalizar(valorGab));
+                    if (numEncontrado == null) {
+                        try {
+                            numEncontrado = Integer.parseInt(valorGab);
+                        } catch (NumberFormatException ignored) {
+                        }
+                    }
+
+                    if (numEncontrado != null) {
+                        String nomeItem = itensPorOrdem.getOrDefault(numEncontrado, valorGab);
+                        numeroEsperadoPorOpcao.put(chaveOpcao, String.valueOf(numEncontrado));
+                        textoEsperadoPorOpcao.put(chaveOpcao, normalizar(nomeItem));
+                        gabaritoLegivel.add(opcao + " = " + numEncontrado + " (" + nomeItem + ")");
+                    } else {
+                        textoEsperadoPorOpcao.put(chaveOpcao, normalizar(valorGab));
+                        gabaritoLegivel.add(opcao + " = " + valorGab);
+                    }
+                }
+            }
+        }
+
+        List<String> alunoLegivel = new ArrayList<>();
+        int totalPares = Math.max(numeroEsperadoPorOpcao.size(), textoEsperadoPorOpcao.size());
+        int paresCorretos = 0;
+
+        if (!respostaAluno.isEmpty()) {
+            for (String par : respostaAluno.split("\\s*\\|\\s*|\\r?\\n")) {
+                String[] partes = par.split("=", 2);
+                if (partes.length == 2) {
+                    String opcao = partes[0].trim();
+                    String valorAluno = partes[1].trim();
+                    String chaveOpcao = normalizar(opcao);
+                    String valorAlunoNorm = normalizar(valorAluno);
+
+                    String numEsperado = numeroEsperadoPorOpcao.get(chaveOpcao);
+                    String textoEsperado = textoEsperadoPorOpcao.get(chaveOpcao);
+
+                    boolean acertouPar = (numEsperado != null && valorAlunoNorm.equals(numEsperado))
+                            || (textoEsperado != null && valorAlunoNorm.equals(textoEsperado));
+
+                    if (acertouPar) {
+                        paresCorretos++;
+                    }
+
+                    // Formata a resposta do aluno mostrando o número e o nome do item correspondente
+                    try {
+                        int numEscolhido = Integer.parseInt(valorAluno);
+                        String nomeItem = itensPorOrdem.get(numEscolhido);
+                        if (nomeItem != null) {
+                            alunoLegivel.add(opcao + " = " + numEscolhido + " (" + nomeItem + ")");
+                        } else {
+                            alunoLegivel.add(opcao + " = " + valorAluno);
+                        }
+                    } catch (NumberFormatException e) {
+                        alunoLegivel.add(opcao + " = " + valorAluno);
+                    }
+                }
+            }
+        }
+
+        if (!gabaritoLegivel.isEmpty()) {
+            resposta.setGabarito(String.join(" | ", gabaritoLegivel));
+        }
+        if (!alunoLegivel.isEmpty()) {
+            resposta.setRespostaAluno(String.join(" | ", alunoLegivel));
+        }
+
+        double notaCalculada = totalPares > 0
+                ? arredondarDuasCasas(((double) paresCorretos / totalPares) * pontosQuestao)
+                : 0.0;
+
+        resposta.setNota(notaCalculada);
+        resposta.setCorreta(notaCalculada > 0.0);
+        resposta.setDetalheCorrecao(
+                paresCorretos + " de " + totalPares + " associações corretas"
+        );
+    }
+
     private void avaliarQuestaoAutomatica(RespostaAlunoProva resposta,
                                           String respostaAluno,
                                           String gabarito,
@@ -313,8 +453,10 @@ public class TurmaProfessorDAO {
 
             if (gabaritoSet.isEmpty()) {
                 boolean igual = normalizar(respostaAluno).equals(normalizar(gabarito));
+                double notaIgual = igual ? pontosQuestao : 0.0;
                 resposta.setCorreta(igual);
-                resposta.setNota(igual ? pontosQuestao : 0.0);
+                resposta.setNota(notaIgual);
+                resposta.setNotaAutomatica(notaIgual);
                 return;
             }
 
@@ -333,45 +475,14 @@ public class TurmaProfessorDAO {
             notaCalculada = arredondarDuasCasas(notaCalculada);
 
             resposta.setNota(notaCalculada);
+            resposta.setNotaAutomatica(notaCalculada); // <--- ADICIONA AQUI
             resposta.setCorreta(notaCalculada > 0.0);
             resposta.setDetalheCorrecao(
                     corretasMarcadas + " de " + gabaritoSet.size() + " corretas marcadas"
                             + (incorretasMarcadas > 0 ? " (" + incorretasMarcadas + " incorreta(s))" : "")
             );
             return;
-        }
-
-        if (Questao.CORRESPONDENCIA.equals(tipo)) {
-            List<String> paresGabarito = separarItensOrdenados(gabarito);
-            List<String> paresAluno = separarItensOrdenados(respostaAluno);
-
-            if (paresGabarito.isEmpty()) {
-                boolean igual = normalizar(respostaAluno).equals(normalizar(gabarito));
-                resposta.setCorreta(igual);
-                resposta.setNota(igual ? pontosQuestao : 0.0);
-                return;
-            }
-
-            Set<String> gabaritoSet = new HashSet<>(paresGabarito);
-            Set<String> alunoSet = new HashSet<>(paresAluno);
-
-            int paresCorretos = 0;
-            for (String par : alunoSet) {
-                if (gabaritoSet.contains(par)) {
-                    paresCorretos++;
                 }
-            }
-
-            double notaCalculada = ((double) paresCorretos / paresGabarito.size()) * pontosQuestao;
-            notaCalculada = arredondarDuasCasas(notaCalculada);
-
-            resposta.setNota(notaCalculada);
-            resposta.setCorreta(notaCalculada > 0.0);
-            resposta.setDetalheCorrecao(
-                    paresCorretos + " de " + paresGabarito.size() + " associações corretas"
-            );
-            return;
-        }
 
         // Múltipla escolha: tudo ou nada
         boolean acertou = normalizar(respostaAluno).equals(normalizar(gabarito));
@@ -467,23 +578,6 @@ public class TurmaProfessorDAO {
 
     private Set<String> separarRespostas(String valor) {
         Set<String> itens = new HashSet<>();
-
-        if (valor == null || valor.trim().isEmpty()) {
-            return itens;
-        }
-
-        for (String item : valor.split("\\s*\\|\\s*|\\r?\\n")) {
-            String normalizado = normalizar(item);
-            if (!normalizado.isEmpty()) {
-                itens.add(normalizado);
-            }
-        }
-
-        return itens;
-    }
-
-    private List<String> separarItensOrdenados(String valor) {
-        List<String> itens = new ArrayList<>();
 
         if (valor == null || valor.trim().isEmpty()) {
             return itens;
