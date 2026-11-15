@@ -22,3 +22,25 @@
 .barralateral .button:hover {
     -fx-background-color: #004d3b; /* Efeito de destaque levemente mais escuro ao passar o mouse */
 }
+/* Mantém o wallpaper visível atrás do cartão de dados pessoais. */
+.dados-pessoais-scroll,
+.dados-pessoais-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+.dados-pessoais-scroll {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+/* Campos de consulta sem foco ou seleção, com cantos arredondados. */
+.campo-dados-pessoais {
+    -fx-background-color: #f0f4f8;
+    -fx-background-radius: 8px;
+    -fx-background-insets: 0;
+    -fx-border-color: #d5dde5;
+    -fx-border-radius: 8px;
+    -fx-padding: 8px 12px;
+    -fx-text-fill: #15344b;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}

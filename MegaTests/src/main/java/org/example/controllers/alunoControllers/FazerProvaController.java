@@ -26,12 +26,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public class FazerProvaController implements Initializable {
 
@@ -133,6 +128,9 @@ public class FazerProvaController implements Initializable {
                 mostrarMensagemNaTela("A prova selecionada não foi encontrada no banco de dados.");
                 return;
             }
+            List<Questao> questoesEmbaralhadas = new ArrayList<>(provaAtual.getQuestoes());
+            Collections.shuffle(questoesEmbaralhadas);
+            provaAtual.setQuestoes(questoesEmbaralhadas);
 
             provaEmAndamento = true;
             montarInterfaceDaProva();

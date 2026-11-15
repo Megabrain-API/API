@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns="http://javafx.com/javafx/13" xmlns:fx="http://javafx.com/fxml/1"
+            fx:id="telaDados" fx:controller="org.example.controllers.DadosPessoaisController"
+            prefWidth="960" prefHeight="600" styleClass="fundo-inicio" stylesheets="@estilo.css">
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="dados-pessoais-scroll">
+            <content>
+                <VBox alignment="TOP_CENTER" spacing="20">
+                    <padding><Insets top="36" right="28" bottom="36" left="28"/></padding>
+                    <VBox maxWidth="560" spacing="18" style="-fx-background-color: white; -fx-background-radius: 16; -fx-padding: 30;">
+                        <Label text="Dados Pessoais" style="-fx-font-size: 27; -fx-font-weight: bold; -fx-text-fill: #15344b;"/>
+                        <Label fx:id="perfil" style="-fx-font-size: 14; -fx-text-fill: #526779;"/>
+                        <VBox spacing="6">
+                            <Label text="Nome"/>
+                            <TextField fx:id="nome" editable="false" focusTraversable="false" mouseTransparent="true" styleClass="campo-dados-pessoais" prefHeight="38"/>
+                        </VBox>
+                        <VBox spacing="6">
+                            <Label text="Email"/>
+                            <TextField fx:id="email" editable="false" focusTraversable="false" mouseTransparent="true" styleClass="campo-dados-pessoais" prefHeight="38"/>
+                        </VBox>
+                        <VBox spacing="6">
+                            <Label fx:id="identificadorLabel" text="RA"/>
+                            <TextField fx:id="identificador" editable="false" focusTraversable="false" mouseTransparent="true" styleClass="campo-dados-pessoais" prefHeight="38"/>
+                        </VBox>
+                        <VBox fx:id="grupoCurso" spacing="6">
+                            <Label text="Curso"/>
+                            <TextField fx:id="curso" editable="false" focusTraversable="false" mouseTransparent="true" styleClass="campo-dados-pessoais" prefHeight="38"/>
+                        </VBox>
+                        <Label fx:id="mensagem" visible="false" managed="false" wrapText="true"
+                               style="-fx-text-fill: #b42318; -fx-font-size: 13;"/>
+                        <Button fx:id="botaoVoltar" text="Voltar" onAction="#voltar" cancelButton="true" prefWidth="120" prefHeight="40"
+                                style="-fx-background-color: #00674f; -fx-text-fill: white; -fx-background-radius: 8; -fx-font-weight: bold;"/>
+                    </VBox>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>

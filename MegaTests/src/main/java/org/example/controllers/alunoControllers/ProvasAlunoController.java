@@ -242,7 +242,8 @@ public class ProvasAlunoController implements Initializable {
     }
 
     @FXML
-    void entra_dados_pessoais_alu(ActionEvent event) {
+    void entra_dados_pessoais_alu(ActionEvent event) throws IOException {
+        App.abrirDadosPessoais();
     }
 
     @FXML
