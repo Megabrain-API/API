@@ -88,7 +88,7 @@ public class PreviewFormularioController {
                     String opcaoTexto = questao.getAlternativasCorrespondencia().get(i);
                     Integer numCorreto = questao.getGabaritoCorrespondencia().get(i);
 
-                    Label gabLbl = new Label("  - " + opcaoTexto + " ──> Item [" + numCorreto + "]");
+                    Label gabLbl = new Label("  - " + opcaoTexto + " ──> Item [ " + numCorreto + "]");
                     gabLbl.setStyle("-fx-font-weight: bold; -fx-text-fill: #2e7d32;");
                     bloco.getChildren().add(gabLbl);
                 }

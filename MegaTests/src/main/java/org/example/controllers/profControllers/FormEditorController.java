@@ -47,6 +47,7 @@ public class FormEditorController {
     private static class EditorQuestao {
         private final VBox painel;
         private final TextField enunciado;
+        private final TextField pontos;
         private final ComboBox<String> tipo;
         private final VBox areaAlternativas;
         private final Label tituloAlternativas;
@@ -63,6 +64,7 @@ public class FormEditorController {
         private EditorQuestao(
                 VBox painel,
                 TextField enunciado,
+                TextField pontos,
                 ComboBox<String> tipo,
                 VBox areaAlternativas,
                 Label tituloAlternativas,
@@ -74,6 +76,7 @@ public class FormEditorController {
                 TextArea respostaModelo){
             this.painel = painel;
             this.enunciado = enunciado;
+            this.pontos = pontos;
             this.tipo = tipo;
             this.areaAlternativas = areaAlternativas;
             this.tituloAlternativas = tituloAlternativas;
@@ -99,7 +102,6 @@ public class FormEditorController {
             this.numeroCorreto = numeroCorreto;
         }
     }
-
 
     private static class EditorAlternativa {
         private final HBox painel;
@@ -127,6 +129,11 @@ public class FormEditorController {
         txtPergunta.setPromptText("Digite o enunciado da questão...");
         txtPergunta.setMaxWidth(Double.MAX_VALUE);
 
+        // Campo de pontuação inicia vazio usando promptText (marca d'água opaca)
+        TextField txtPontos = new TextField();
+        txtPontos.setPromptText("Ex: 1.0 (Padrão)");
+        txtPontos.setMaxWidth(180);
+
         ComboBox<String> cmbTipo = new ComboBox<>();
         cmbTipo.getItems().addAll(
                 "Múltipla escolha" ,
@@ -142,7 +149,6 @@ public class FormEditorController {
 
         Button btnAdicionarAlternativa = new Button("Adicionar alternativa");
 
-
         Label tituloModelo = new Label("Resposta de referência (opcional):");
         TextArea txtRespostaModelo = new TextArea();
         txtRespostaModelo.setPromptText("Digite uma resposta de referência...");
@@ -152,24 +158,18 @@ public class FormEditorController {
         VBox areaCorrespondencia = new VBox(10);
 
         Label tituloItens = new Label("Itens:");
-
         VBox areaItensCorrespondencia = new VBox(6);
-
         Button btnAdicionarItem = new Button("Adicionar item");
 
         Label tituloOpcoes = new Label("Alternativas:");
-
         VBox areaOpcoesCorrespondencia = new VBox(6);
-
         Button btnAdicionarOpcao = new Button("Adicionar Opção");
 
-
         EditorQuestao editor = new EditorQuestao(
-                painel, txtPergunta, cmbTipo, areaAlternativas,
-                tituloAlternativas, btnAdicionarAlternativa,areaCorrespondencia, areaItensCorrespondencia,
+                painel, txtPergunta, txtPontos, cmbTipo, areaAlternativas,
+                tituloAlternativas, btnAdicionarAlternativa, areaCorrespondencia, areaItensCorrespondencia,
                 areaOpcoesCorrespondencia, tituloModelo, txtRespostaModelo
-                );
-
+        );
 
         btnAdicionarItem.setOnAction(
                 event -> adicionarItemCorrespondencia(editor)
@@ -201,6 +201,9 @@ public class FormEditorController {
                 titulo,
                 new Label("Tipo de questão:"),
                 cmbTipo,
+                new Label("Pontuação / Valor da questão:"),
+                txtPontos,
+                new Label("Enunciado:"),
                 txtPergunta,
                 tituloAlternativas,
                 areaAlternativas,
@@ -225,7 +228,6 @@ public class FormEditorController {
         // Visível apenas para Múltipla Escolha ou Checklist numerado
         boolean objetivaOuChecklist = !dissertativa && !correspondencia;
 
-
         // Controle das alternativas comuns (Múltipla escolha / Checklist)
         editor.areaAlternativas.setVisible(objetivaOuChecklist);
         editor.areaAlternativas.setManaged(objetivaOuChecklist);
@@ -240,44 +242,32 @@ public class FormEditorController {
         editor.tituloModelo.setVisible(dissertativa);
         editor.tituloModelo.setManaged(dissertativa);
 
-        // Control da área de correspondência (Correspondência)
+        // Controle da área de correspondência (Correspondência)
         editor.areaCorrespondencia.setVisible(correspondencia);
         editor.areaCorrespondencia.setManaged(correspondencia);
     }
 
     private void atualizarComboCorrespondencia(EditorQuestao editor) {
+        int quantidadeItens = editor.itensCorrespondencia.size();
 
-        int quantidadeItens =
-                editor.itensCorrespondencia.size();
-
-        for (EditorCorrespondenciaOpcao opcao :
-                editor.opcoesCorrespondencia) {
-
-            Integer selecionado =
-                    opcao.numeroCorreto.getValue();
-
+        for (EditorCorrespondenciaOpcao opcao : editor.opcoesCorrespondencia) {
+            Integer selecionado = opcao.numeroCorreto.getValue();
             opcao.numeroCorreto.getItems().clear();
 
             for (int i = 1; i <= quantidadeItens; i++) {
                 opcao.numeroCorreto.getItems().add(i);
             }
 
-            if (selecionado != null &&
-                    selecionado <= quantidadeItens) {
-
+            if (selecionado != null && selecionado <= quantidadeItens) {
                 opcao.numeroCorreto.setValue(selecionado);
             }
         }
     }
 
     private void atualizarNumerosCorrespondencia(EditorQuestao editor) {
-
         for (int i = 0; i < editor.areaItensCorrespondencia.getChildren().size(); i++) {
-
             HBox linha = (HBox) editor.areaItensCorrespondencia.getChildren().get(i);
-
             Label numero = (Label) linha.getChildren().get(0);
-
             numero.setText((i + 1) + ".");
         }
     }
@@ -308,31 +298,24 @@ public class FormEditorController {
     }
 
     private void adicionarOpcaoCorrespondencia(EditorQuestao editor) {
-
         HBox linha = new HBox(8);
         linha.setAlignment(Pos.CENTER_LEFT);
 
         ComboBox<Integer> numero = new ComboBox<>();
-
         TextField texto = new TextField();
         texto.setPromptText("Digite a alternativa...");
         texto.setMaxWidth(Double.MAX_VALUE);
-
         HBox.setHgrow(texto, Priority.ALWAYS);
 
         EditorCorrespondenciaOpcao opcao = new EditorCorrespondenciaOpcao(texto, numero);
 
         Button remover = new Button("Remover");
-
         remover.setOnAction(event -> {
-
             editor.areaOpcoesCorrespondencia.getChildren().remove(linha);
-
             editor.opcoesCorrespondencia.remove(opcao);
         });
 
         linha.getChildren().addAll(numero, texto, remover);
-
         editor.opcoesCorrespondencia.add(opcao);
         editor.areaOpcoesCorrespondencia.getChildren().add(linha);
 
@@ -340,40 +323,25 @@ public class FormEditorController {
     }
 
     private void adicionarItemCorrespondencia(EditorQuestao editor) {
-
         HBox linha = new HBox(8);
         linha.setAlignment(Pos.CENTER_LEFT);
 
-        Label numero = new Label(
-                (editor.itensCorrespondencia.size() + 1) + "."
-        );
+        Label numero = new Label((editor.itensCorrespondencia.size() + 1) + ".");
 
         TextField campo = new TextField();
         campo.setPromptText("Digite o item...");
         campo.setMaxWidth(Double.MAX_VALUE);
-
         HBox.setHgrow(campo, Priority.ALWAYS);
 
         Button remover = new Button("Remover");
-
         remover.setOnAction(event -> {
-
-            editor.areaItensCorrespondencia
-                    .getChildren()
-                    .remove(linha);
-
+            editor.areaItensCorrespondencia.getChildren().remove(linha);
             editor.itensCorrespondencia.remove(campo);
-
             atualizarNumerosCorrespondencia(editor);
             atualizarComboCorrespondencia(editor);
         });
 
-        linha.getChildren().addAll(
-                numero,
-                campo,
-                remover
-        );
-
+        linha.getChildren().addAll(numero, campo, remover);
         editor.itensCorrespondencia.add(campo);
         editor.areaItensCorrespondencia.getChildren().add(linha);
 
@@ -427,8 +395,30 @@ public class FormEditorController {
                 return;
             }
 
+            // Se o campo estiver vazio, mantém o valor padrão de 1.0 ponto
+            double pontos = 1.0;
+            String txtP = editor.pontos.getText() == null ? "" : editor.pontos.getText().trim().replace(",", ".");
+
+            if (!txtP.isEmpty()) {
+                try {
+                    pontos = Double.parseDouble(txtP);
+                    if (pontos <= 0) {
+                        mostrarErro("A pontuação da questão " + (i + 1) + " deve ser maior que zero.");
+                        return;
+                    }
+                    if (pontos > 9.99) {
+                        mostrarErro("A pontuação da questão " + (i + 1) + " não pode ser maior que 9.99.");
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    mostrarErro("Informe um valor numérico válido para a pontuação da questão " + (i + 1) + " (ex: 1.5 ou 2.50).");
+                    return;
+                }
+            }
+
             Questao questao = new Questao();
             questao.setEnunciado(enunciado);
+            questao.setPontos(pontos);
             String tipoSelecionado = editor.tipo.getValue();
 
             if ("Múltipla escolha".equals(tipoSelecionado)) {
@@ -445,16 +435,13 @@ public class FormEditorController {
                 temCorrespondencia = true;
             }
 
-            // Validações e preenchimento conforme o tipo da questão
-
-            //Dissertativa
+            // Dissertativa
             if (Questao.DISSERTATIVA.equals(questao.getTipo())) {
                 String modelo = editor.respostaModelo.getText();
                 questao.setRespostaModelo(modelo == null ? "" : modelo.trim());
 
             }
-
-            //Coresspondencia
+            // Correspondência
             else if (Questao.CORRESPONDENCIA.equals(questao.getTipo())) {
                 if (editor.itensCorrespondencia.size() < 2) {
                     mostrarErro("A questão de correspondência " + (i + 1) + " precisa ter pelo menos dois itens.");
@@ -492,9 +479,8 @@ public class FormEditorController {
                 }
 
             }
-
+            // Múltipla escolha ou Checklist
             else {
-                // Múltipla escolha ou Checklist
                 if (editor.alternativas.size() < 2) {
                     mostrarErro("A questão " + (i + 1) + " precisa ter pelo menos duas alternativas.");
                     return;
@@ -541,7 +527,6 @@ public class FormEditorController {
                 : temCorrespondencia ? "Correspondência" : "Dissertativa");
 
         try {
-            // Salva diretamente no banco utilizando o DAO (sem geração de arquivos JSON)
             new ProvaDAO().salvaProvaCompleta(prova);
 
             Alert alerta = new Alert(Alert.AlertType.INFORMATION);
@@ -558,145 +543,6 @@ public class FormEditorController {
                     + e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
-
-    /*private void GeraJson(ActionEvent event) {
-        Prova prova = SessaoApp.provaAtual;
-        if (prova == null) {
-            mostrarErro("Nenhuma prova foi inicializada. Volte e crie a prova novamente.");
-            return;
-        }
-        if (editores.isEmpty()) {
-            mostrarErro("Adicione pelo menos uma questão.");
-            return;
-        }
-
-        List<Questao> questoesNovas = new ArrayList<>();
-        boolean temMultiplaEscolha = false;
-        boolean temChecklist = false;
-        boolean temDissertativa = false;
-
-        for (int i = 0; i < editores.size(); i++) {
-            EditorQuestao editor = editores.get(i);
-            String enunciado = editor.enunciado.getText() == null
-                    ? "" : editor.enunciado.getText().trim();
-            if (enunciado.isEmpty()) {
-                mostrarErro("Preencha o enunciado da questão " + (i + 1) + ".");
-                return;
-            }
-
-            Questao questao = new Questao();
-            questao.setEnunciado(enunciado);
-            String tipoSelecionado = editor.tipo.getValue();
-
-            if ("Múltipla escolha".equals(tipoSelecionado)) {
-                questao.setTipo(Questao.MULTIPLA_ESCOLHA);
-                temMultiplaEscolha = true;
-            } else if ("Checklist numerado".equals(tipoSelecionado)) {
-                questao.setTipo(Questao.CHECKLIST);
-                temChecklist = true;
-            } else {
-                questao.setTipo(Questao.DISSERTATIVA);
-                temDissertativa = true;
-            }
-
-            if (!Questao.DISSERTATIVA.equals(questao.getTipo())) {
-                if (editor.alternativas.size() < 2) {
-                    mostrarErro("A questão " + (i + 1) + " precisa ter pelo menos duas alternativas / itens.");
-                    return;
-                }
-
-                int quantidadeCorretas = 0;
-                for (int j = 0; j < editor.alternativas.size(); j++) {
-                    EditorAlternativa alternativa = editor.alternativas.get(j);
-                    String texto = alternativa.texto.getText() == null
-                            ? "" : alternativa.texto.getText().trim();
-                    if (texto.isEmpty()) {
-                        mostrarErro("Preencha todas as alternativas da questão " + (i + 1) + ".");
-                        return;
-                    }
-                    questao.getAlternativas().add(texto);
-                    if (alternativa.correta.isSelected()) {
-                        questao.getRespostasCorretas().add(j);
-                        quantidadeCorretas++;
-                    }
-                }
-
-                if (quantidadeCorretas == 0) {
-                    mostrarErro("Marque pelo menos uma alternativa correta na questão " + (i + 1) + ".");
-                    return;
-                }
-                if (Questao.MULTIPLA_ESCOLHA.equals(questao.getTipo()) && quantidadeCorretas != 1) {
-                    mostrarErro("A questão de múltipla escolha " + (i + 1) + " deve ter exatamente uma alternativa correta.");
-                    return;
-                }
-            } else {
-                String modelo = editor.respostaModelo.getText();
-                questao.setRespostaModelo(modelo == null ? "" : modelo.trim());
-            }
-            questoesNovas.add(questao);
-        }
-
-        prova.getQuestoes().clear();
-        prova.getQuestoes().addAll(questoesNovas);
-        int tiposUsados = (temMultiplaEscolha ? 1 : 0)
-                + (temChecklist ? 1 : 0) + (temDissertativa ? 1 : 0);
-        prova.setTipoQuestoes(tiposUsados > 1 ? "Mista"
-                : temMultiplaEscolha ? "Múltipla escolha"
-                : temChecklist ? "Checklist numerado" : "Dissertativa");
-
-        Path arquivoTemporario = null;
-        try {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            String json = gson.toJson(prova);
-            String nome = sanitizarNomeArquivo(prova.getNome());
-            Path pasta = Path.of("MegaTests","provas_salvas");
-            Files.createDirectories(pasta);
-            Path arquivoFinal = pasta.resolve(nome + ".json");
-            arquivoTemporario = pasta.resolve(nome + ".json.tmp");
-            Files.writeString(arquivoTemporario, json, StandardCharsets.UTF_8);
-
-            // O DAO original mantém a conexão, as transações, as queries e os PreparedStatements.
-            // Só persistimos o arquivo definitivo depois do commit no banco.
-            new ProvaDAO().salvaProvaCompleta(prova);
-            try {
-                Files.move(arquivoTemporario, arquivoFinal,
-                        StandardCopyOption.REPLACE_EXISTING,
-                        StandardCopyOption.ATOMIC_MOVE);
-            } catch (AtomicMoveNotSupportedException ex) {
-                Files.move(arquivoTemporario, arquivoFinal,
-                        StandardCopyOption.REPLACE_EXISTING);
-            }
-
-            Alert alerta = new Alert(Alert.AlertType.INFORMATION);
-            alerta.setTitle("Sucesso");
-            alerta.setHeaderText("Prova salva com sucesso!");
-            alerta.setContentText("A prova e os enunciados foram enviados ao banco. "
-                    + "Os tipos, alternativas e respostas de referência foram salvos em:\n"
-                    + arquivoFinal.toAbsolutePath());
-            alerta.showAndWait();
-            App.setRoot("professorFluxo/ListaProva");
-        } catch (Exception e) {
-            if (arquivoTemporario != null) {
-                try {
-                    Files.deleteIfExists(arquivoTemporario);
-                } catch (IOException ignored) {
-                    // Mantém o erro principal como informação para o usuário.
-                }
-            }
-            e.printStackTrace();
-            mostrarErro("Não foi possível salvar a prova no banco/arquivo. "
-                    + "Confira a conexão, a disciplina selecionada e a sessão do professor.\n"
-                    + e.getClass().getSimpleName() + ": " + e.getMessage());
-        }
-    }*/
-
-    /*private String sanitizarNomeArquivo(String nomeOriginal) {
-        if (nomeOriginal == null || nomeOriginal.trim().isEmpty()) {
-            return "Prova_Sem_Nome";
-        }
-        String nome = nomeOriginal.trim().replaceAll("[^a-zA-Z0-9._-]", "_");
-        return nome.isEmpty() ? "Prova_Sem_Nome" : nome;
-    }*/
 
     private void mostrarErro(String mensagem) {
         Alert erro = new Alert(Alert.AlertType.ERROR);

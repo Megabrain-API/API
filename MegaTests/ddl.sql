@@ -2,8 +2,8 @@ CREATE DATABASE IF NOT EXISTS megabrain_db;
 USE megabrain_db;
 
 CREATE TABLE IF NOT EXISTS mg_professor (
-                                            matricula BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                            email VARCHAR(100) NOT NULL UNIQUE,
+    matricula BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(100) NOT NULL UNIQUE,
     nome VARCHAR(50) NOT NULL,
     senha VARCHAR(50) NOT NULL,
     data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -11,13 +11,13 @@ CREATE TABLE IF NOT EXISTS mg_professor (
 
 -- Cursos precisam existir antes do cadastro do aluno e da associação curso/disciplina.
 CREATE TABLE IF NOT EXISTS mg_cursos (
-                                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                         nome_curso VARCHAR(100) NOT NULL UNIQUE
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nome_curso VARCHAR(100) NOT NULL UNIQUE
     );
 
 CREATE TABLE IF NOT EXISTS mg_aluno (
-                                        ra BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                        email VARCHAR(100) NOT NULL UNIQUE,
+    ra BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(100) NOT NULL UNIQUE,
     nome VARCHAR(50) NOT NULL,
     senha VARCHAR(50) NOT NULL,
     id_curso BIGINT,
@@ -26,23 +26,23 @@ CREATE TABLE IF NOT EXISTS mg_aluno (
     );
 
 CREATE TABLE IF NOT EXISTS mg_disciplina (
-                                             id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                             nome VARCHAR(50) NOT NULL
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(50) NOT NULL
     );
 
 -- Liga cada curso às disciplinas que fazem parte dele.
 CREATE TABLE IF NOT EXISTS mg_curso_disciplina (
-                                                   id_disciplina BIGINT NOT NULL,
-                                                   id_curso BIGINT NOT NULL,
-                                                   ordem INT,
-                                                   PRIMARY KEY (id_disciplina, id_curso),
+    id_disciplina BIGINT NOT NULL,
+    id_curso BIGINT NOT NULL,
+    ordem INT,
+    PRIMARY KEY (id_disciplina, id_curso),
     FOREIGN KEY (id_curso) REFERENCES mg_cursos(id) ON DELETE CASCADE,
     FOREIGN KEY (id_disciplina) REFERENCES mg_disciplina(id) ON DELETE CASCADE
     );
 
 CREATE TABLE IF NOT EXISTS mg_provas (
-                                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                         nome VARCHAR(50) NOT NULL,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(50) NOT NULL,
     data_inicial DATETIME,
     data_limite DATETIME,
     duracao_minutos INT NOT NULL DEFAULT 120,
@@ -53,38 +53,39 @@ CREATE TABLE IF NOT EXISTS mg_provas (
     );
 
 CREATE TABLE IF NOT EXISTS mg_questoes (
-                                           id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                           tipo ENUM("Dissertativa", "Objetiva") NOT NULL,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    tipo ENUM("Dissertativa", "Objetiva") NOT NULL,
+    pontos DECIMAL(3,2) NOT NULL DEFAULT 1.00,
     enunciado TEXT NOT NULL,
     gabarito TEXT NOT NULL
     );
 
 CREATE TABLE IF NOT EXISTS mg_prova_questao (
-                                                id_prova BIGINT NOT NULL,
-                                                id_questao BIGINT NOT NULL,
-                                                ordem INT,
-                                                PRIMARY KEY (id_prova, id_questao),
+    id_prova BIGINT NOT NULL,
+    id_questao BIGINT NOT NULL,
+    ordem INT,
+    PRIMARY KEY (id_prova, id_questao),
     FOREIGN KEY (id_prova) REFERENCES mg_provas(id) ON DELETE CASCADE,
     FOREIGN KEY (id_questao) REFERENCES mg_questoes(id) ON DELETE CASCADE
     );
 
 CREATE TABLE IF NOT EXISTS mg_questao_alternativa (
-                                                      id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                                      id_questao BIGINT NOT NULL,
-                                                      ordem INT NOT NULL,
-                                                      texto TEXT NOT NULL,
-                                                      correta BOOLEAN NOT NULL DEFAULT FALSE,
-                                                      FOREIGN KEY (id_questao) REFERENCES mg_questoes(id) ON DELETE CASCADE
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id_questao BIGINT NOT NULL,
+    ordem INT NOT NULL,
+    texto TEXT NOT NULL,
+    correta BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (id_questao) REFERENCES mg_questoes(id) ON DELETE CASCADE
     );
 
 -- Cada linha representa o inicio e a tentativa de um aluno em uma prova.
 CREATE TABLE IF NOT EXISTS mg_aluno_prova (
-                                              id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                              ra_aluno BIGINT NOT NULL,
-                                              id_prova BIGINT NOT NULL,
-                                              data_inicio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                              data_envio DATETIME DEFAULT NULL,
-                                              status ENUM('EM_ANDAMENTO', 'FINALIZADA', 'EXPIRADA') NOT NULL DEFAULT 'EM_ANDAMENTO',
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    ra_aluno BIGINT NOT NULL,
+    id_prova BIGINT NOT NULL,
+    data_inicio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    data_envio DATETIME DEFAULT NULL,
+    status ENUM('EM_ANDAMENTO', 'FINALIZADA', 'EXPIRADA') NOT NULL DEFAULT 'EM_ANDAMENTO',
     UNIQUE KEY uk_aluno_prova (ra_aluno, id_prova),
     FOREIGN KEY (ra_aluno) REFERENCES mg_aluno(ra) ON DELETE CASCADE,
     FOREIGN KEY (id_prova) REFERENCES mg_provas(id) ON DELETE CASCADE
@@ -110,13 +111,13 @@ CREATE TABLE mg_questao_correspondencia_alternativa (
 );
 -- Cada linha representa a resposta de um aluno para uma questão de uma prova.
 CREATE TABLE IF NOT EXISTS mg_resposta_aluno (
-                                                 id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                                 ra_aluno BIGINT NOT NULL,
-                                                 id_prova BIGINT NOT NULL,
-                                                 id_questao BIGINT NOT NULL,
-                                                 resposta_texto TEXT,
-                                                 data_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
-                                                 nota DECIMAL(4,2),
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    ra_aluno BIGINT NOT NULL,
+    id_prova BIGINT NOT NULL,
+    id_questao BIGINT NOT NULL,
+    resposta_texto TEXT,
+    data_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
+    nota DECIMAL(4,2),
     FOREIGN KEY (ra_aluno) REFERENCES mg_aluno(ra) ON DELETE CASCADE,
     FOREIGN KEY (id_prova) REFERENCES mg_provas(id) ON DELETE CASCADE,
     FOREIGN KEY (id_questao) REFERENCES mg_questoes(id) ON DELETE CASCADE
@@ -145,7 +146,7 @@ SET @tem_tabela_curso_disiciplina = (
     SELECT COUNT(*)
     FROM INFORMATION_SCHEMA.TABLES
     WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'mg_curso_disiciplina'
+    AND TABLE_NAME = 'mg_curso_disiciplina'
 );
 SET @sql_migrar_curso_disciplina = IF(
     @tem_tabela_curso_disiciplina > 0,
@@ -172,6 +173,61 @@ SET @sql_mg_provas_duracao = IF(
 PREPARE stmt_mg_provas_duracao FROM @sql_mg_provas_duracao;
 EXECUTE stmt_mg_provas_duracao;
 DEALLOCATE PREPARE stmt_mg_provas_duracao;
+
+-- Coluna 'pontos' em mg_questoes (garante compatibilidade caso o banco seja antigo)
+SET @mg_questoes_tem_pontos = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_questoes'
+      AND COLUMN_NAME = 'pontos'
+);
+SET @sql_mg_questoes_pontos = IF(
+    @mg_questoes_tem_pontos = 0,
+    'ALTER TABLE mg_questoes ADD COLUMN pontos DECIMAL(3,2) NOT NULL DEFAULT 1.00',
+    'SELECT 1'
+);
+PREPARE stmt_mg_questoes_pontos FROM @sql_mg_questoes_pontos;
+EXECUTE stmt_mg_questoes_pontos;
+DEALLOCATE PREPARE stmt_mg_questoes_pontos;
+
+-- Coluna 'correta' em mg_resposta_aluno (NULL = pendente de correção manual, 1 = correta/parcial, 0 = incorreta)
+SET @mg_resp_tem_correta = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_resposta_aluno'
+      AND COLUMN_NAME = 'correta'
+);
+SET @sql_mg_resp_correta = IF(
+    @mg_resp_tem_correta = 0,
+    'ALTER TABLE mg_resposta_aluno ADD COLUMN correta TINYINT(1) NULL DEFAULT NULL',
+    'SELECT 1'
+);
+PREPARE stmt_mg_resp_correta FROM @sql_mg_resp_correta;
+EXECUTE stmt_mg_resp_correta;
+DEALLOCATE PREPARE stmt_mg_resp_correta;
+
+-- Coluna 'nota_total' em mg_aluno_prova para devolver a nota final calculada ao aluno
+SET @mg_ap_tem_nota_total = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_aluno_prova'
+      AND COLUMN_NAME = 'nota_total'
+);
+SET @sql_mg_ap_nota_total = IF(
+    @mg_ap_tem_nota_total = 0,
+    'ALTER TABLE mg_aluno_prova ADD COLUMN nota_total DECIMAL(5,2) NULL DEFAULT NULL',
+    'SELECT 1'
+);
+PREPARE stmt_mg_ap_nota_total FROM @sql_mg_ap_nota_total;
+EXECUTE stmt_mg_ap_nota_total;
+DEALLOCATE PREPARE stmt_mg_ap_nota_total;
+
+-- Atualiza o ENUM de status em mg_aluno_prova para aceitar 'CORRIGIDA'
+ALTER TABLE mg_aluno_prova
+    MODIFY COLUMN status ENUM('EM_ANDAMENTO', 'FINALIZADA', 'EXPIRADA', 'CORRIGIDA') NOT NULL DEFAULT 'EM_ANDAMENTO';
 
 -- (Mantenha todas as suas criações de tabelas e migrações que já estão no seu arquivo...)
 
