@@ -79,7 +79,11 @@ public class DadosPessoaisController {
         String barra = aluno ? "alunoFluxo/BarraLateralAluno.fxml"
                 : "professorFluxo/BarraLateralProf.fxml";
         try {
-            telaDados.setLeft(FXMLLoader.load(App.class.getResource(barra)));
+            java.net.URL recurso = App.class.getResource(barra);
+            if (recurso == null) {
+                throw new IOException("Arquivo da barra lateral não encontrado: " + barra);
+            }
+            telaDados.setLeft(FXMLLoader.load(recurso));
         } catch (IOException erro) {
             mostrarErro("Não foi possível carregar a barra lateral.");
         }
