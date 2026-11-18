@@ -95,8 +95,8 @@ public class MenuProfController implements Initializable {
     }
 
     @FXML
-    void entra_dados_pessoais_prof(ActionEvent event) {
-        // Lógica futura
+    void entra_dados_pessoais_prof(ActionEvent event) throws IOException {
+        App.abrirDadosPessoais();
     }
 
     @FXML
