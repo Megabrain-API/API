@@ -1,4 +1,4 @@
-[⬅️ Voltar para o README Principal](../README.md)
+[⬅️ Voltar para o README Principal](API/README.md)
 
 # 🛠️ Manual de Instalação e Execução — MegaTests
 
