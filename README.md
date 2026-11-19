@@ -117,8 +117,8 @@ O desenvolvimento é conduzido sob a metodologia **Scrum**, garantindo entregas 
 
 ### Stack Tecnológica
 
-* **Backend:** Linguagem **Java** (desenvolvido com conceitos avançados de POO e arquitetura limpa).
-* **Banco de Dados:** Modelagem relacional estruturada através de **MER** (Modelo Entidade-Relacionamento) e **DER** (Diagrama Entidade-Relacionamento).
+* **Backend:** Linguagem **Java (JDK 21)** com gerenciamento de dependências via **Apache Maven** (`pom.xml`).
+* **Banco de Dados:** **MySQL** executado via **Docker Compose** (`compose.yml`), modelado com **MER** e **DER** e persistência via padrão **DAO**.
 * **Controle de Versão:** Git e GitHub.
 
 ---
@@ -188,6 +188,25 @@ O desenvolvimento é conduzido sob a metodologia **Scrum**, garantindo entregas 
 - [ ] **Gestão:** Status atualizado no board.
 - [ ] **Sprint Review:** Item demonstrado (ou pronto para demonstração) na Sprint Review.
 
-## 📦 Como Executar o Projeto
+---
 
-**EM PROCESSO...**
+## 📦 Como Executar, Usar e Testar o Projeto
+
+Para instruções detalhadas de configuração do ambiente local (Docker, MySQL DDL, Java 21 e Maven), bem como o guia passo a passo de navegação nas telas para **Professores** e **Alunos**, acesse os manuais oficiais do projeto:
+
+* 🛠️ [**Manual de Instalação e Execução**](documentacao/documentação-projeto/Manual_Instalação.md) — *Configuração do container Docker, script DDL do MySQL, importação no IntelliJ IDEA e execução via Maven.*
+* 📖 [**Manual do Usuário**](documentacao/documentação-projeto/Manual_Usuario.md) — *Guia completo de uso das funcionalidades de cadastro, login, criação/correção de provas e realização de avaliações.*
+
+---
+
+## 📚 Pasta de Documentação Complementar
+
+Toda a documentação técnica, modelagem de banco de dados e governança da equipe está organizada na pasta [`documentacao/`](documentacao/):
+
+*  [**Documentação do Projeto**](documentacao/documentação-projeto/) — *Manuais de Instalação e Usuário, Backlog (`BACKLOG.xlsx`), Modelagem (`DER_API.brM`) e Documentação Geral.*
+*  [**Documentação da Equipe**](documentacao/documentacao%20equipe/) — *Contrato de Permanência, Padrão de Commits e regras do time.*
+*  [**Documentação das Sprints**](documentacao/documentacao%20sprint/) — *Artefatos, telas e entregas incrementais de cada ciclo.*
+
+---
+
+
