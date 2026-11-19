@@ -12,7 +12,7 @@ import org.example.App;
 import org.example.dao.DisciplinaDAO;
 import org.example.entity.profEntity.Prova;
 import org.example.entity.profEntity.SessaoApp;
-
+import java.time.ZoneId;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -154,7 +154,7 @@ public class CriaProvaController {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm")
                 .withResolverStyle(java.time.format.ResolverStyle.STRICT);
-        LocalDateTime agora = LocalDateTime.now();
+        LocalDateTime agora = LocalDateTime.now(ZoneId.of("America/Sao_Paulo"));
         LocalDateTime dataInicialParsed = null;
         LocalDateTime dataLimiteParsed = null;
 

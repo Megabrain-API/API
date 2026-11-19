@@ -11,6 +11,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -30,6 +31,8 @@ import java.util.*;
 
 public class FazerProvaController implements Initializable {
 
+    private static final Locale PT_BR = Locale.forLanguageTag("pt-BR");
+
     @FXML
     private VBox barra_lateral;
 
@@ -46,6 +49,21 @@ public class FazerProvaController implements Initializable {
     private Button minhas_provas_aluno;
 
     @FXML
+    private Label lbl_disciplina_prova;
+
+    @FXML
+    private Label lbl_titulo_prova;
+
+    @FXML
+    private Label lbl_periodo_prova;
+
+    @FXML
+    private Label lblTempoRestante;
+
+    @FXML
+    private Label lbl_progresso_questoes;
+
+    @FXML
     private VBox vb_fazerprova_container;
 
     private final Map<Button, String> textosOriginais = new HashMap<>();
@@ -56,7 +74,6 @@ public class FazerProvaController implements Initializable {
     // --- VARIÁVEIS DO CRONÓMETRO E CONTROLO DE FECHO ---
     private Timeline cronometro;
     private int segundosRestantes;
-    private Label lblTempoRestante;
     private static boolean provaEmAndamento = false;
     private static FazerProvaController instanciaAtiva;
 
@@ -66,7 +83,7 @@ public class FazerProvaController implements Initializable {
 
     public static void submeterProvaAutomaticamenteNoEncerramento() {
         if (instanciaAtiva != null && instanciaAtiva.provaAtual != null && provaEmAndamento) {
-            provaEmAndamento = false; // Evita loop de submissão
+            provaEmAndamento = false;
             if (instanciaAtiva.cronometro != null) {
                 instanciaAtiva.cronometro.stop();
             }
@@ -109,15 +126,12 @@ public class FazerProvaController implements Initializable {
         }
 
         vb_fazerprova_container.getChildren().clear();
-        vb_fazerprova_container.setAlignment(Pos.TOP_LEFT);
-        vb_fazerprova_container.setSpacing(14);
-        vb_fazerprova_container.setPadding(new Insets(18));
         respostas.clear();
 
         Prova provaSelecionada = ProvasAlunoController.getProvaSelecionadaParaAbertura();
 
         if (provaSelecionada == null) {
-            mostrarMensagemNaTela("Nenhuma prova foi selecionada.");
+            mostrarCardAviso("Nenhuma prova foi selecionada.");
             return;
         }
 
@@ -125,9 +139,10 @@ public class FazerProvaController implements Initializable {
             provaAtual = new ProvaDAO().buscarProvaCompleta(provaSelecionada.getId());
 
             if (provaAtual == null) {
-                mostrarMensagemNaTela("A prova selecionada não foi encontrada no banco de dados.");
+                mostrarCardAviso("A prova selecionada não foi encontrada no banco de dados.");
                 return;
             }
+
             List<Questao> questoesEmbaralhadas = new ArrayList<>(provaAtual.getQuestoes());
             Collections.shuffle(questoesEmbaralhadas);
             provaAtual.setQuestoes(questoesEmbaralhadas);
@@ -136,7 +151,7 @@ public class FazerProvaController implements Initializable {
             montarInterfaceDaProva();
         } catch (RuntimeException erro) {
             erro.printStackTrace();
-            mostrarMensagemNaTela("Não foi possível carregar a prova. Verifique a conexão com o banco de dados.");
+            mostrarCardAviso("Não foi possível carregar a prova. Verifique a conexão com o banco de dados.");
 
             Alert alerta = new Alert(Alert.AlertType.ERROR);
             alerta.setTitle("Erro ao carregar prova");
@@ -147,37 +162,38 @@ public class FazerProvaController implements Initializable {
     }
 
     private void montarInterfaceDaProva() {
-        Label titulo = new Label(provaAtual.getNome() == null ? "Prova" : provaAtual.getNome());
-        titulo.setFont(Font.font("System", FontWeight.BOLD, 22));
-        titulo.setWrapText(true);
-        titulo.setStyle("-fx-text-fill: #1B1B1B;");
-        vb_fazerprova_container.getChildren().add(titulo);
-
-        if (provaAtual.getDisciplina() != null && !provaAtual.getDisciplina().trim().isEmpty()) {
-            Label disciplina = new Label("Disciplina: " + provaAtual.getDisciplina());
-            disciplina.setStyle("-fx-text-fill: #1B1B1B; -fx-font-size: 13px;");
-            vb_fazerprova_container.getChildren().add(disciplina);
+        // --- CABEÇALHO DA PROVA ---
+        if (lbl_disciplina_prova != null) {
+            String disc = (provaAtual.getDisciplina() != null && !provaAtual.getDisciplina().trim().isEmpty())
+                    ? provaAtual.getDisciplina().toUpperCase()
+                    : "AVALIAÇÃO";
+            lbl_disciplina_prova.setText(disc);
         }
 
-        // --- FORMATAR E EXIBIR PERÍODO DA PROVA ---
+        if (lbl_titulo_prova != null) {
+            lbl_titulo_prova.setText(provaAtual.getNome() == null ? "Prova" : provaAtual.getNome());
+        }
+
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         String dataIniStr = provaAtual.getDataInicial() != null ? provaAtual.getDataInicial().format(fmt) : "Imediato";
         String dataFimStr = provaAtual.getDataLimite() != null ? provaAtual.getDataLimite().format(fmt) : "Sem limite";
 
-        Label prazos = new Label("Período disponível: " + dataIniStr + " até " + dataFimStr);
-        prazos.setStyle("-fx-text-fill: #555555; -fx-font-size: 13px; -fx-font-weight: bold;");
-        vb_fazerprova_container.getChildren().add(prazos);
+        if (lbl_periodo_prova != null) {
+            lbl_periodo_prova.setText("Período disponível: " + dataIniStr + " até " + dataFimStr);
+        }
 
         // --- CRONÓMETRO E DURAÇÃO (PERSISTENTE PELA HORA DE INÍCIO NO BANCO) ---
         if (provaAtual.getDuracaoMinutos() != null && provaAtual.getDuracaoMinutos() > 0) {
-            lblTempoRestante = new Label("Tempo restante: Calculando...");
-            lblTempoRestante.setStyle("-fx-text-fill: #d32f2f; -fx-font-size: 15px; -fx-font-weight: bold;");
-            vb_fazerprova_container.getChildren().add(lblTempoRestante);
+            if (lblTempoRestante != null) {
+                lblTempoRestante.setVisible(true);
+                lblTempoRestante.setManaged(true);
+                lblTempoRestante.setText("Tempo restante: Calculando...");
+            }
 
             Long raAlunoLogado = SessaoUsuarioController.getIdUsuarioLogado();
             AlunoDAO alunoDAO = new AlunoDAO();
 
-            LocalDateTime dataInicioAluno = null;
+            LocalDateTime dataInicioAluno;
             if (raAlunoLogado != null) {
                 dataInicioAluno = alunoDAO.buscarDataInicioProva(raAlunoLogado, provaAtual.getId());
 
@@ -195,174 +211,241 @@ public class FazerProvaController implements Initializable {
             segundosRestantes = (int) (duracaoTotalSegundos - segundosDecorridos);
 
             if (segundosRestantes <= 0) {
-                lblTempoRestante.setText("Tempo esgotado!");
+                if (lblTempoRestante != null) {
+                    lblTempoRestante.setText("Tempo esgotado!");
+                }
                 submeterProvaPorTempoEsgotado();
             } else {
                 iniciarCronometro();
             }
+        } else if (lblTempoRestante != null) {
+            lblTempoRestante.setVisible(false);
+            lblTempoRestante.setManaged(false);
         }
 
         if (provaAtual.getQuestoes() == null || provaAtual.getQuestoes().isEmpty()) {
-            Label aviso = new Label("Esta prova não possui questões cadastradas.");
-            aviso.setWrapText(true);
-            aviso.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
-            vb_fazerprova_container.getChildren().add(aviso);
+            mostrarCardAviso("Esta prova não possui questões cadastradas.");
+            atualizarProgressoRodape();
             return;
         }
 
         int numeroQuestao = 1;
 
         for (Questao questao : provaAtual.getQuestoes()) {
-            VBox blocoQuestao = new VBox(10);
-            blocoQuestao.setMaxWidth(Double.MAX_VALUE);
-            VBox.setVgrow(blocoQuestao, Priority.NEVER);
-            blocoQuestao.setPadding(new Insets(15));
-            blocoQuestao.setStyle(
-                    "-fx-background-color: rgba(255,255,255,0.94);" +
-                    "-fx-background-radius: 10px;"
-            );
-
-            Label enunciado = new Label(numeroQuestao + ". " + valorOuVazio(questao.getEnunciado()));
-            enunciado.setFont(Font.font("System", FontWeight.BOLD, 14));
-            enunciado.setWrapText(true);
-            enunciado.setMaxWidth(Double.MAX_VALUE);
-            blocoQuestao.getChildren().add(enunciado);
-
-            System.out.println(
-                    "QUESTÃO: " + questao.getEnunciado()
-                            + " | TIPO: " + questao.getTipo()
-            );
-
-            String tipo = tipoNormalizado(questao.getTipo());
-
-            Label tipoQuestao = new Label(textoTipo(tipo));
-            tipoQuestao.setStyle("-fx-text-fill: #666666; -fx-font-size: 11px;");
-            blocoQuestao.getChildren().add(tipoQuestao);
-
-            // Para questões de Checklist
-            if (Questao.CHECKLIST.equals(tipo)) {
-                List<CheckBox> itens = new ArrayList<>();
-
-                for (String alternativa : questao.getAlternativas()) {
-                    CheckBox item = new CheckBox(alternativa);
-                    item.setWrapText(true);
-                    item.setMaxWidth(Double.MAX_VALUE);
-                    item.setPadding(new Insets(2, 0, 2, 12));
-                    itens.add(item);
-                    blocoQuestao.getChildren().add(item);
-                }
-
-                if (itens.isEmpty()) {
-                    blocoQuestao.getChildren().add(criarAvisoSemAlternativas());
-                }
-
-                respostas.add(RespostaQuestao.checklist(numeroQuestao, questao.getId(), itens, null, null));
-            }
-            // Para questões de Dissertativa
-            else if (Questao.DISSERTATIVA.equals(tipo)) {
-
-                TextArea campoResposta = new TextArea();
-                campoResposta.setPromptText("Digite sua resposta");
-                campoResposta.setWrapText(true);
-                campoResposta.setPrefRowCount(4);
-                campoResposta.setMaxWidth(Double.MAX_VALUE);
-
-                blocoQuestao.getChildren().add(campoResposta);
-
-                respostas.add(RespostaQuestao.dissertativa(numeroQuestao, questao.getId(), campoResposta, null, null));
-
-            }
-             // Para questões de Correspondencia
-            else if (Questao.CORRESPONDENCIA.equals(tipo)) {
-
-                VBox areaCorrespondencia = new VBox(10);
-
-                Label tituloItens = new Label("Itens:");
-                tituloItens.setStyle("-fx-font-weight: bold;");
-
-                areaCorrespondencia.getChildren().add(tituloItens);
-
-                List<String> itens =
-                        questao.getItensCorrespondencia();
-
-                for (int i = 0; i < itens.size(); i++) {
-
-                    Label item = new Label(
-                            (i + 1) + ". " + itens.get(i)
-                    );
-
-                    item.setWrapText(true);
-
-                    areaCorrespondencia.getChildren().add(item);
-                }
-
-                Label tituloAlternativas =
-                        new Label("Correspondências:");
-
-                tituloAlternativas.setStyle(
-                        "-fx-font-weight: bold;"
-                );
-
-                areaCorrespondencia
-                        .getChildren()
-                        .add(tituloAlternativas);
-
-                List<ComboBox<Integer>> respostasCorrespondencia =
-                        new ArrayList<>();
-
-                List<String> textosAlternativas =
-                        questao.getAlternativasCorrespondencia();
-
-                for (String alternativa : textosAlternativas) {
-
-                    HBox linha = new HBox(10);
-                    linha.setAlignment(Pos.CENTER_LEFT);
-
-                    ComboBox<Integer> numero =
-                            new ComboBox<>();
-
-                    numero.setPromptText("Nº");
-
-                    for (int i = 1; i <= itens.size(); i++) {
-                        numero.getItems().add(i);
-                    }
-
-                    Label textoAlternativa = new Label(alternativa);
-                    textoAlternativa.setWrapText(true);
-                    respostasCorrespondencia.add(numero);
-                    linha.getChildren().addAll(numero, textoAlternativa);
-                    areaCorrespondencia.getChildren().add(linha);
-                }
-
-                blocoQuestao.getChildren().add(areaCorrespondencia);
-
-                respostas.add(RespostaQuestao.correspondencia(numeroQuestao, questao.getId(), respostasCorrespondencia, textosAlternativas));
-
-            } else {
-                // Múltipla escolha (Tratamento padrão/fallback para as objetivas)
-                ToggleGroup grupo = new ToggleGroup();
-                int quantidadeAlternativas = 0;
-
-                for (String alternativa : questao.getAlternativas()) {
-                    RadioButton opcao = new RadioButton(alternativa);
-                    opcao.setToggleGroup(grupo);
-                    opcao.setWrapText(true);
-                    opcao.setMaxWidth(Double.MAX_VALUE);
-                    opcao.setPadding(new Insets(2, 0, 2, 12));
-                    blocoQuestao.getChildren().add(opcao);
-                    quantidadeAlternativas++;
-                }
-
-                if (quantidadeAlternativas == 0) {
-                    blocoQuestao.getChildren().add(criarAvisoSemAlternativas());
-                }
-
-                respostas.add(RespostaQuestao.multiplaEscolha(numeroQuestao, questao.getId(), grupo, quantidadeAlternativas, null, null));
-            }
-
+            VBox blocoQuestao = criarCardQuestao(questao, numeroQuestao);
             vb_fazerprova_container.getChildren().add(blocoQuestao);
             numeroQuestao++;
         }
+
+        atualizarProgressoRodape();
+    }
+
+    private VBox criarCardQuestao(Questao questao, int numeroQuestao) {
+        VBox blocoQuestao = new VBox(12);
+        blocoQuestao.setMaxWidth(Double.MAX_VALUE);
+        VBox.setVgrow(blocoQuestao, Priority.NEVER);
+        blocoQuestao.setPadding(new Insets(18, 22, 18, 22));
+        blocoQuestao.setStyle(
+                "-fx-background-color: rgba(255, 255, 255, 0.96);" +
+                        "-fx-background-radius: 12px;" +
+                        "-fx-border-color: #D4DFEC;" +
+                        "-fx-border-radius: 12px;" +
+                        "-fx-border-width: 1px;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 3);"
+        );
+
+        // Cabeçalho do card: enunciado + badge de pontuação
+        HBox topoCard = new HBox(12);
+        topoCard.setAlignment(Pos.TOP_LEFT);
+
+        Label enunciado = new Label(numeroQuestao + ". " + valorOuVazio(questao.getEnunciado()));
+        enunciado.setFont(Font.font("System", FontWeight.BOLD, 15));
+        enunciado.setWrapText(true);
+        enunciado.setMaxWidth(Double.MAX_VALUE);
+        enunciado.setStyle("-fx-text-fill: #1B1B1B;");
+        HBox.setHgrow(enunciado, Priority.ALWAYS);
+
+        Label badgePontos = new Label(String.format(PT_BR, "Vale %.2f pt(s)", questao.getPontos()));
+        badgePontos.setMinWidth(Region.USE_PREF_SIZE);
+        badgePontos.setPadding(new Insets(4, 12, 4, 12));
+        badgePontos.setStyle(
+                "-fx-background-color: #E3EEFF;" +
+                        "-fx-text-fill: #004EC2;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-font-size: 12px;" +
+                        "-fx-background-radius: 12px;"
+        );
+
+        topoCard.getChildren().addAll(enunciado, badgePontos);
+
+        String tipo = tipoNormalizado(questao.getTipo());
+
+        Label tipoQuestao = new Label(textoTipo(tipo));
+        tipoQuestao.setStyle("-fx-text-fill: #5F6368; -fx-font-size: 12px;");
+
+        blocoQuestao.getChildren().addAll(topoCard, tipoQuestao, new Separator());
+
+        // --- CHECKLIST ---
+        if (Questao.CHECKLIST.equals(tipo)) {
+            List<CheckBox> itens = new ArrayList<>();
+            VBox listaOpcoes = new VBox(8);
+
+            for (String alternativa : questao.getAlternativas()) {
+                CheckBox item = new CheckBox(alternativa);
+                item.setWrapText(true);
+                item.setMaxWidth(Double.MAX_VALUE);
+                item.setStyle(estiloOpcao());
+                item.selectedProperty().addListener((obs, oldV, newV) -> atualizarProgressoRodape());
+                itens.add(item);
+                listaOpcoes.getChildren().add(item);
+            }
+
+            if (itens.isEmpty()) {
+                blocoQuestao.getChildren().add(criarAvisoSemAlternativas());
+            } else {
+                blocoQuestao.getChildren().add(listaOpcoes);
+            }
+
+            respostas.add(RespostaQuestao.checklist(numeroQuestao, questao.getId(), itens));
+        }
+        // --- DISSERTATIVA ---
+        else if (Questao.DISSERTATIVA.equals(tipo)) {
+            TextArea campoResposta = new TextArea();
+            campoResposta.setPromptText("Digite sua resposta aqui...");
+            campoResposta.setWrapText(true);
+            campoResposta.setPrefRowCount(4);
+            campoResposta.setMaxWidth(Double.MAX_VALUE);
+            campoResposta.setStyle(
+                    "-fx-control-inner-background: #F7FAFF;" +
+                            "-fx-background-radius: 8px;" +
+                            "-fx-border-color: #DCE6F5;" +
+                            "-fx-border-radius: 8px;" +
+                            "-fx-font-size: 13px;"
+            );
+            campoResposta.textProperty().addListener((obs, oldV, newV) -> atualizarProgressoRodape());
+
+            blocoQuestao.getChildren().add(campoResposta);
+            respostas.add(RespostaQuestao.dissertativa(numeroQuestao, questao.getId(), campoResposta));
+        }
+        // --- CORRESPONDÊNCIA ---
+        else if (Questao.CORRESPONDENCIA.equals(tipo)) {
+            VBox areaCorrespondencia = new VBox(10);
+
+            VBox caixaItens = new VBox(6);
+            caixaItens.setPadding(new Insets(12, 14, 12, 14));
+            caixaItens.setStyle(
+                    "-fx-background-color: #F7FAFF;" +
+                            "-fx-background-radius: 8px;" +
+                            "-fx-border-color: #DCE6F5;" +
+                            "-fx-border-radius: 8px;"
+            );
+
+            Label tituloItens = new Label("Itens de referência:");
+            tituloItens.setStyle("-fx-font-weight: bold; -fx-text-fill: #0066FF; -fx-font-size: 12px;");
+            caixaItens.getChildren().add(tituloItens);
+
+            List<String> itens = questao.getItensCorrespondencia();
+            for (int i = 0; i < itens.size(); i++) {
+                Label item = new Label((i + 1) + ". " + itens.get(i));
+                item.setWrapText(true);
+                item.setStyle("-fx-text-fill: #1B1B1B; -fx-font-size: 13px;");
+                caixaItens.getChildren().add(item);
+            }
+
+            areaCorrespondencia.getChildren().add(caixaItens);
+
+            Label tituloAlternativas = new Label("Correspondências:");
+            tituloAlternativas.setStyle("-fx-font-weight: bold; -fx-text-fill: #1B1B1B; -fx-font-size: 13px;");
+            areaCorrespondencia.getChildren().add(tituloAlternativas);
+
+            List<ComboBox<Integer>> respostasCorrespondencia = new ArrayList<>();
+            List<String> textosAlternativas = questao.getAlternativasCorrespondencia();
+
+            for (String alternativa : textosAlternativas) {
+                HBox linha = new HBox(12);
+                linha.setAlignment(Pos.CENTER_LEFT);
+                linha.setPadding(new Insets(8, 12, 8, 12));
+                linha.setStyle(
+                        "-fx-background-color: #F7FAFF;" +
+                                "-fx-background-radius: 8px;" +
+                                "-fx-border-color: #DCE6F5;" +
+                                "-fx-border-radius: 8px;"
+                );
+
+                ComboBox<Integer> numero = new ComboBox<>();
+                numero.setPromptText("Nº");
+                numero.setPrefWidth(72);
+                for (int i = 1; i <= itens.size(); i++) {
+                    numero.getItems().add(i);
+                }
+                numero.valueProperty().addListener((obs, oldV, newV) -> atualizarProgressoRodape());
+
+                Label textoAlternativa = new Label(alternativa);
+                textoAlternativa.setWrapText(true);
+                textoAlternativa.setStyle("-fx-text-fill: #1B1B1B; -fx-font-size: 13px;");
+                HBox.setHgrow(textoAlternativa, Priority.ALWAYS);
+
+                respostasCorrespondencia.add(numero);
+                linha.getChildren().addAll(numero, textoAlternativa);
+                areaCorrespondencia.getChildren().add(linha);
+            }
+
+            blocoQuestao.getChildren().add(areaCorrespondencia);
+            respostas.add(RespostaQuestao.correspondencia(numeroQuestao, questao.getId(), respostasCorrespondencia, textosAlternativas));
+        }
+        // --- MÚLTIPLA ESCOLHA ---
+        else {
+            ToggleGroup grupo = new ToggleGroup();
+            VBox listaOpcoes = new VBox(8);
+            int quantidadeAlternativas = 0;
+
+            for (String alternativa : questao.getAlternativas()) {
+                RadioButton opcao = new RadioButton(alternativa);
+                opcao.setToggleGroup(grupo);
+                opcao.setWrapText(true);
+                opcao.setMaxWidth(Double.MAX_VALUE);
+                opcao.setStyle(estiloOpcao());
+                listaOpcoes.getChildren().add(opcao);
+                quantidadeAlternativas++;
+            }
+
+            grupo.selectedToggleProperty().addListener((obs, oldV, newV) -> atualizarProgressoRodape());
+
+            if (quantidadeAlternativas == 0) {
+                blocoQuestao.getChildren().add(criarAvisoSemAlternativas());
+            } else {
+                blocoQuestao.getChildren().add(listaOpcoes);
+            }
+
+            respostas.add(RespostaQuestao.multiplaEscolha(numeroQuestao, questao.getId(), grupo, quantidadeAlternativas));
+        }
+
+        return blocoQuestao;
+    }
+
+    private String estiloOpcao() {
+        return "-fx-background-color: #F7FAFF;" +
+                "-fx-border-color: #DCE6F5;" +
+                "-fx-border-radius: 8px;" +
+                "-fx-background-radius: 8px;" +
+                "-fx-padding: 9 12 9 12;" +
+                "-fx-font-size: 13px;" +
+                "-fx-text-fill: #1B1B1B;" +
+                "-fx-cursor: hand;";
+    }
+
+    private void atualizarProgressoRodape() {
+        if (lbl_progresso_questoes == null) {
+            return;
+        }
+        int total = respostas.size();
+        int respondidas = 0;
+        for (RespostaQuestao r : respostas) {
+            if (r.foiRespondida()) {
+                respondidas++;
+            }
+        }
+        lbl_progresso_questoes.setText("Respondidas: " + respondidas + " / " + total);
     }
 
     // --- LÓGICA DO CRONÓMETRO TEMPO REAL ---
@@ -371,14 +454,20 @@ public class FazerProvaController implements Initializable {
             cronometro.stop();
         }
 
+        if (lblTempoRestante != null) {
+            lblTempoRestante.setText("Tempo restante: " + formatarTempo(segundosRestantes));
+        }
+
         cronometro = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
             segundosRestantes--;
 
             if (segundosRestantes <= 0) {
-                lblTempoRestante.setText("Tempo esgotado!");
+                if (lblTempoRestante != null) {
+                    lblTempoRestante.setText("Tempo esgotado!");
+                }
                 cronometro.stop();
                 submeterProvaPorTempoEsgotado();
-            } else {
+            } else if (lblTempoRestante != null) {
                 lblTempoRestante.setText("Tempo restante: " + formatarTempo(segundosRestantes));
             }
         }));
@@ -387,7 +476,6 @@ public class FazerProvaController implements Initializable {
         cronometro.play();
     }
 
-    // --- CONVERSOR UTILITÁRIO DE SEGUNDOS EM (HH:mm:ss OU mm:ss) ---
     private String formatarTempo(int totalSegundos) {
         int horas = totalSegundos / 3600;
         int minutos = (totalSegundos % 3600) / 60;
@@ -428,7 +516,7 @@ public class FazerProvaController implements Initializable {
     private Label criarAvisoSemAlternativas() {
         Label aviso = new Label("Nenhuma alternativa foi cadastrada para esta questão.");
         aviso.setWrapText(true);
-        aviso.setStyle("-fx-text-fill: #b00020; -fx-font-size: 12px;");
+        aviso.setStyle("-fx-text-fill: #B3261E; -fx-font-size: 12px;");
         return aviso;
     }
 
@@ -442,11 +530,9 @@ public class FazerProvaController implements Initializable {
         if ("DISSERTATIVA".equals(normalizado)) {
             return Questao.DISSERTATIVA;
         }
-
         if ("CHECKLIST".equals(normalizado)) {
             return Questao.CHECKLIST;
         }
-
         if ("CORRESPONDENCIA".equals(normalizado)) {
             return Questao.CORRESPONDENCIA;
         }
@@ -462,7 +548,7 @@ public class FazerProvaController implements Initializable {
             return "Selecione todas as alternativas que considerar corretas";
         }
         if (Questao.CORRESPONDENCIA.equals(tipo)) {
-            return "Relacione cada alternativa ao número correspondente";
+            return "Relacione cada alternativa ao número correspondente (sem repetir números)";
         }
         return "Selecione uma alternativa";
     }
@@ -471,20 +557,30 @@ public class FazerProvaController implements Initializable {
         return valor == null ? "" : valor;
     }
 
-    private void mostrarMensagemNaTela(String mensagem) {
+    private void mostrarCardAviso(String mensagem) {
+        VBox card = new VBox(8);
+        card.setAlignment(Pos.CENTER);
+        card.setPadding(new Insets(32, 24, 32, 24));
+        card.setStyle(
+                "-fx-background-color: rgba(255, 255, 255, 0.96);" +
+                        "-fx-background-radius: 12px;" +
+                        "-fx-border-color: #D4DFEC;" +
+                        "-fx-border-radius: 12px;" +
+                        "-fx-border-width: 1px;"
+        );
+
         Label aviso = new Label(mensagem);
         aviso.setWrapText(true);
-        aviso.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
-        vb_fazerprova_container.getChildren().add(aviso);
+        aviso.setStyle("-fx-text-fill: #5F6368; -fx-font-size: 14px;");
+        card.getChildren().add(aviso);
+        vb_fazerprova_container.getChildren().add(card);
     }
 
     @FXML
     private void expande_barra() {
-        Timeline timeline = new Timeline();
-        KeyValue kv = new KeyValue(barra_lateral.prefWidthProperty(), 170.0);
-        KeyFrame kf = new KeyFrame(Duration.millis(130), kv);
-        timeline.getKeyFrames().add(kf);
-
+        Timeline timeline = new Timeline(
+                new KeyFrame(Duration.millis(130), new KeyValue(barra_lateral.prefWidthProperty(), 170.0))
+        );
         timeline.setOnFinished(event -> mostrarTextosBotoes());
         timeline.play();
     }
@@ -492,11 +588,9 @@ public class FazerProvaController implements Initializable {
     @FXML
     private void minimiza_barra() {
         ocultarTextosBotoes();
-
-        Timeline timeline = new Timeline();
-        KeyValue kv = new KeyValue(barra_lateral.prefWidthProperty(), 60.0);
-        KeyFrame kf = new KeyFrame(Duration.millis(150), kv);
-        timeline.getKeyFrames().add(kf);
+        Timeline timeline = new Timeline(
+                new KeyFrame(Duration.millis(150), new KeyValue(barra_lateral.prefWidthProperty(), 60.0))
+        );
         timeline.play();
     }
 
@@ -504,7 +598,6 @@ public class FazerProvaController implements Initializable {
         if (botoesMenu == null) {
             return;
         }
-
         for (Button btn : botoesMenu) {
             if (btn != null) {
                 btn.setText("");
@@ -516,7 +609,6 @@ public class FazerProvaController implements Initializable {
         if (botoesMenu == null) {
             return;
         }
-
         for (Button btn : botoesMenu) {
             if (btn != null) {
                 btn.setText(textosOriginais.get(btn));
@@ -574,7 +666,6 @@ public class FazerProvaController implements Initializable {
                 return;
             }
 
-            // Mantém a ordem das questões e prepara o conteúdo para o AlunoDAO.
             Map<Long, String> respostasParaSalvar = new LinkedHashMap<>();
             for (RespostaQuestao resposta : respostas) {
                 respostasParaSalvar.put(resposta.idQuestao, resposta.obterRespostaTexto());
@@ -610,14 +701,12 @@ public class FazerProvaController implements Initializable {
 
     private String juntarNumeros(List<Integer> numeros) {
         StringBuilder texto = new StringBuilder();
-
         for (int i = 0; i < numeros.size(); i++) {
             if (i > 0) {
                 texto.append(", ");
             }
             texto.append(numeros.get(i));
         }
-
         return texto.toString();
     }
 
@@ -637,7 +726,8 @@ public class FazerProvaController implements Initializable {
     }
 
     @FXML
-    void entra_meucurso(ActionEvent event) {
+    void entra_meucurso(ActionEvent event) throws IOException {
+        App.setRoot("alunoFluxo/MeuCursoAluno");
     }
 
     private static class RespostaQuestao {
@@ -655,7 +745,6 @@ public class FazerProvaController implements Initializable {
                                 ToggleGroup grupo, List<CheckBox> checklist,
                                 int quantidadeAlternativas, List<ComboBox<Integer>> correspondencia,
                                 List<String> textosCorrespondencia) {
-
             this.numeroQuestao = numeroQuestao;
             this.idQuestao = idQuestao;
             this.tipo = tipo;
@@ -667,24 +756,29 @@ public class FazerProvaController implements Initializable {
             this.textosCorrespondencia = textosCorrespondencia;
         }
 
-        private static RespostaQuestao dissertativa(int numeroQuestao, long idQuestao, TextArea texto, List<ComboBox<Integer>> correspondencia, List<String> textosCorrespondencia ) {
+        private static RespostaQuestao dissertativa(int numeroQuestao, long idQuestao, TextArea texto) {
             return new RespostaQuestao(numeroQuestao, idQuestao, Questao.DISSERTATIVA, texto,
                     null, null, 0, null, null);
         }
 
         private static RespostaQuestao multiplaEscolha(int numeroQuestao, long idQuestao,
-                                                        ToggleGroup grupo, int quantidadeAlternativas, List<ComboBox<Integer>> correspondencia, List<String> textosCorrespondencia) {
+                                                       ToggleGroup grupo, int quantidadeAlternativas) {
             return new RespostaQuestao(numeroQuestao, idQuestao, Questao.MULTIPLA_ESCOLHA, null,
-                    grupo, null, quantidadeAlternativas , null, null);
+                    grupo, null, quantidadeAlternativas, null, null);
         }
 
-        private static RespostaQuestao checklist(int numeroQuestao, long idQuestao, List<CheckBox> checklist, List<ComboBox<Integer>> correspondencia, List<String> textosCorrespondencia) {
+        private static RespostaQuestao checklist(int numeroQuestao, long idQuestao, List<CheckBox> checklist) {
             return new RespostaQuestao(numeroQuestao, idQuestao, Questao.CHECKLIST, null,
                     null, checklist, checklist.size(), null, null);
         }
-        private static RespostaQuestao correspondencia(int numeroQuestao, long idQuestao, List<ComboBox<Integer>> correspondencia, List<String> textosCorrespondencia) {
-            return new RespostaQuestao(numeroQuestao, idQuestao, Questao.CORRESPONDENCIA, null, null, null, correspondencia.size(), correspondencia, textosCorrespondencia);
+
+        private static RespostaQuestao correspondencia(int numeroQuestao, long idQuestao,
+                                                       List<ComboBox<Integer>> correspondencia,
+                                                       List<String> textosCorrespondencia) {
+            return new RespostaQuestao(numeroQuestao, idQuestao, Questao.CORRESPONDENCIA, null,
+                    null, null, correspondencia.size(), correspondencia, textosCorrespondencia);
         }
+
         private boolean foiRespondida() {
             if (Questao.DISSERTATIVA.equals(tipo)) {
                 return texto != null && texto.getText() != null && !texto.getText().trim().isEmpty();
@@ -693,22 +787,15 @@ public class FazerProvaController implements Initializable {
             if (quantidadeAlternativas == 0) {
                 return false;
             }
-            if (Questao.CORRESPONDENCIA.equals(tipo)) {
 
+            if (Questao.CORRESPONDENCIA.equals(tipo)) {
                 if (correspondencia == null || correspondencia.isEmpty()) {
                     return false;
                 }
                 List<Integer> numerosUsados = new ArrayList<>();
-
                 for (ComboBox<Integer> combo : correspondencia) {
-
                     Integer numero = combo.getValue();
-
-                    if (numero == null) {
-                        return false;
-                    }
-
-                    if (numerosUsados.contains(numero)) {
+                    if (numero == null || numerosUsados.contains(numero)) {
                         return false;
                     }
                     numerosUsados.add(numero);
@@ -720,7 +807,6 @@ public class FazerProvaController implements Initializable {
                 if (checklist == null) {
                     return false;
                 }
-
                 for (CheckBox item : checklist) {
                     if (item.isSelected()) {
                         return true;
@@ -732,30 +818,23 @@ public class FazerProvaController implements Initializable {
             return grupo != null && grupo.getSelectedToggle() != null;
         }
 
-        /**
-         * Converte o componente JavaFX preenchido pelo aluno em texto para o banco.
-         */
         private String obterRespostaTexto() {
             if (Questao.DISSERTATIVA.equals(tipo)) {
                 return texto == null ? "" : texto.getText().trim();
             }
+
             if (Questao.CORRESPONDENCIA.equals(tipo)) {
-
                 List<String> respostas = new ArrayList<>();
-
                 for (int i = 0; i < correspondencia.size(); i++) {
                     Integer numero = correspondencia.get(i).getValue();
-                    String textoAlt = textosCorrespondencia.get(i); // Pega o texto da alternativa
-
-                    // Salva no formato "TextoAlternativa=NumeroItem" para coincidir perfeitamente com o gabarito
+                    String textoAlt = textosCorrespondencia.get(i);
                     respostas.add(textoAlt + "=" + (numero == null ? "" : numero));
                 }
-
                 return String.join(" | ", respostas);
             }
+
             if (Questao.CHECKLIST.equals(tipo)) {
                 List<String> selecionadas = new ArrayList<>();
-
                 if (checklist != null) {
                     for (CheckBox item : checklist) {
                         if (item.isSelected()) {
@@ -763,7 +842,6 @@ public class FazerProvaController implements Initializable {
                         }
                     }
                 }
-
                 return String.join(" | ", selecionadas);
             }
 

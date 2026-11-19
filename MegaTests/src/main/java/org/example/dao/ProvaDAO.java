@@ -11,7 +11,6 @@ import java.util.List;
 public class ProvaDAO {
 
     public void salvaProvaCompleta(Prova prova) {
-        // Queries usadas durante o salvamento completo da prova.
         String sqlBuscaDisciplina = "SELECT id FROM mg_disciplina WHERE nome = ?";
         String sqlProva = "INSERT INTO mg_provas (nome, data_inicial, data_limite, duracao_minutos, id_disciplina, matricula_professor) VALUES (?, ?, ?, ?, ?, ?)";
         String sqlQuestao = "INSERT INTO mg_questoes (tipo, enunciado, gabarito, pontos) VALUES (?, ?, ?, ?)";
@@ -21,14 +20,11 @@ public class ProvaDAO {
         String sqlOpcaoCorrespondencia = "INSERT INTO mg_questao_correspondencia_alternativa (id_questao, texto, numero_correto) VALUES (?, ?, ?)";
 
         try (Connection conn = new ConexaoDAO().conectaBD()) {
-            // Tudo é salvo dentro de uma única transação. Se qualquer etapa falhar,
-            // o rollback impede que a prova fique pela metade no banco.
             conn.setAutoCommit(false);
 
             try {
                 long idDisciplina;
 
-                // Busca o ID da disciplina escolhida pelo professor.
                 try (PreparedStatement stmtDisciplina = conn.prepareStatement(sqlBuscaDisciplina)) {
                     stmtDisciplina.setString(1, prova.getDisciplina());
 
@@ -47,7 +43,6 @@ public class ProvaDAO {
 
                 long idProva;
 
-                // Salva os dados principais da prova e recupera o ID gerado.
                 try (PreparedStatement stmtProva = conn.prepareStatement(sqlProva, Statement.RETURN_GENERATED_KEYS)) {
                     stmtProva.setString(1, prova.getNome());
 
@@ -83,14 +78,11 @@ public class ProvaDAO {
 
                 int ordemQuestao = 1;
 
-                // Salva cada questão da prova.
                 for (Questao q : prova.getQuestoes()) {
                     String tipoBanco = Questao.DISSERTATIVA.equalsIgnoreCase(q.getTipo())
                             ? "Dissertativa"
                             : "Objetiva";
 
-                    // O campo gabarito é obrigatório em mg_questoes.
-                    // Ele é montado antes do INSERT para garantir que sempre exista um valor.
                     String gabarito = montarGabarito(q);
                     if (gabarito == null) {
                         gabarito = "";
@@ -102,7 +94,7 @@ public class ProvaDAO {
                         stmtQuestao.setString(1, tipoBanco);
                         stmtQuestao.setString(2, q.getEnunciado());
                         stmtQuestao.setString(3, gabarito);
-                        stmtQuestao.setDouble(4, q.getPontos()); // Persiste os pontos salvos na Questao
+                        stmtQuestao.setDouble(4, q.getPontos());
                         stmtQuestao.executeUpdate();
 
                         try (ResultSet rsQuestaoKeys = stmtQuestao.getGeneratedKeys()) {
@@ -113,16 +105,14 @@ public class ProvaDAO {
                         }
                     }
 
-                    // Liga a questão à prova e mantém a ordem definida no formulário.
                     try (PreparedStatement stmtAssoc = conn.prepareStatement(sqlAssociativa)) {
                         stmtAssoc.setLong(1, idProva);
                         stmtAssoc.setLong(2, idQuestao);
                         stmtAssoc.setInt(3, ordemQuestao++);
                         stmtAssoc.executeUpdate();
                     }
-                    // Tratamento isolado por tipo de questão (Evita duplicação e usa as queries certas)
+
                     if (Questao.CORRESPONDENCIA.equals(q.getTipo())) {
-                        // Salva os itens numerados da correspondência
                         for (int i = 0; i < q.getItensCorrespondencia().size(); i++) {
                             try (PreparedStatement stmt = conn.prepareStatement(sqlItemCorrespondencia)) {
                                 stmt.setLong(1, idQuestao);
@@ -132,7 +122,6 @@ public class ProvaDAO {
                             }
                         }
 
-                        // Salva as opções e o número correto da correspondência
                         for (int i = 0; i < q.getAlternativasCorrespondencia().size(); i++) {
                             try (PreparedStatement stmt = conn.prepareStatement(sqlOpcaoCorrespondencia)) {
                                 stmt.setLong(1, idQuestao);
@@ -141,9 +130,7 @@ public class ProvaDAO {
                                 stmt.executeUpdate();
                             }
                         }
-                    }
-                    else if (!Questao.DISSERTATIVA.equals(q.getTipo())) {
-                        // Salva as alternativas comuns APENAS UMA VEZ para Múltipla Escolha e Checklist
+                    } else if (!Questao.DISSERTATIVA.equals(q.getTipo())) {
                         List<String> alternativas = q.getAlternativas();
                         List<Integer> respostasCorretas = q.getRespostasCorretas();
 
@@ -183,11 +170,8 @@ public class ProvaDAO {
             List<String> partes = new ArrayList<>();
 
             for (int i = 0; i < questao.getAlternativasCorrespondencia().size(); i++) {
-
                 String texto = questao.getAlternativasCorrespondencia().get(i);
-
-                String numero = questao.getItensCorrespondencia().get(i);
-
+                Integer numero = questao.getGabaritoCorrespondencia().get(i);
                 partes.add(texto + "=" + numero);
             }
             return String.join(" | ", partes);
@@ -203,7 +187,6 @@ public class ProvaDAO {
     }
 
     public Prova buscarProvaCompletaParaProfessor(int idProva) {
-        // Reutiliza a lógica base de buscar a prova
         Prova prova = buscarProvaCompleta(idProva);
         if (prova == null) {
             return null;
@@ -220,11 +203,8 @@ public class ProvaDAO {
 
         try (Connection conn = new ConexaoDAO().conectaBD()) {
             for (Questao questao : prova.getQuestoes()) {
-
-                // Se for Múltipla Escolha ou Checklist, carrega as corretas
                 if (Questao.DISSERTATIVA.equals(questao.getTipo())) {
                     String gabaritoDissertativa = "";
-                    // Tem um select proprio pra referencia da dissertativa
                     try (PreparedStatement stmtGab = conn.prepareStatement("SELECT gabarito FROM mg_questoes WHERE id = ?")) {
                         stmtGab.setLong(1, questao.getId());
 
@@ -235,9 +215,7 @@ public class ProvaDAO {
                         }
                     }
                     questao.setRespostaModelo(gabaritoDissertativa);
-                }
-                //Se for Correspondência, garante que os itens e o gabarito vêm preenchidos
-                else if (Questao.CORRESPONDENCIA.equals(questao.getTipo())) {
+                } else if (Questao.CORRESPONDENCIA.equals(questao.getTipo())) {
                     questao.getItensCorrespondencia().clear();
                     questao.getAlternativasCorrespondencia().clear();
                     questao.getGabaritoCorrespondencia().clear();
@@ -260,9 +238,7 @@ public class ProvaDAO {
                             }
                         }
                     }
-                }
-                // Se for Múltipla Escolha ou Checklist, AGORA EXECUTA O SELECT E CARREGA AS CORRETAS aaaaaaaa
-                else {
+                } else {
                     questao.getRespostasCorretas().clear();
 
                     try (PreparedStatement stmt = conn.prepareStatement(sqlAlternativasComGabarito)) {
@@ -305,6 +281,7 @@ public class ProvaDAO {
                         "WHERE pq.id_prova = ? " +
                         "GROUP BY q.id, q.tipo, q.enunciado, q.pontos, pq.ordem " +
                         "ORDER BY pq.ordem";
+
         String sqlItensCorrespondencia =
                 "SELECT ordem, texto " +
                         "FROM mg_questao_correspondencia_item " +
@@ -363,7 +340,6 @@ public class ProvaDAO {
                         int quantidadeCorretas = rsQuestoes.getInt("quantidade_corretas");
 
                         Questao questao = new Questao();
-                        // Guarda o ID e a pontuação da questão trazida do MySQL
                         questao.setId(idQuestao);
                         questao.setEnunciado(rsQuestoes.getString("enunciado"));
                         questao.setPontos(rsQuestoes.getDouble("pontos"));
@@ -373,27 +349,19 @@ public class ProvaDAO {
 
                         if ("Dissertativa".equalsIgnoreCase(tipoBanco)) {
                             questao.setTipo(Questao.DISSERTATIVA);
-
                         } else if (quantidadeItensCorrespondencia > 0) {
-
                             questao.setTipo(Questao.CORRESPONDENCIA);
-
                         } else if (quantidadeCorretas > 1) {
-
                             questao.setTipo(Questao.CHECKLIST);
-
                         } else {
-
                             questao.setTipo(Questao.MULTIPLA_ESCOLHA);
-                        }if (Questao.CORRESPONDENCIA.equals(questao.getTipo())) {
+                        }
 
+                        if (Questao.CORRESPONDENCIA.equals(questao.getTipo())) {
                             try (PreparedStatement stmt =
                                          conn.prepareStatement(sqlItensCorrespondencia)) {
-
                                 stmt.setLong(1, idQuestao);
-
                                 try (ResultSet rs = stmt.executeQuery()) {
-
                                     while (rs.next()) {
                                         questao.getItensCorrespondencia()
                                                 .add(rs.getString("texto"));
@@ -403,32 +371,22 @@ public class ProvaDAO {
 
                             try (PreparedStatement stmt =
                                          conn.prepareStatement(sqlAlternativasCorrespondencia)) {
-
                                 stmt.setLong(1, idQuestao);
-
                                 try (ResultSet rs = stmt.executeQuery()) {
-
                                     while (rs.next()) {
-
                                         questao.getAlternativasCorrespondencia()
                                                 .add(rs.getString("texto"));
-
                                         questao.getGabaritoCorrespondencia()
                                                 .add(rs.getInt("numero_correto"));
                                     }
                                 }
                             }
-
                         } else if (!Questao.DISSERTATIVA.equals(questao.getTipo())) {
-
                             try (PreparedStatement stmtAlternativas =
                                          conn.prepareStatement(sqlAlternativas)) {
-
                                 stmtAlternativas.setLong(1, idQuestao);
-
                                 try (ResultSet rsAlternativas =
                                              stmtAlternativas.executeQuery()) {
-
                                     while (rsAlternativas.next()) {
                                         questao.getAlternativas()
                                                 .add(rsAlternativas.getString("texto"));
@@ -452,8 +410,8 @@ public class ProvaDAO {
     }
 
     /**
-     * Lista apenas as provas das disciplinas pertencentes ao curso do aluno logado.
-     * O caminho da consulta é: aluno -> curso -> disciplinas -> provas.
+     * Lista apenas as provas pendentes das disciplinas pertencentes ao curso do aluno logado,
+     * respeitando a janela de data_inicial e data_limite e ocultando provas já enviadas/finalizadas.
      */
     public List<Prova> listarProvasPorAluno(long raAluno) {
         List<Prova> listaProvas = new ArrayList<>();
@@ -467,11 +425,15 @@ public class ProvaDAO {
                 "AND (p.data_inicial IS NULL OR p.data_inicial <= NOW()) " +
                 "AND (p.data_limite IS NULL OR p.data_limite >= NOW()) " +
                 "AND NOT EXISTS (" +
-                "SELECT 1 FROM mg_resposta_aluno r " +
-                "WHERE r.ra_aluno = a.ra " +
-                "AND r.id_prova = p.id" +
+                "    SELECT 1 FROM mg_resposta_aluno r " +
+                "    WHERE r.ra_aluno = a.ra AND r.id_prova = p.id" +
                 ") " +
-                "ORDER BY d.nome, p.nome";
+                "AND NOT EXISTS (" +
+                "    SELECT 1 FROM mg_aluno_prova ap " +
+                "    WHERE ap.ra_aluno = a.ra AND ap.id_prova = p.id " +
+                "    AND ap.status IN ('FINALIZADA', 'EXPIRADA', 'CORRIGIDA')" +
+                ") " +
+                "ORDER BY d.nome, p.data_limite, p.nome";
 
         try (Connection conn = new ConexaoDAO().conectaBD();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -501,66 +463,52 @@ public class ProvaDAO {
             }
         } catch (SQLException erro) {
             erro.printStackTrace();
-            throw new RuntimeException(
-                    "Erro ao carregar provas do curso do aluno: " + erro.getMessage(), erro);
+            throw new RuntimeException("Erro ao listar provas do aluno: " + erro.getMessage(), erro);
         }
 
-        System.out.println("Total de provas do curso carregadas: " + listaProvas.size());
         return listaProvas;
     }
 
-    // Funçao para deletar provas pelo remove do ListaProvas.xml
-    public boolean deletarProva(long idProva) {
-        String sql = "DELETE FROM mg_provas WHERE id = ?";
-
-        try (Connection conn = new ConexaoDAO().conectaBD();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setLong(1, idProva);
-            int linhasAfetadas = stmt.executeUpdate();
-            return linhasAfetadas > 0; // Retorna true se conseguiu apagar do banco
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    // Função para carregar uma lista com todas as provas
+    /**
+     * Carrega a lista de provas postadas pelo professor logado (usado em ListaProvaController).
+     */
     public List<Prova> listarNomeProvas() {
         List<Prova> listaProvas = new ArrayList<>();
-        String sql = "SELECT * FROM mg_provas"; //Query para puxar todas as provas
-        //Query para puxar prova por disciplina
-       /*  "SELECT
-                provas.nome AS nome_da_prova,
-                disciplinas.nome AS nome_da_disciplina
-            FROM
-                provas
-            INNER JOIN
-                disciplinas ON provas.id_disciplina = disciplinas.id;"*/
-        //Implantar essa função futuramente.
+        Long matriculaProfessor = SessaoUsuarioController.getIdUsuarioLogado();
+
+        String sql = "SELECT p.id, p.nome, p.data_inicial, p.data_limite, p.duracao_minutos, d.nome AS disciplina " +
+                "FROM mg_provas p " +
+                "LEFT JOIN mg_disciplina d ON d.id = p.id_disciplina " +
+                (matriculaProfessor != null ? "WHERE p.matricula_professor = ? " : "") +
+                "ORDER BY p.id DESC";
 
         try (Connection conn = new ConexaoDAO().conectaBD();
-             PreparedStatement statement = conn.prepareStatement(sql);
-             ResultSet rs = statement.executeQuery()) {
-            //Percorre todos os resultados do SELECT
-            while (rs.next()) {
-                Prova prova = new Prova();
-                prova.setId(rs.getInt("id"));
-                prova.setNome(rs.getString("Nome"));
-                prova.setDuracaoMinutos(rs.getInt("duracao_minutos"));
+             PreparedStatement statement = conn.prepareStatement(sql)) {
 
-                Timestamp dataInicial = rs.getTimestamp("data_inicial");
-                if (dataInicial != null) {
-                    prova.setDataInicial(dataInicial.toLocalDateTime());
+            if (matriculaProfessor != null) {
+                statement.setLong(1, matriculaProfessor);
+            }
+
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    Prova prova = new Prova();
+                    prova.setId(rs.getInt("id"));
+                    prova.setNome(rs.getString("nome"));
+                    prova.setDisciplina(rs.getString("disciplina"));
+                    prova.setDuracaoMinutos(rs.getInt("duracao_minutos"));
+
+                    Timestamp dataInicial = rs.getTimestamp("data_inicial");
+                    if (dataInicial != null) {
+                        prova.setDataInicial(dataInicial.toLocalDateTime());
+                    }
+
+                    Timestamp dataLimite = rs.getTimestamp("data_limite");
+                    if (dataLimite != null) {
+                        prova.setDataLimite(dataLimite.toLocalDateTime());
+                    }
+
+                    listaProvas.add(prova);
                 }
-
-                Timestamp dataLimite = rs.getTimestamp("data_limite");
-                if (dataLimite != null) {
-                    prova.setDataLimite(dataLimite.toLocalDateTime());
-                }
-
-                listaProvas.add(prova);
             }
 
         } catch (SQLException erro) {
@@ -570,4 +518,19 @@ public class ProvaDAO {
         return listaProvas;
     }
 
+    public boolean deletarProva(long idProva) {
+        String sql = "DELETE FROM mg_provas WHERE id = ?";
+
+        try (Connection conn = new ConexaoDAO().conectaBD();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, idProva);
+            int linhasAfetadas = stmt.executeUpdate();
+            return linhasAfetadas > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

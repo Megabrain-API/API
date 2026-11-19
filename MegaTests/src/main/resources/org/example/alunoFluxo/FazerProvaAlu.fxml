@@ -8,56 +8,15 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="400.0" prefWidth="600.0" styleClass="fundo-inicio" stylesheets="@../estilo.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.alunoControllers.FazerProvaController">
-   <center>
-      <StackPane minHeight="0.0" minWidth="0.0">
-         <children>
-            <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="402.0" prefWidth="459.0">
-               <children>
-                  <Label>
-                     <font>
-                        <Font name="System Bold" size="24.0" />
-                     </font>
-                  </Label>
-                  <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="362.0" prefWidth="459.0">
-                     <content>
-                        <VBox fx:id="vb_fazerprova_container" alignment="TOP_LEFT" fillWidth="true" prefWidth="430.0" spacing="14.0">
-                           <padding>
-                              <Insets bottom="18.0" left="18.0" right="18.0" top="18.0" />
-                           </padding>
-                        </VBox>
-                     </content>
-                  </ScrollPane>
-                  <HBox alignment="CENTER" prefHeight="90.0" prefWidth="459.0" spacing="50.0">
-                     <children>
-                        <Button alignment="CENTER" contentDisplay="CENTER" lineSpacing="10.0" mnemonicParsing="false" onAction="#Cancelar_Prova" prefHeight="40.0" prefWidth="130.0" style="-fx-background-radius: 8px;" text="Voltar">
-                           <font>
-                              <Font size="16.0" />
-                           </font>
-                        </Button>
-                        <Button lineSpacing="10.0" mnemonicParsing="false" onAction="#EnviarProva_aluno" prefHeight="40.0" prefWidth="130.0" style="-fx-background-color: #4A7C59; -fx-background-radius: 8px;" text="Enviar Prova" textFill="WHITE">
-                           <font>
-                              <Font name="System Bold" size="16.0" />
-                           </font>
-                        </Button>
-                     </children>
-                     <VBox.margin>
-                        <Insets top="20.0" />
-                     </VBox.margin>
-                  </HBox>
-               </children>
-            </VBox>
-         </children>
-      </StackPane>
-   </center>
+<BorderPane prefHeight="600.0" prefWidth="960.0" styleClass="fundo-inicio" stylesheets="@../estilo.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.alunoControllers.FazerProvaController">
    <left>
-      <VBox fx:id="barra_lateral" alignment="CENTER_LEFT" minHeight="200.0" minWidth="60.0" onMouseEntered="#expande_barra" onMouseExited="#minimiza_barra" prefHeight="400.0" prefWidth="60.0" style="-fx-background-color: #0066ff;" styleClass="barralateral" BorderPane.alignment="CENTER">
+      <VBox fx:id="barra_lateral" alignment="CENTER_LEFT" minHeight="200.0" minWidth="60.0" onMouseEntered="#expande_barra" onMouseExited="#minimiza_barra" prefHeight="600.0" prefWidth="60.0" style="-fx-background-color: #0066ff;" styleClass="barralateral" BorderPane.alignment="CENTER">
          <children>
-      
+
             <Button fx:id="menu_meucurso" alignment="BASELINE_LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#entra_meucurso" prefHeight="48.0" prefWidth="200.0" style="-fx-background-color: #0066ff; -fx-padding: 0 0 0 10;" text="Meu Curso" textFill="WHITE">
                <VBox.margin>
                   <Insets bottom="25.0" top="30.0" />
@@ -73,7 +32,7 @@
                   <Font name="System Bold" size="12.0" />
                </font>
             </Button>
-      
+
             <Button fx:id="minhas_provas_aluno" alignment="BASELINE_LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#entra_menuprova_aluno" prefHeight="48.0" prefWidth="200.0" style="-fx-background-color: #0066ff; -fx-padding: 0 0 0 10;" text="Ver Provas" textFill="WHITE">
                <VBox.margin>
                   <Insets bottom="25.0" top="30.0" />
@@ -89,7 +48,7 @@
                   <Font name="System Bold" size="12.0" />
                </font>
             </Button>
-      
+
             <Button fx:id="dados_pessoais_alu" alignment="BASELINE_LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#entra_dados_pessoais_alu" prefHeight="48.0" prefWidth="200.0" style="-fx-background-color: #0066ff; -fx-padding: 0 0 0 10;" text="Dados Pessoais" textFill="WHITE">
                <VBox.margin>
                   <Insets bottom="25.0" top="30.0" />
@@ -105,7 +64,7 @@
                   <Font name="System Bold" size="12.0" />
                </font>
             </Button>
-      
+
             <Button fx:id="menu_sair_aluno" alignment="BASELINE_LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#deslogar_aluno" prefHeight="48.0" prefWidth="200.0" style="-fx-background-color: #0066ff; -fx-padding: 0 0 0 10;" text="Sair" textFill="WHITE">
                <VBox.margin>
                   <Insets bottom="25.0" left="5.0" top="30.0" />
@@ -121,8 +80,71 @@
                   <Font name="System Bold" size="12.0" />
                </font>
             </Button>
-      
+
          </children>
       </VBox>
    </left>
+   <center>
+      <VBox prefHeight="600.0" prefWidth="880.0" spacing="0.0" BorderPane.alignment="CENTER">
+         <children>
+            <!-- Cabeçalho fixo com título da prova, período e cronômetro -->
+            <HBox alignment="CENTER_LEFT" spacing="16.0" style="-fx-background-color: rgba(255, 255, 255, 0.92); -fx-border-color: #DCE3EC; -fx-border-width: 0 0 1 0;">
+               <padding>
+                  <Insets bottom="16.0" left="28.0" right="28.0" top="16.0" />
+               </padding>
+               <children>
+                  <VBox spacing="3.0">
+                     <children>
+                        <Label fx:id="lbl_disciplina_prova" text="AVALIAÇÃO" textFill="#0066FF">
+                           <font>
+                              <Font name="System Bold" size="11.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="lbl_titulo_prova" text="Carregando prova..." textFill="#1B1B1B">
+                           <font>
+                              <Font name="System Bold" size="22.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="lbl_periodo_prova" text="Aguarde..." textFill="#5F6368" wrapText="true">
+                           <font>
+                              <Font size="13.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </VBox>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Label fx:id="lblTempoRestante" managed="false" style="-fx-background-color: #FDECEA; -fx-text-fill: #B3261E; -fx-border-color: #F5C2BE; -fx-border-radius: 10px; -fx-background-radius: 10px; -fx-padding: 8 16 8 16; -fx-font-weight: bold; -fx-font-size: 14px;" text="Tempo restante: --:--" visible="false" />
+               </children>
+            </HBox>
+
+            <!-- Área rolável com os cards das questões -->
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
+               <content>
+                  <VBox fx:id="vb_fazerprova_container" fillWidth="true" spacing="16.0">
+                     <padding>
+                        <Insets bottom="26.0" left="28.0" right="28.0" top="22.0" />
+                     </padding>
+                  </VBox>
+               </content>
+            </ScrollPane>
+
+            <!-- Rodapé fixo com progresso e ações -->
+            <HBox alignment="CENTER_LEFT" spacing="14.0" style="-fx-background-color: rgba(255, 255, 255, 0.92); -fx-border-color: #DCE3EC; -fx-border-width: 1 0 0 0;">
+               <padding>
+                  <Insets bottom="14.0" left="28.0" right="28.0" top="14.0" />
+               </padding>
+               <children>
+                  <Label fx:id="lbl_progresso_questoes" text="Respondidas: 0 / 0" textFill="#5F6368">
+                     <font>
+                        <Font name="System Bold" size="13.0" />
+                     </font>
+                  </Label>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Button mnemonicParsing="false" onAction="#Cancelar_Prova" prefHeight="38.0" prefWidth="120.0" style="-fx-background-color: #F1F4F8; -fx-border-color: #C4CEDB; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-text-fill: #2B3340; -fx-font-weight: bold; -fx-cursor: hand;" text="Voltar" />
+                  <Button mnemonicParsing="false" onAction="#EnviarProva_aluno" prefHeight="38.0" prefWidth="150.0" style="-fx-background-color: #0066FF; -fx-background-radius: 8px; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="Enviar Prova" />
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </center>
 </BorderPane>
