@@ -455,30 +455,25 @@ public class ProvaDAO {
      * Lista apenas as provas das disciplinas pertencentes ao curso do aluno logado.
      * O caminho da consulta é: aluno -> curso -> disciplinas -> provas.
      */
-    public List<Prova> listarProvasPorAluno(long raAluno) {
+    // Função para carregar uma lista com as provas do professor logado (com disciplina e prazos)
+    public List<Prova> listarNomeProvas() {
         List<Prova> listaProvas = new ArrayList<>();
+        Long matriculaProfessor = SessaoUsuarioController.getIdUsuarioLogado();
 
-        String sql = "SELECT DISTINCT p.id, p.nome, p.data_inicial, p.data_limite, p.duracao_minutos, d.nome AS disciplina " +
-                "FROM mg_aluno a " +
-                "INNER JOIN mg_curso_disciplina cd ON cd.id_curso = a.id_curso " +
-                "INNER JOIN mg_disciplina d ON d.id = cd.id_disciplina " +
-                "INNER JOIN mg_provas p ON p.id_disciplina = d.id " +
-                "WHERE a.ra = ? " +
-                "AND (p.data_inicial IS NULL OR p.data_inicial <= NOW()) " +
-                "AND (p.data_limite IS NULL OR p.data_limite >= NOW()) " +
-                "AND NOT EXISTS (" +
-                "SELECT 1 FROM mg_resposta_aluno r " +
-                "WHERE r.ra_aluno = a.ra " +
-                "AND r.id_prova = p.id" +
-                ") " +
-                "ORDER BY d.nome, p.nome";
+        String sql = "SELECT p.id, p.nome, p.data_inicial, p.data_limite, p.duracao_minutos, d.nome AS disciplina " +
+                "FROM mg_provas p " +
+                "LEFT JOIN mg_disciplina d ON d.id = p.id_disciplina " +
+                (matriculaProfessor != null ? "WHERE p.matricula_professor = ? " : "") +
+                "ORDER BY p.id DESC";
 
         try (Connection conn = new ConexaoDAO().conectaBD();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement statement = conn.prepareStatement(sql)) {
 
-            stmt.setLong(1, raAluno);
+            if (matriculaProfessor != null) {
+                statement.setLong(1, matriculaProfessor);
+            }
 
-            try (ResultSet rs = stmt.executeQuery()) {
+            try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     Prova prova = new Prova();
                     prova.setId(rs.getInt("id"));
@@ -499,13 +494,11 @@ public class ProvaDAO {
                     listaProvas.add(prova);
                 }
             }
+
         } catch (SQLException erro) {
             erro.printStackTrace();
-            throw new RuntimeException(
-                    "Erro ao carregar provas do curso do aluno: " + erro.getMessage(), erro);
         }
-
-        System.out.println("Total de provas do curso carregadas: " + listaProvas.size());
+        System.out.println("Total de provas carregadas: " + listaProvas.size());
         return listaProvas;
     }
 
@@ -525,49 +518,4 @@ public class ProvaDAO {
             return false;
         }
     }
-
-    // Função para carregar uma lista com todas as provas
-    public List<Prova> listarNomeProvas() {
-        List<Prova> listaProvas = new ArrayList<>();
-        String sql = "SELECT * FROM mg_provas"; //Query para puxar todas as provas
-        //Query para puxar prova por disciplina
-       /*  "SELECT
-                provas.nome AS nome_da_prova,
-                disciplinas.nome AS nome_da_disciplina
-            FROM
-                provas
-            INNER JOIN
-                disciplinas ON provas.id_disciplina = disciplinas.id;"*/
-        //Implantar essa função futuramente.
-
-        try (Connection conn = new ConexaoDAO().conectaBD();
-             PreparedStatement statement = conn.prepareStatement(sql);
-             ResultSet rs = statement.executeQuery()) {
-            //Percorre todos os resultados do SELECT
-            while (rs.next()) {
-                Prova prova = new Prova();
-                prova.setId(rs.getInt("id"));
-                prova.setNome(rs.getString("Nome"));
-                prova.setDuracaoMinutos(rs.getInt("duracao_minutos"));
-
-                Timestamp dataInicial = rs.getTimestamp("data_inicial");
-                if (dataInicial != null) {
-                    prova.setDataInicial(dataInicial.toLocalDateTime());
-                }
-
-                Timestamp dataLimite = rs.getTimestamp("data_limite");
-                if (dataLimite != null) {
-                    prova.setDataLimite(dataLimite.toLocalDateTime());
-                }
-
-                listaProvas.add(prova);
-            }
-
-        } catch (SQLException erro) {
-            erro.printStackTrace();
-        }
-        System.out.println("Total de provas carregadas: " + listaProvas.size());
-        return listaProvas;
-    }
-
 }
