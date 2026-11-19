@@ -1,4 +1,4 @@
-[⬅️ Voltar para o README Principal](../README.md)
+[⬅️ Voltar para o README Principal](../../README.md)
 
 # 📖 Manual do Usuário — MegaTests
 
