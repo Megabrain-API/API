@@ -205,7 +205,7 @@ Toda a documentação técnica, modelagem de banco de dados e governança da equ
 
 *  [**Documentação do Projeto**](documentacao/documentação-projeto/) — *Manuais de Instalação, Backlog (`BACKLOG.xlsx`), Modelagem (`DER_API.brM`) e Documentação Geral.*
 *  [**Documentação da Equipe**](documentacao/documentacao%20equipe/) — *Contrato de Permanência, Padrão de Commits e regras do time.*
-*  [**Documentação do Usuário**](documentacao/documentacao%20usuario/) — *Manual para uso do usuário professor e aluno.*
+ [**Documentação do Usuário**](documentacao/documentacao_usuario/) — *Manual para uso do usuário professor e aluno.*
 
 ---
 
