@@ -1,14 +1,16 @@
-
 package org.example.controllers.alunoControllers;
-
-import org.example.entity.alunoEntity.MediaFinal;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import org.example.App;
+import org.example.controllers.profControllers.SessaoUsuarioController;
+import org.example.dao.MediaFinalDAO;
+import org.example.entity.alunoEntity.MediaFinal;
 
+import java.io.IOException;
 import java.math.RoundingMode;
 import java.util.List;
 
@@ -26,7 +28,6 @@ public class MediaFinalAlunoController {
     @FXML
     private VBox vb_mediafinal_aluno_container;
 
-
     //inicio da tela
     @FXML
     public void initialize() {
@@ -36,8 +37,16 @@ public class MediaFinalAlunoController {
         lbl_caminho_mediafinal_aluno.setText(
                 "Confira suas médias por disciplina"
         );
-    }
 
+        Long raAluno = SessaoUsuarioController.getIdUsuarioLogado();
+
+        if (raAluno != null) {
+            List<MediaFinal> medias = new MediaFinalDAO().listarMediasPorAluno(raAluno);
+            carregarMedias(medias);
+        } else {
+            carregarMedias(List.of());
+        }
+    }
 
     //recebe as medias
     public void carregarMedias(List<MediaFinal> medias) {
@@ -69,7 +78,6 @@ public class MediaFinalAlunoController {
         }
     }
 
-
     //cria o cartão de cada disciplina
     private VBox criarCartao(MediaFinal media) {
 
@@ -83,18 +91,15 @@ public class MediaFinalAlunoController {
                         "-fx-padding: 15px;"
         );
 
-
         //nome
         Label titulo = new Label(
                 media.getNomeDisciplina()
         );
 
-
         //quantidade de avaliações
         Label provas = new Label(
                 media.getQuantidadeprova() + " provas consideradas"
         );
-
 
         //média final
         String valorMedia = "Não disponível";
@@ -111,7 +116,6 @@ public class MediaFinalAlunoController {
                 "Média final: " + valorMedia
         );
 
-
         //adiciona os elementos ao cartão
         cartao.getChildren().addAll(
                 titulo,
@@ -122,12 +126,9 @@ public class MediaFinalAlunoController {
         return cartao;
     }
 
-
     //botão voltar
     @FXML
-    void voltar(ActionEvent event) {
-        //pfv implementar o evento de voltar para tela anterior
-
+    void voltar(ActionEvent event) throws IOException {
+        App.setRoot("alunoFluxo/MenuAluno");
     }
-
 }

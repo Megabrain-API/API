@@ -46,11 +46,28 @@ CREATE TABLE IF NOT EXISTS mg_provas (
     data_inicial DATETIME,
     data_limite DATETIME,
     duracao_minutos INT NOT NULL DEFAULT 120,
+    peso DECIMAL(4,2) NOT NULL DEFAULT 1.00,
     id_disciplina BIGINT NOT NULL,
     matricula_professor BIGINT NOT NULL,
     FOREIGN KEY (id_disciplina) REFERENCES mg_disciplina(id) ON DELETE CASCADE,
     FOREIGN KEY (matricula_professor) REFERENCES mg_professor(matricula) ON DELETE CASCADE
     );
+
+SET @mg_provas_tem_peso = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_provas'
+      AND COLUMN_NAME = 'peso'
+);
+SET @sql_mg_provas_peso = IF(
+    @mg_provas_tem_peso = 0,
+    'ALTER TABLE mg_provas ADD COLUMN peso DECIMAL(4,2) NOT NULL DEFAULT 1.00',
+    'SELECT 1'
+);
+PREPARE stmt_mg_provas_peso FROM @sql_mg_provas_peso;
+EXECUTE stmt_mg_provas_peso;
+DEALLOCATE PREPARE stmt_mg_provas_peso;
 
 CREATE TABLE IF NOT EXISTS mg_questoes (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
