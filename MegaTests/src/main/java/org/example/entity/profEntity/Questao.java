@@ -28,6 +28,8 @@ public class Questao {
     private List<Integer> respostasCorretas;
     private String respostaModelo;
     private double pontos = 1.0; // Pontuação/Valor atribuído à questão
+    private String disciplina;
+    private String prova;
 
     public Questao() {
         this.alternativas = new ArrayList<>();
@@ -120,5 +122,23 @@ public class Questao {
 
     public void setRespostaModelo(String respostaModelo) {
         this.respostaModelo = respostaModelo;
+    }
+
+
+    // Armazenar a disciplina com base na tabela mg_prova
+    public String getDisciplina() {
+        return disciplina;
+    }
+
+    public void setDisciplina(String disciplina) {
+        this.disciplina = disciplina;
+    }
+
+    public String getProva() {
+        return prova;
+    }
+
+    public void setProva(String prova) {
+        this.prova = prova;
     }
 }
