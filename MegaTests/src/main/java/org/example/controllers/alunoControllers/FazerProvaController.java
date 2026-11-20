@@ -3,6 +3,7 @@ package org.example.controllers.alunoControllers;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -74,6 +75,7 @@ public class FazerProvaController implements Initializable {
     // --- VARIÁVEIS DO CRONÓMETRO E CONTROLO DE FECHO ---
     private Timeline cronometro;
     private int segundosRestantes;
+    private boolean submissaoPorTempoIniciada = false;
     private static boolean provaEmAndamento = false;
     private static FazerProvaController instanciaAtiva;
 
@@ -126,7 +128,9 @@ public class FazerProvaController implements Initializable {
         }
 
         vb_fazerprova_container.getChildren().clear();
+        vb_fazerprova_container.setDisable(false);
         respostas.clear();
+        submissaoPorTempoIniciada = false;
 
         Prova provaSelecionada = ProvasAlunoController.getProvaSelecionadaParaAbertura();
 
@@ -182,6 +186,23 @@ public class FazerProvaController implements Initializable {
             lbl_periodo_prova.setText("Período disponível: " + dataIniStr + " até " + dataFimStr);
         }
 
+        if (provaAtual.getQuestoes() == null || provaAtual.getQuestoes().isEmpty()) {
+            mostrarCardAviso("Esta prova não possui questões cadastradas.");
+            atualizarProgressoRodape();
+            return;
+        }
+
+        // Monta as questões antes de verificar o cronômetro para que a lista 'respostas'
+        // já contenha todas as questões (mesmo que zeradas) caso o tempo já tenha expirado.
+        int numeroQuestao = 1;
+        for (Questao questao : provaAtual.getQuestoes()) {
+            VBox blocoQuestao = criarCardQuestao(questao, numeroQuestao);
+            vb_fazerprova_container.getChildren().add(blocoQuestao);
+            numeroQuestao++;
+        }
+
+        atualizarProgressoRodape();
+
         // --- CRONÓMETRO E DURAÇÃO (PERSISTENTE PELA HORA DE INÍCIO NO BANCO) ---
         if (provaAtual.getDuracaoMinutos() != null && provaAtual.getDuracaoMinutos() > 0) {
             if (lblTempoRestante != null) {
@@ -222,22 +243,6 @@ public class FazerProvaController implements Initializable {
             lblTempoRestante.setVisible(false);
             lblTempoRestante.setManaged(false);
         }
-
-        if (provaAtual.getQuestoes() == null || provaAtual.getQuestoes().isEmpty()) {
-            mostrarCardAviso("Esta prova não possui questões cadastradas.");
-            atualizarProgressoRodape();
-            return;
-        }
-
-        int numeroQuestao = 1;
-
-        for (Questao questao : provaAtual.getQuestoes()) {
-            VBox blocoQuestao = criarCardQuestao(questao, numeroQuestao);
-            vb_fazerprova_container.getChildren().add(blocoQuestao);
-            numeroQuestao++;
-        }
-
-        atualizarProgressoRodape();
     }
 
     private VBox criarCardQuestao(Questao questao, int numeroQuestao) {
@@ -489,28 +494,51 @@ public class FazerProvaController implements Initializable {
     }
 
     private void submeterProvaPorTempoEsgotado() {
+        if (submissaoPorTempoIniciada) {
+            return;
+        }
+        submissaoPorTempoIniciada = true;
         provaEmAndamento = false;
-        Alert alerta = new Alert(Alert.AlertType.WARNING);
-        alerta.setTitle("Tempo Esgotado");
-        alerta.setHeaderText("O tempo limite para a realização da prova acabou");
-        alerta.setContentText("Suas respostas atuais foram enviadas automaticamente.");
-        alerta.showAndWait();
 
-        Long raAlunoLogado = SessaoUsuarioController.getIdUsuarioLogado();
+        if (cronometro != null) {
+            cronometro.stop();
+        }
 
-        if (raAlunoLogado != null && provaAtual != null) {
-            Map<Long, String> respostasParaSalvar = new LinkedHashMap<>();
-            for (RespostaQuestao resposta : respostas) {
-                respostasParaSalvar.put(resposta.idQuestao, resposta.obterRespostaTexto());
+        // Bloqueia imediatamente os campos da prova para impedir alterações após o tempo zerar
+        if (vb_fazerprova_container != null) {
+            vb_fazerprova_container.setDisable(true);
+        }
+
+        // Executa fora do ciclo de animação do Timeline (evita IllegalStateException no showAndWait)
+        Platform.runLater(() -> {
+            Long raAlunoLogado = SessaoUsuarioController.getIdUsuarioLogado();
+
+            if (raAlunoLogado != null && provaAtual != null) {
+                Map<Long, String> respostasParaSalvar = new LinkedHashMap<>();
+                for (RespostaQuestao resposta : respostas) {
+                    // Questões não preenchidas retornam "" (ficam zeradas na correção)
+                    respostasParaSalvar.put(resposta.idQuestao, resposta.obterRespostaTexto());
+                }
+
+                try {
+                    new AlunoDAO().salvarRespostasProva(raAlunoLogado, provaAtual.getId(), respostasParaSalvar);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
+
+            Alert alerta = new Alert(Alert.AlertType.WARNING);
+            alerta.setTitle("Tempo Esgotado");
+            alerta.setHeaderText("O tempo limite para a realização da prova acabou");
+            alerta.setContentText("Suas respostas preenchidas foram enviadas automaticamente (questões em branco foram zeradas).");
+            alerta.showAndWait();
 
             try {
-                new AlunoDAO().salvarRespostasProva(raAlunoLogado, provaAtual.getId(), respostasParaSalvar);
                 App.setRoot("alunoFluxo/MenuAluno");
-            } catch (Exception e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+        });
     }
 
     private Label criarAvisoSemAlternativas() {
@@ -623,6 +651,10 @@ public class FazerProvaController implements Initializable {
 
     @FXML
     void EnviarProva_aluno(ActionEvent event) throws IOException {
+        if (submissaoPorTempoIniciada) {
+            return;
+        }
+
         if (provaAtual == null || provaAtual.getQuestoes() == null || provaAtual.getQuestoes().isEmpty()) {
             Alert alerta = new Alert(Alert.AlertType.WARNING);
             alerta.setTitle("Prova indisponível");

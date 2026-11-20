@@ -222,6 +222,17 @@ public class AlunoDAO {
                     stmtResposta.executeBatch();
                 }
 
+                String sqlFinalizaTentativa =
+                        "INSERT INTO mg_aluno_prova (ra_aluno, id_prova, data_inicio, data_envio, status) " +
+                                "VALUES (?, ?, NOW(), NOW(), 'FINALIZADA') " +
+                                "ON DUPLICATE KEY UPDATE data_envio = NOW(), status = 'FINALIZADA'";
+
+                try (PreparedStatement stmtFinaliza = conn.prepareStatement(sqlFinalizaTentativa)) {
+                    stmtFinaliza.setLong(1, raAluno);
+                    stmtFinaliza.setInt(2, idProva);
+                    stmtFinaliza.executeUpdate();
+                }
+
                 conn.commit();
                 System.out.println("Respostas do aluno salvas com sucesso!");
             } catch (SQLException erro) {
