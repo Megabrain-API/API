@@ -4,90 +4,182 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="400.0" prefWidth="600.0" styleClass="fundo-inicio" stylesheets="@../estilo.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.profControllers.CriaProvaController">
-   <left>
-      <fx:include source="BarraLateralProf.fxml" />
-   </left>
-   <center>
-      <StackPane>
-         <children>
-            <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="0.0" minWidth="0.0" prefHeight="370.0" prefWidth="542.0" spacing="1.0" StackPane.alignment="CENTER">
-               <children>
-                    <Label maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="35.0" prefWidth="146.0" text="Criar prova">
-                        <font>
-                            <Font name="System Bold" size="24.0" />
-                        </font>
-                     <VBox.margin>
-                        <Insets bottom="15.0" />
-                     </VBox.margin>
-                    </Label>
-                    <Label maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="30.0" prefWidth="118.0" text="Nome da prova">
-                        <font>
-                            <Font name="System Bold" size="16.0" />
-                        </font>
-                    </Label>
-                    <TextField fx:id="nomeProva" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="50.0" prefWidth="542.0" promptText="Ex: Prova 1 - Cálculo" />
-                    <Label maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="30.0" prefWidth="118.0" text="Disciplina">
-                        <font>
-                            <Font name="System Bold" size="16.0" />
-                        </font>
-                    </Label>
-                    <ComboBox fx:id="selectDisciplina" maxHeight="-Infinity" maxWidth="-Infinity" opacity="0.85" prefHeight="50.0" prefWidth="542.0" promptText="Selecione a disciplina" />
-                    <Label maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="30.0" prefWidth="204.0" text="Insira o prazo de entrega">
-                        <font>
-                            <Font name="System Bold" size="16.0" />
-                        </font>
-                    </Label>
-                  <HBox>
-                     <children>
-                          <TextField fx:id="dataInicio" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="26.0" prefWidth="270.0" promptText="Ex: 23/05/2026" />
-                        <TextField fx:id="dataFim" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="26.0" prefWidth="270.0" promptText="Ex: 26/05/2026" />
-                     </children>
-                  </HBox>
-                  <Label maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="26.0" prefWidth="234.0" text="Insira o horário das entregas">
-                     <font>
-                        <Font name="System Bold" size="16.0" />
-                     </font>
-                  </Label>
-                  <HBox>
-                     <children>
-                        <TextField fx:id="horarioInicio" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="26.0" prefWidth="270.0" promptText="Ex: 00:00" />
-                        <TextField fx:id="horarioFim" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="26.0" prefWidth="270.0" promptText="Ex: 23:59" />
-                     </children>
-                  </HBox>
-                  <Label maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="26.0" prefWidth="326.0" text="Insira o tempo de realização em minutos">
-                     <font>
-                        <Font name="System Bold" size="16.0" />
-                     </font>
-                  </Label>
-                  <TextField fx:id="tempoMinutos" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="26.0" prefWidth="544.0" promptText="Ex: 120" />
-                  <HBox prefHeight="100.0" prefWidth="200.0" spacing="200.0">
-                     <children>
-                        <Button maxHeight="-Infinity" maxWidth="-Infinity" mnemonicParsing="false" onAction="#voltarCriaProva" prefHeight="40.0" prefWidth="177.0" style="-fx-background-radius: 8px;" text="Voltar" textAlignment="CENTER">
-                           <font>
-                              <Font name="System Bold" size="15.0" />
-                           </font>
-                        </Button>
-                          <Button maxHeight="-Infinity" maxWidth="-Infinity" mnemonicParsing="false" onAction="#confirmCriarProva" prefHeight="40.0" prefWidth="166.0" style="-fx-background-color: #4A7C59; -fx-background-radius: 8px;" text="Confirmar" textAlignment="CENTER" textFill="WHITE">
-                              <font>
-                                  <Font name="System Bold" size="15.0" />
-                              </font>
-                          </Button>
-                     </children>
-                     <VBox.margin>
-                        <Insets top="20.0" />
-                     </VBox.margin>
-                  </HBox>
-               </children>
-            </VBox>
-         </children>
-      </StackPane>
-   </center>
+<BorderPane prefHeight="650.0" prefWidth="980.0" styleClass="fundo-inicio" stylesheets="@../estilo.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.profControllers.CriaProvaController">
+    <left>
+        <fx:include source="BarraLateralProf.fxml" />
+    </left>
+    <center>
+        <StackPane BorderPane.alignment="CENTER">
+            <padding>
+                <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
+            </padding>
+            <children>
+                <VBox alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="600.0" spacing="16.0" style="-fx-background-color: rgba(255, 255, 255, 0.96); -fx-background-radius: 16px; -fx-border-color: #D4DFD8; -fx-border-radius: 16px; -fx-border-width: 1px; -fx-padding: 32; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 16, 0, 0, 4);" StackPane.alignment="CENTER">
+                    <children>
+                        <!-- Cabeçalho do card -->
+                        <VBox spacing="4.0">
+                            <children>
+                                <Label style="-fx-background-color: #DDEEE2; -fx-text-fill: #285A36; -fx-font-weight: bold; -fx-font-size: 11px; -fx-padding: 3 10 3 10; -fx-background-radius: 10px;" text="NOVA AVALIAÇÃO" />
+                                <Label text="Criar Prova" textFill="#1B1B1B">
+                                    <font>
+                                        <Font name="System Bold" size="24.0" />
+                                    </font>
+                                </Label>
+                                <Label text="Defina os dados gerais, o prazo de disponibilidade e o tempo máximo de realização." textFill="#5F6368" wrapText="true">
+                                    <font>
+                                        <Font size="13.0" />
+                                    </font>
+                                </Label>
+                            </children>
+                        </VBox>
+
+                        <Separator />
+
+                        <!-- Nome da prova -->
+                        <VBox spacing="5.0">
+                            <children>
+                                <Label text="Nome da prova" textFill="#1B1B1B">
+                                    <font>
+                                        <Font name="System Bold" size="13.0" />
+                                    </font>
+                                </Label>
+                                <TextField fx:id="nomeProva" prefHeight="38.0" promptText="Ex: Prova 1 - Cálculo" style="-fx-background-radius: 8px; -fx-border-color: #C4D6CA; -fx-border-radius: 8px; -fx-padding: 0 12 0 12;" />
+                            </children>
+                        </VBox>
+
+                        <!-- Disciplina -->
+                        <VBox spacing="5.0">
+                            <children>
+                                <Label text="Disciplina" textFill="#1B1B1B">
+                                    <font>
+                                        <Font name="System Bold" size="13.0" />
+                                    </font>
+                                </Label>
+                                <ComboBox fx:id="selectDisciplina" maxWidth="1.7976931348623157E308" prefHeight="38.0" promptText="Selecione a disciplina" style="-fx-background-radius: 8px; -fx-border-color: #C4D6CA; -fx-border-radius: 8px;" />
+                            </children>
+                        </VBox>
+
+                        <!-- Datas de início e entrega -->
+                        <VBox spacing="5.0">
+                            <children>
+                                <HBox alignment="CENTER_LEFT" spacing="6.0">
+                                    <children>
+                                        <Label text="Período de disponibilidade (opcional)" textFill="#1B1B1B">
+                                            <font>
+                                                <Font name="System Bold" size="13.0" />
+                                            </font>
+                                        </Label>
+                                        <Label text="•  Início e prazo limite" textFill="#2F363D">
+                                            <font>
+                                                <Font size="12.0" />
+                                            </font>
+                                        </Label>
+                                    </children>
+                                </HBox>
+                                <HBox spacing="12.0">
+                                    <children>
+                                        <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                                            <children>
+                                                <Label text="Data inicial" textFill="#2F363D">
+                                                    <font>
+                                                        <Font size="11.5" />
+                                                    </font>
+                                                </Label>
+                                                <TextField fx:id="dataInicio" prefHeight="38.0" promptText="Ex: 23/05/2026" style="-fx-background-radius: 8px; -fx-border-color: #C4D6CA; -fx-border-radius: 8px; -fx-padding: 0 12 0 12;" />
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                                            <children>
+                                                <Label text="Data limite" textFill="#2F363D">
+                                                    <font>
+                                                        <Font size="11.5" />
+                                                    </font>
+                                                </Label>
+                                                <TextField fx:id="dataFim" prefHeight="38.0" promptText="Ex: 26/05/2026" style="-fx-background-radius: 8px; -fx-border-color: #C4D6CA; -fx-border-radius: 8px; -fx-padding: 0 12 0 12;" />
+                                            </children>
+                                        </VBox>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+
+                        <!-- Horários de início e entrega -->
+                        <VBox spacing="5.0">
+                            <children>
+                                <Label text="Horários de liberação e encerramento" textFill="#1B1B1B">
+                                    <font>
+                                        <Font name="System Bold" size="13.0" />
+                                    </font>
+                                </Label>
+                                <HBox spacing="12.0">
+                                    <children>
+                                        <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                                            <children>
+                                                <Label text="Horário inicial" textFill="#2F363D">
+                                                    <font>
+                                                        <Font size="11.5" />
+                                                    </font>
+                                                </Label>
+                                                <TextField fx:id="horarioInicio" prefHeight="38.0" promptText="Ex: 08:00" style="-fx-background-radius: 8px; -fx-border-color: #C4D6CA; -fx-border-radius: 8px; -fx-padding: 0 12 0 12;" />
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                                            <children>
+                                                <Label text="Horário limite" textFill="#2F363D">
+                                                    <font>
+                                                        <Font size="11.5" />
+                                                    </font>
+                                                </Label>
+                                                <TextField fx:id="horarioFim" prefHeight="38.0" promptText="Ex: 23:59" style="-fx-background-radius: 8px; -fx-border-color: #C4D6CA; -fx-border-radius: 8px; -fx-padding: 0 12 0 12;" />
+                                            </children>
+                                        </VBox>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+
+                        <!-- Tempo de realização -->
+                        <VBox spacing="5.0">
+                            <children>
+                                <Label text="Tempo máximo de realização (em minutos)" textFill="#1B1B1B">
+                                    <font>
+                                        <Font name="System Bold" size="13.0" />
+                                    </font>
+                                </Label>
+                                <TextField fx:id="tempoMinutos" prefHeight="38.0" promptText="Ex: 120" style="-fx-background-radius: 8px; -fx-border-color: #C4D6CA; -fx-border-radius: 8px; -fx-padding: 0 12 0 12;" />
+                            </children>
+                        </VBox>
+
+                        <Separator />
+
+                        <!-- Botões de ação -->
+                        <HBox alignment="CENTER_LEFT" spacing="12.0">
+                            <children>
+                                <Button fx:id="voltarCriaProva" mnemonicParsing="false" onAction="#voltarCriaProva" prefHeight="40.0" prefWidth="145.0" style="-fx-background-color: #EEF5F0; -fx-border-color: #C4D6CA; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-text-fill: #285A36; -fx-font-weight: bold; -fx-cursor: hand;" text="Voltar">
+                                    <font>
+                                        <Font size="14.0" />
+                                    </font>
+                                </Button>
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Button fx:id="confirmCriarProva" mnemonicParsing="false" onAction="#confirmCriarProva" prefHeight="40.0" prefWidth="185.0" style="-fx-background-color: #4A7C59; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-cursor: hand;" text="Avançar para Questões">
+                                    <font>
+                                        <Font size="14.0" />
+                                    </font>
+                                </Button>
+                            </children>
+                        </HBox>
+                    </children>
+                </VBox>
+            </children>
+        </StackPane>
+    </center>
 </BorderPane>
