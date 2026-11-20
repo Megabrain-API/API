@@ -553,6 +553,11 @@ public class FormEditorController {
     }
 
     @FXML
+    void entraa_banco_questoes(ActionEvent event) throws IOException {
+        App.setRoot("professorFluxo/BancoQuestoes");
+    }
+
+    @FXML
     private void cancelaFormulario(ActionEvent event) throws IOException {
         App.setRoot("professorFluxo/ListaProva");
     }

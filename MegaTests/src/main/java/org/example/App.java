@@ -55,7 +55,7 @@ public class App extends Application {
         } */
 
         // Inicializa a cena com a resolução padrão
-        scene = new Scene(loadFXML("professorFluxo/BancoQuestoes"), 960, 540);
+        scene = new Scene(loadFXML("telainicio"), 960, 540);
 
         // Carrega o arquivo de estilos
         scene.getStylesheets().add(App.class.getResource("estilo.css").toExternalForm());
