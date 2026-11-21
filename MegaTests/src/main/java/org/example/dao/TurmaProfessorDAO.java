@@ -25,6 +25,60 @@ import java.util.Set;
  */
 public class TurmaProfessorDAO {
 
+    /**
+     * DTO com o resumo de cada prova de um aluno na disciplina (nota, peso e status).
+     */
+    public static class NotaProvaBoletim {
+        private final int idProva;
+        private final String nomeProva;
+        private final double peso;
+        private final Double notaTotal;
+        private final double pontosMaximos;
+        private final String status;
+
+        public NotaProvaBoletim(int idProva,
+                                String nomeProva,
+                                double peso,
+                                Double notaTotal,
+                                double pontosMaximos,
+                                String status) {
+            this.idProva = idProva;
+            this.nomeProva = nomeProva;
+            this.peso = peso;
+            this.notaTotal = notaTotal;
+            this.pontosMaximos = pontosMaximos;
+            this.status = status;
+        }
+
+        public int getIdProva() {
+            return idProva;
+        }
+
+        public String getNomeProva() {
+            return nomeProva;
+        }
+
+        public double getPeso() {
+            return peso;
+        }
+
+        public Double getNotaTotal() {
+            return notaTotal;
+        }
+
+        public double getPontosMaximos() {
+            return pontosMaximos;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public boolean isCorrigida() {
+            return "CORRIGIDA".equalsIgnoreCase(status) && notaTotal != null;
+        }
+    }
+
     public List<TurmaItem> listarDisciplinasProfessor(long matriculaProfessor) {
         List<TurmaItem> disciplinas = new ArrayList<>();
 
@@ -90,7 +144,7 @@ public class TurmaProfessorDAO {
                                            long idCurso) {
         List<Prova> provas = new ArrayList<>();
 
-        String sql = "SELECT p.id, p.nome, d.nome AS disciplina " +
+        String sql = "SELECT p.id, p.nome, p.peso, d.nome AS disciplina " +
                 "FROM mg_provas p " +
                 "INNER JOIN mg_disciplina d ON d.id = p.id_disciplina " +
                 "WHERE p.matricula_professor = ? " +
@@ -99,7 +153,7 @@ public class TurmaProfessorDAO {
                 "    SELECT 1 FROM mg_curso_disciplina cd " +
                 "    WHERE cd.id_curso = ? AND cd.id_disciplina = p.id_disciplina" +
                 ") " +
-                "ORDER BY p.nome";
+                "ORDER BY p.id";
 
         try (Connection conn = new ConexaoDAO().conectaBD();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -114,6 +168,7 @@ public class TurmaProfessorDAO {
                     prova.setId(rs.getInt("id"));
                     prova.setNome(rs.getString("nome"));
                     prova.setDisciplina(rs.getString("disciplina"));
+                    prova.setPeso(rs.getDouble("peso"));
                     provas.add(prova);
                 }
             }
@@ -123,6 +178,159 @@ public class TurmaProfessorDAO {
         }
 
         return provas;
+    }
+
+    /**
+     * Lista todos os alunos matriculados no curso selecionado (usado no fluxo "Ver Notas").
+     */
+    public List<AlunoProva> listarAlunosDoCurso(long idCurso) {
+        List<AlunoProva> alunos = new ArrayList<>();
+
+        String sql = "SELECT ra, nome " +
+                "FROM mg_aluno " +
+                "WHERE id_curso = ? " +
+                "ORDER BY nome";
+
+        try (Connection conn = new ConexaoDAO().conectaBD();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, idCurso);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    AlunoProva aluno = new AlunoProva();
+                    aluno.setRaAluno(rs.getLong("ra"));
+                    aluno.setNomeAluno(rs.getString("nome"));
+                    alunos.add(aluno);
+                }
+            }
+        } catch (SQLException erro) {
+            throw new RuntimeException(
+                    "Erro ao carregar alunos do curso: " + erro.getMessage(), erro);
+        }
+
+        return alunos;
+    }
+
+    /**
+     * Busca todas as provas lançadas pelo professor naquela disciplina, trazendo
+     * o peso de cada prova e a nota obtida pelo aluno (caso já corrigida).
+     */
+    public List<NotaProvaBoletim> listarBoletimAlunoNaDisciplina(long matriculaProfessor,
+                                                                 long idDisciplina,
+                                                                 long raAluno) {
+        List<NotaProvaBoletim> boletim = new ArrayList<>();
+
+        String sql = "SELECT p.id, p.nome, COALESCE(p.peso, 1.0) AS peso, " +
+                "ap.nota_total, ap.status, " +
+                "COALESCE((SELECT SUM(q.pontos) FROM mg_prova_questao pq " +
+                "          INNER JOIN mg_questoes q ON q.id = pq.id_questao " +
+                "          WHERE pq.id_prova = p.id), 0) AS pontos_maximos " +
+                "FROM mg_provas p " +
+                "LEFT JOIN mg_aluno_prova ap ON ap.id_prova = p.id AND ap.ra_aluno = ? " +
+                "WHERE p.matricula_professor = ? " +
+                "AND p.id_disciplina = ? " +
+                "ORDER BY p.id";
+
+        try (Connection conn = new ConexaoDAO().conectaBD();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, raAluno);
+            stmt.setLong(2, matriculaProfessor);
+            stmt.setLong(3, idDisciplina);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    BigDecimal notaBD = rs.getBigDecimal("nota_total");
+                    Double notaTotal = notaBD != null ? notaBD.doubleValue() : null;
+
+                    boletim.add(new NotaProvaBoletim(
+                            rs.getInt("id"),
+                            rs.getString("nome"),
+                            rs.getDouble("peso"),
+                            notaTotal,
+                            rs.getDouble("pontos_maximos"),
+                            rs.getString("status")
+                    ));
+                }
+            }
+        } catch (SQLException erro) {
+            throw new RuntimeException(
+                    "Erro ao carregar notas do aluno na disciplina: " + erro.getMessage(), erro);
+        }
+
+        return boletim;
+    }
+
+    /**
+
+     * Garante que todas as avaliações já corrigidas do aluno nesta disciplina estejam
+     * com status = 'CORRIGIDA' e nota_total consolidada em mg_aluno_prova,
+     * além de gravar a média final em mg_media_final para exibição na área "Ver Curso" do aluno.
+     */
+    public int fecharNotasEEnviarParaAluno(long matriculaProfessor,
+                                           long idDisciplina,
+                                           long raAluno) {
+        List<NotaProvaBoletim> boletim = listarBoletimAlunoNaDisciplina(
+                matriculaProfessor, idDisciplina, raAluno
+        );
+
+        String sqlConsolidar = "UPDATE mg_aluno_prova " +
+                "SET status = 'CORRIGIDA', nota_total = ? " +
+                "WHERE ra_aluno = ? AND id_prova = ?";
+
+        String sqlUpsertMedia = "INSERT INTO mg_media_final (ra_aluno, id_disciplina, media_final, data_fechamento) " +
+                "VALUES (?, ?, ?, NOW()) " +
+                "ON DUPLICATE KEY UPDATE media_final = VALUES(media_final), data_fechamento = NOW()";
+
+        int provasEnviadas = 0;
+        double somaNotasPonderadas = 0.0;
+        double somaPesos = 0.0;
+
+        try (Connection conn = new ConexaoDAO().conectaBD();
+             PreparedStatement stmt = conn.prepareStatement(sqlConsolidar);
+             PreparedStatement stmtMedia = conn.prepareStatement(sqlUpsertMedia)) {
+
+            conn.setAutoCommit(false);
+
+            try {
+                for (NotaProvaBoletim item : boletim) {
+                    if (item.isCorrigida()) {
+                        double pesoEfetivo = item.getPeso() > 0 ? item.getPeso() : 1.0;
+                        somaNotasPonderadas += item.getNotaTotal() * pesoEfetivo;
+                        somaPesos += pesoEfetivo;
+
+                        BigDecimal notaConsolidada = BigDecimal.valueOf(item.getNotaTotal())
+                                .setScale(2, RoundingMode.HALF_UP);
+
+                        stmt.setBigDecimal(1, notaConsolidada);
+                        stmt.setLong(2, raAluno);
+                        stmt.setInt(3, item.getIdProva());
+
+                        provasEnviadas += stmt.executeUpdate();
+                    }
+                }
+
+                if (provasEnviadas > 0 && somaPesos > 0) {
+                    BigDecimal mediaFinal = BigDecimal.valueOf(somaNotasPonderadas / somaPesos)
+                            .setScale(2, RoundingMode.HALF_UP);
+
+                    stmtMedia.setLong(1, raAluno);
+                    stmtMedia.setLong(2, idDisciplina);
+                    stmtMedia.setBigDecimal(3, mediaFinal);
+                    stmtMedia.executeUpdate();
+                }
+
+                conn.commit();
+                return provasEnviadas;
+            } catch (SQLException erro) {
+                conn.rollback();
+                throw erro;
+            }
+        } catch (SQLException erro) {
+            throw new RuntimeException(
+                    "Erro ao enviar notas consolidadas para o aluno: " + erro.getMessage(), erro);
+        }
     }
 
     public List<AlunoProva> listarAlunosQueRealizaramProva(int idProva, long idCurso) {
@@ -156,13 +364,6 @@ public class TurmaProfessorDAO {
         return alunos;
     }
 
-    /**
-     * Carrega a prova respondida pelo aluno e calcula a pontuação por questão:
-     * - Múltipla escolha: tudo ou nada
-     * - Checklist: proporcional aos acertos líquidos
-     * - Correspondência: proporcional aos pares corretos (interpretando número e texto do item)
-     * - Dissertativa: carrega a nota manual salva ou deixa pendente para avaliação
-     */
     public List<RespostaAlunoProva> buscarRespostasDoAluno(int idProva,
                                                            long raAluno,
                                                            long matriculaProfessor) {
@@ -207,7 +408,6 @@ public class TurmaProfessorDAO {
             stmtQuestoes.setInt(2, idProva);
             stmtQuestoes.setLong(3, matriculaProfessor);
 
-            // Busca pelas questões checklist, multi escolha, dissertativa e correspondencia
             try (ResultSet rs = stmtQuestoes.executeQuery()) {
                 while (rs.next()) {
                     RespostaAlunoProva resposta = new RespostaAlunoProva();
@@ -324,10 +524,6 @@ public class TurmaProfessorDAO {
         return respostas;
     }
 
-    /**
-     * Interpreta os números escolhidos pelo aluno (ex: "Mr. Raiado=3") cruzando com
-     * os itens numerados ("3 -> Amigo") e calcula a pontuação proporcional.
-     */
     private void avaliarCorrespondencia(RespostaAlunoProva resposta,
                                         String respostaAluno,
                                         String gabaritoBruto,
@@ -350,7 +546,6 @@ public class TurmaProfessorDAO {
                 gabaritoLegivel.add(opcao + " = " + numCorreto + " (" + nomeItem + ")");
             }
         } else if (!gabaritoBruto.isEmpty()) {
-            // Fallback caso a tabela de alternativas não tenha registros e o gabarito esteja só na coluna texto
             Map<String, Integer> ordemPorTextoItem = new LinkedHashMap<>();
             for (Map.Entry<Integer, String> item : itensPorOrdem.entrySet()) {
                 ordemPorTextoItem.put(normalizar(item.getValue()), item.getKey());
@@ -407,7 +602,6 @@ public class TurmaProfessorDAO {
                         paresCorretos++;
                     }
 
-                    // Formata a resposta do aluno mostrando o número e o nome do item correspondente
                     try {
                         int numEscolhido = Integer.parseInt(valorAluno);
                         String nomeItem = itensPorOrdem.get(numEscolhido);
@@ -475,25 +669,20 @@ public class TurmaProfessorDAO {
             notaCalculada = arredondarDuasCasas(notaCalculada);
 
             resposta.setNota(notaCalculada);
-            resposta.setNotaAutomatica(notaCalculada); // <--- ADICIONA AQUI
+            resposta.setNotaAutomatica(notaCalculada);
             resposta.setCorreta(notaCalculada > 0.0);
             resposta.setDetalheCorrecao(
                     corretasMarcadas + " de " + gabaritoSet.size() + " corretas marcadas"
                             + (incorretasMarcadas > 0 ? " (" + incorretasMarcadas + " incorreta(s))" : "")
             );
             return;
-                }
+        }
 
-        // Múltipla escolha: tudo ou nada
         boolean acertou = normalizar(respostaAluno).equals(normalizar(gabarito));
         resposta.setCorreta(acertou);
         resposta.setNota(acertou ? arredondarDuasCasas(pontosQuestao) : 0.0);
     }
 
-    /**
-     * Salva a nota individual de cada questão e atualiza mg_aluno_prova com a soma total
-     * e status = 'CORRIGIDA', devolvendo a prova corrigida ao aluno.
-     */
     public double salvarCorrecaoProva(int idProva,
                                       long raAluno,
                                       List<RespostaAlunoProva> respostas) {

@@ -173,6 +173,19 @@ public class MeuCursoAlunoController implements Initializable {
         Region espacador = new Region();
         HBox.setHgrow(espacador, Priority.ALWAYS);
 
+        boolean mediaDefinida = materia.getMediaFinal() != null;
+        Label badgeMedia = new Label(mediaDefinida
+                ? String.format(PT_BR, "Média: %.2f", materia.getMediaFinal())
+                : "Média: Indefinida");
+        badgeMedia.setStyle(
+                "-fx-background-color: " + (mediaDefinida ? "#E3EEFF" : "#F1F3F5") + ";" +
+                        "-fx-text-fill: " + (mediaDefinida ? "#004EC2" : "#687386") + ";" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-font-size: 12px;" +
+                        "-fx-background-radius: 6px;" +
+                        "-fx-padding: 5px 10px;"
+        );
+
         int qtdProvas = materia.getProvasCorrigidas().size();
         Label badgeQtd = new Label(qtdProvas == 1
                 ? "1 prova corrigida"
@@ -186,7 +199,7 @@ public class MeuCursoAlunoController implements Initializable {
                         "-fx-padding: 5px 10px;"
         );
 
-        cabecalhoMateria.getChildren().addAll(lblDisciplina, espacador, badgeQtd);
+        cabecalhoMateria.getChildren().addAll(lblDisciplina, espacador, badgeMedia, badgeQtd);
         cardMateria.getChildren().addAll(cabecalhoMateria, new Separator());
 
         if (materia.getProvasCorrigidas().isEmpty()) {

@@ -246,6 +246,16 @@ DEALLOCATE PREPARE stmt_mg_ap_nota_total;
 ALTER TABLE mg_aluno_prova
     MODIFY COLUMN status ENUM('EM_ANDAMENTO', 'FINALIZADA', 'EXPIRADA', 'CORRIGIDA') NOT NULL DEFAULT 'EM_ANDAMENTO';
 
+CREATE TABLE IF NOT EXISTS mg_media_final (
+    ra_aluno BIGINT NOT NULL,
+    id_disciplina BIGINT NOT NULL,
+    media_final DECIMAL(5,2) NOT NULL,
+    data_fechamento DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (ra_aluno, id_disciplina),
+    CONSTRAINT fk_media_final_aluno FOREIGN KEY (ra_aluno) REFERENCES mg_aluno(ra) ON DELETE CASCADE,
+    CONSTRAINT fk_media_final_disciplina FOREIGN KEY (id_disciplina) REFERENCES mg_disciplina(id) ON DELETE CASCADE
+    );
+
 -- (Mantenha todas as suas criações de tabelas e migrações que já estão no seu arquivo...)
 
 -- Dados de Cursos

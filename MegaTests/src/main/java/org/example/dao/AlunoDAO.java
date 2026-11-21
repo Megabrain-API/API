@@ -251,9 +251,10 @@ public class AlunoDAO {
                 "INNER JOIN mg_cursos c ON c.id = a.id_curso " +
                 "WHERE a.ra = ?";
 
-        String sqlMaterias = "SELECT d.id, d.nome " +
+        String sqlMaterias = "SELECT d.id, d.nome, mf.media_final " +
                 "FROM mg_curso_disciplina cd " +
                 "INNER JOIN mg_disciplina d ON d.id = cd.id_disciplina " +
+                "LEFT JOIN mg_media_final mf ON mf.id_disciplina = d.id AND mf.ra_aluno = ? " +
                 "WHERE cd.id_curso = ? " +
                 "ORDER BY d.nome";
 
@@ -289,11 +290,15 @@ public class AlunoDAO {
             Map<Long, MateriaAluno> mapaMaterias = new LinkedHashMap<>();
 
             try (PreparedStatement stmtMaterias = conn.prepareStatement(sqlMaterias)) {
-                stmtMaterias.setLong(1, cursoAluno.getIdCurso());
+                stmtMaterias.setLong(1, raAluno);
+                stmtMaterias.setLong(2, cursoAluno.getIdCurso());
                 try (ResultSet rs = stmtMaterias.executeQuery()) {
                     while (rs.next()) {
                         long idDisc = rs.getLong("id");
                         MateriaAluno materia = new MateriaAluno(idDisc, rs.getString("nome"));
+                        BigDecimal mediaBD = rs.getBigDecimal("media_final");
+                        materia.setMediaFinal(mediaBD != null ? mediaBD.doubleValue() : null);
+
                         mapaMaterias.put(idDisc, materia);
                         cursoAluno.getMaterias().add(materia);
                     }
