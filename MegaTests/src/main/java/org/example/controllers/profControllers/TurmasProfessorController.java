@@ -658,7 +658,8 @@ public class TurmasProfessorController implements Initializable {
     }
 
     /**
-     * Fluxo 1 - Tela 3: Exibe os alunos que realizaram a prova selecionada no curso.
+     * Fluxo 1 - Tela 3: Exibe os alunos que realizaram a prova selecionada no curso,
+     * indicando visualmente quais já foram corrigidas (com a nota) e quais aguardam correção.
      */
     private void mostrarAlunos() {
         if (cursoSelecionado == null || provaSelecionada == null) {
@@ -677,13 +678,20 @@ public class TurmasProfessorController implements Initializable {
 
             limparLista();
 
+            long qtdCorrigidas = alunos.stream().filter(AlunoProva::isCorrigida).count();
+            long qtdPendentes = alunos.size() - qtdCorrigidas;
+
             String subtitulo = (disciplinaSelecionada != null ? disciplinaSelecionada.getNome().toUpperCase() + " • " : "")
                     + cursoSelecionado.getNome().toUpperCase();
+
+            String resumoEnvios = alunos.isEmpty()
+                    ? "0 aluno(s) realizaram esta prova"
+                    : alunos.size() + " envio(s) • " + qtdCorrigidas + " corrigida(s) • " + qtdPendentes + " pendente(s)";
 
             configurarCabecalho(
                     subtitulo,
                     provaSelecionada.getNome(),
-                    alunos.size() + " aluno(s) realizaram esta prova"
+                    resumoEnvios
             );
 
             VBox cardAlunos = criarCardBase();
@@ -714,15 +722,7 @@ public class TurmasProfessorController implements Initializable {
             } else {
                 VBox listaAlunos = new VBox(10);
                 for (AlunoProva aluno : alunos) {
-                    listaAlunos.getChildren().add(
-                            criarLinhaItem(
-                                    aluno.getNome(),
-                                    "Prova enviada • Pronto para visualização e correção",
-                                    "RA: " + aluno.getRa(),
-                                    "Corrigir Prova",
-                                    () -> abrirRespostaDoAluno(aluno)
-                            )
-                    );
+                    listaAlunos.getChildren().add(criarLinhaAlunoEnvioProva(aluno));
                 }
                 cardAlunos.getChildren().add(listaAlunos);
             }
@@ -731,6 +731,72 @@ public class TurmasProfessorController implements Initializable {
         } catch (RuntimeException erro) {
             tratarErroCarregamento("Não foi possível carregar os alunos.", erro);
         }
+    }
+
+    private HBox criarLinhaAlunoEnvioProva(AlunoProva aluno) {
+        HBox linha = new HBox(12);
+        linha.setAlignment(Pos.CENTER_LEFT);
+        linha.setPadding(new Insets(12, 16, 12, 16));
+        linha.setStyle(
+                "-fx-background-color: #F7FAF8;" +
+                        "-fx-background-radius: 9px;" +
+                        "-fx-border-color: #DCE7E0;" +
+                        "-fx-border-radius: 9px;" +
+                        "-fx-border-width: 1px;"
+        );
+
+        boolean corrigida = aluno.isCorrigida();
+
+        VBox colunaTexto = new VBox(3);
+        Label lblTitulo = new Label(aluno.getNome());
+        lblTitulo.setFont(Font.font("System", FontWeight.BOLD, 14));
+        lblTitulo.setStyle("-fx-text-fill: #1B1B1B;");
+
+        String subtitulo = corrigida
+                ? "Prova corrigida • Clique para revisar a correção"
+                : "Prova enviada • Aguardando correção";
+        Label lblSub = new Label(subtitulo);
+        lblSub.setFont(Font.font("System", 12));
+        lblSub.setStyle("-fx-text-fill: #66706A;");
+
+        colunaTexto.getChildren().addAll(lblTitulo, lblSub);
+
+        Region espacador = new Region();
+        HBox.setHgrow(espacador, Priority.ALWAYS);
+
+        String textoStatus;
+        if (corrigida) {
+            textoStatus = aluno.getNotaTotal() != null
+                    ? "✓ Corrigida • Nota: " + formatoDecimal.format(aluno.getNotaTotal())
+                    : "✓ Corrigida";
+        } else {
+            textoStatus = "⏳ Aguardando correção";
+        }
+
+        Label badgeStatus = new Label(textoStatus);
+        badgeStatus.setPadding(new Insets(5, 11, 5, 11));
+        badgeStatus.setStyle(
+                corrigida
+                        ? "-fx-background-color: #DDEEE2; -fx-text-fill: #285A36; -fx-font-weight: bold; -fx-font-size: 12px; -fx-background-radius: 6px;"
+                        : "-fx-background-color: #FFF4E5; -fx-text-fill: #8A5300; -fx-font-weight: bold; -fx-font-size: 12px; -fx-background-radius: 6px;"
+        );
+
+        Label badgeRa = new Label("RA: " + aluno.getRa());
+        badgeRa.setPadding(new Insets(5, 11, 5, 11));
+        badgeRa.setStyle(
+                "-fx-background-color: #E8ECEA;" +
+                        "-fx-text-fill: #37413B;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-font-size: 12px;" +
+                        "-fx-background-radius: 6px;"
+        );
+
+        Button btnAcao = corrigida
+                ? criarBotaoSecundario("Ver Correção", () -> abrirRespostaDoAluno(aluno))
+                : criarBotaoPrimario("Corrigir Prova", () -> abrirRespostaDoAluno(aluno));
+
+        linha.getChildren().addAll(colunaTexto, espacador, badgeStatus, badgeRa, btnAcao);
+        return linha;
     }
 
     private void abrirRespostaDoAluno(AlunoProva aluno) {

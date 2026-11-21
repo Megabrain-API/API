@@ -263,7 +263,6 @@ public class TurmaProfessorDAO {
     }
 
     /**
-
      * Garante que todas as avaliações já corrigidas do aluno nesta disciplina estejam
      * com status = 'CORRIGIDA' e nota_total consolidada em mg_aluno_prova,
      * além de gravar a média final em mg_media_final para exibição na área "Ver Curso" do aluno.
@@ -336,11 +335,12 @@ public class TurmaProfessorDAO {
     public List<AlunoProva> listarAlunosQueRealizaramProva(int idProva, long idCurso) {
         List<AlunoProva> alunos = new ArrayList<>();
 
-        String sql = "SELECT DISTINCT a.ra, a.nome " +
+        String sql = "SELECT DISTINCT a.ra, a.nome, ap.status, ap.nota_total " +
                 "FROM mg_resposta_aluno r " +
                 "INNER JOIN mg_aluno a ON a.ra = r.ra_aluno " +
+                "LEFT JOIN mg_aluno_prova ap ON ap.ra_aluno = a.ra AND ap.id_prova = r.id_prova " +
                 "WHERE r.id_prova = ? AND a.id_curso = ? " +
-                "ORDER BY a.nome";
+                "ORDER BY CASE WHEN ap.status = 'CORRIGIDA' THEN 1 ELSE 0 END, a.nome";
 
         try (Connection conn = new ConexaoDAO().conectaBD();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -353,6 +353,11 @@ public class TurmaProfessorDAO {
                     AlunoProva aluno = new AlunoProva();
                     aluno.setRaAluno(rs.getLong("ra"));
                     aluno.setNomeAluno(rs.getString("nome"));
+                    aluno.setStatus(rs.getString("status"));
+
+                    BigDecimal notaBD = rs.getBigDecimal("nota_total");
+                    aluno.setNotaTotal(notaBD != null ? notaBD.doubleValue() : null);
+
                     alunos.add(aluno);
                 }
             }

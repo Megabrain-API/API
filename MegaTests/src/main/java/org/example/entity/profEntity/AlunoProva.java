@@ -9,6 +9,7 @@ public class AlunoProva {
     private LocalDateTime dataInicio;
     private LocalDateTime dataEnvio;
     private String status;
+    private Double notaTotal;
     private String nomeAluno;
 
     public AlunoProva() {}
@@ -61,12 +62,24 @@ public class AlunoProva {
         this.status = status;
     }
 
+    public Double getNotaTotal() {
+        return notaTotal;
+    }
+
+    public void setNotaTotal(Double notaTotal) {
+        this.notaTotal = notaTotal;
+    }
+
     public String getNomeAluno() {
         return nomeAluno;
     }
 
     public void setNomeAluno(String nomeAluno) {
         this.nomeAluno = nomeAluno;
+    }
+
+    public boolean isCorrigida() {
+        return "CORRIGIDA".equalsIgnoreCase(status);
     }
 
     // Métodos de compatibilidade para a tela do professor:
@@ -77,5 +90,4 @@ public class AlunoProva {
     public Long getRa() {
         return getRaAluno();
     }
-
 }
