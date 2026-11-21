@@ -84,6 +84,11 @@
                         <Font size="13.0" />
                      </font>
                   </Button>
+                  <Button fx:id="btn_banco_questoes" mnemonicParsing="false" onAction="#entraa_banco_questoes" prefHeight="38.0" prefWidth="175.0" style="-fx-background-color: #FFFFFF; -fx-border-color: #4A7C59; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-text-fill: #285A36; -fx-font-weight: bold; -fx-cursor: hand;" text="Banco de Questões">
+                     <font>
+                        <Font size="13.0" />
+                     </font>
+                  </Button>
                   <Region HBox.hgrow="ALWAYS" />
                   <Button fx:id="btn_cancelar_form" mnemonicParsing="false" onAction="#cancelaFormulario" prefHeight="38.0" prefWidth="130.0" style="-fx-background-color: #FCE8E6; -fx-border-color: #F2B8B5; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-text-fill: #B3261E; -fx-font-weight: bold; -fx-cursor: hand;" text="Cancelar">
                      <font>

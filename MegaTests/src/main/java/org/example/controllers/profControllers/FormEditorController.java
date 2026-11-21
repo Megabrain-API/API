@@ -1,16 +1,24 @@
 package org.example.controllers.profControllers;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
@@ -19,18 +27,16 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.Modality;
+import javafx.stage.Window;
 import org.example.App;
 import org.example.dao.ProvaDAO;
+import org.example.dao.QuestaoDAO;
 import org.example.entity.profEntity.Prova;
 import org.example.entity.profEntity.Questao;
 import org.example.entity.profEntity.SessaoApp;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,13 +47,18 @@ public class FormEditorController {
 
     private static final Locale PT_BR = Locale.forLanguageTag("pt-BR");
     private static final DateTimeFormatter DATA_HORA_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm");
+    private static final double PONTUACAO_PADRAO_PUXADA = 1.0;
     private static final List<Questao> filaBancoQuestoes = new ArrayList<>();
+    private static final List<Questao> rascunhoEditorAtual = new ArrayList<>();
 
     @FXML
     private VBox container_dinamico;
 
     @FXML
     private Button btn_adicionar;
+
+    @FXML
+    private Button btn_banco_questoes;
 
     @FXML
     private Button btn_cancelar_form;
@@ -91,6 +102,7 @@ public class FormEditorController {
         private final List<EditorCorrespondenciaOpcao> opcoesCorrespondencia = new ArrayList<>();
 
         private Long idOrigemBanco;
+        private boolean vindaDoBanco;
         private CheckBox chkReutilizarSemDuplicar;
         private Questao snapshotOriginal;
 
@@ -109,6 +121,7 @@ public class FormEditorController {
                 Label tituloModelo,
                 TextArea respostaModelo,
                 Long idOrigemBanco,
+                boolean vindaDoBanco,
                 CheckBox chkReutilizarSemDuplicar,
                 Questao snapshotOriginal) {
             this.painel = painel;
@@ -125,6 +138,7 @@ public class FormEditorController {
             this.areaItensCorrespondencia = areaItensCorrespondencia;
             this.areaOpcoesCorrespondencia = areaOpcoesCorrespondencia;
             this.idOrigemBanco = idOrigemBanco;
+            this.vindaDoBanco = vindaDoBanco;
             this.chkReutilizarSemDuplicar = chkReutilizarSemDuplicar;
             this.snapshotOriginal = snapshotOriginal;
         }
@@ -157,6 +171,15 @@ public class FormEditorController {
     @FXML
     public void initialize() {
         preencherCabecalho();
+
+        if (!rascunhoEditorAtual.isEmpty()) {
+            List<Questao> rascunhoParaRestaurar = new ArrayList<>(rascunhoEditorAtual);
+            rascunhoEditorAtual.clear();
+            for (Questao q : rascunhoParaRestaurar) {
+                restaurarEditorDeRascunho(q);
+            }
+        }
+
         if (!filaBancoQuestoes.isEmpty()) {
             List<Questao> paraCarregar = new ArrayList<>(filaBancoQuestoes);
             filaBancoQuestoes.clear();
@@ -164,6 +187,7 @@ public class FormEditorController {
                 adicionarQuestaoDoBanco(q);
             }
         }
+
         atualizarResumoCabecalho();
     }
 
@@ -241,7 +265,6 @@ public class FormEditorController {
                         "-fx-border-width: 1.5px;"
         );
 
-        // Cabeçalho do card da questão
         HBox topoCard = new HBox(10);
         topoCard.setAlignment(Pos.CENTER_LEFT);
 
@@ -267,7 +290,6 @@ public class FormEditorController {
 
         topoCard.getChildren().addAll(titulo, espacadorTopo, btnRemover);
 
-        // Linha de configuração: Tipo de questão + Pontuação
         HBox linhaConfig = new HBox(14);
         linhaConfig.setAlignment(Pos.CENTER_LEFT);
 
@@ -300,7 +322,6 @@ public class FormEditorController {
 
         linhaConfig.getChildren().addAll(colTipo, colPontos);
 
-        // Enunciado
         VBox colEnunciado = new VBox(4);
         Label lblEnunciado = new Label("Enunciado da questão:");
         lblEnunciado.setStyle("-fx-font-weight: bold; -fx-text-fill: #1B1B1B; -fx-font-size: 12px;");
@@ -310,7 +331,6 @@ public class FormEditorController {
         txtPergunta.setMaxWidth(Double.MAX_VALUE);
         colEnunciado.getChildren().addAll(lblEnunciado, txtPergunta);
 
-        // Alternativas (Múltipla escolha / Checklist)
         Label tituloAlternativas = new Label("Alternativas (marque a(s) correta(s)):");
         tituloAlternativas.setStyle("-fx-font-weight: bold; -fx-text-fill: #1B1B1B; -fx-font-size: 12px;");
         VBox areaAlternativas = new VBox(8);
@@ -318,7 +338,6 @@ public class FormEditorController {
         Button btnAdicionarAlternativa = new Button("+ Adicionar alternativa");
         btnAdicionarAlternativa.setStyle(estilizarBotaoSecundario());
 
-        // Dissertativa
         Label tituloModelo = new Label("Resposta de referência / gabarito (opcional):");
         tituloModelo.setStyle("-fx-font-weight: bold; -fx-text-fill: #1B1B1B; -fx-font-size: 12px;");
         TextArea txtRespostaModelo = new TextArea();
@@ -326,7 +345,6 @@ public class FormEditorController {
         txtRespostaModelo.setWrapText(true);
         txtRespostaModelo.setPrefRowCount(3);
 
-        // Correspondência
         VBox areaCorrespondencia = new VBox(10);
         areaCorrespondencia.setStyle("-fx-background-color: #F6F8F7; -fx-background-radius: 8px; -fx-padding: 12;");
 
@@ -345,7 +363,7 @@ public class FormEditorController {
         EditorQuestao editor = new EditorQuestao(
                 painel, titulo, txtPergunta, txtPontos, cmbTipo, areaAlternativas,
                 tituloAlternativas, btnAdicionarAlternativa, areaCorrespondencia, areaItensCorrespondencia,
-                areaOpcoesCorrespondencia, tituloModelo, txtRespostaModelo, null, null, null
+                areaOpcoesCorrespondencia, tituloModelo, txtRespostaModelo, null, false, null, null
         );
 
         btnAdicionarItem.setOnAction(event -> adicionarItemCorrespondencia(editor));
@@ -385,6 +403,54 @@ public class FormEditorController {
         container_dinamico.getChildren().add(painel);
         atualizarTipo(editor);
         atualizarResumoCabecalho();
+    }
+
+    private void configurarOpcaoReutilizacaoBanco(EditorQuestao editor, Long idOrigem, Boolean estadoMarcado) {
+        editor.idOrigemBanco = idOrigem;
+        editor.vindaDoBanco = (idOrigem != null);
+
+        if (!editor.vindaDoBanco) {
+            return;
+        }
+
+        Label avisoBanco = new Label("Puxada do Banco de Questões • Peso inicial 1.0 (editável na prova)");
+        avisoBanco.setStyle(
+                "-fx-background-color: #DDEEE2;" +
+                        "-fx-text-fill: #285A36;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-font-size: 11px;" +
+                        "-fx-padding: 4 10 4 10;" +
+                        "-fx-background-radius: 6px;"
+        );
+
+        if (editor.chkReutilizarSemDuplicar == null) {
+            CheckBox chk = new CheckBox("Manter vinculada ao banco (desmarque se alterar conteúdo e quiser enviar como nova)");
+            chk.setSelected(estadoMarcado == null || estadoMarcado);
+            chk.setDisable(false);
+            chk.setVisible(true);
+            chk.setManaged(true);
+            chk.setStyle(
+                    "-fx-text-fill: #285A36;" +
+                            "-fx-font-weight: bold;" +
+                            "-fx-font-size: 11px;"
+            );
+            editor.chkReutilizarSemDuplicar = chk;
+
+            VBox barraBanco = new VBox(6, avisoBanco, chk);
+            barraBanco.setStyle(
+                    "-fx-background-color: #F4F9F5;" +
+                            "-fx-border-color: #C4D6CA;" +
+                            "-fx-border-radius: 8px;" +
+                            "-fx-background-radius: 8px;" +
+                            "-fx-padding: 8 10 8 10;"
+            );
+            editor.painel.getChildren().add(1, barraBanco);
+        } else {
+            editor.chkReutilizarSemDuplicar.setSelected(estadoMarcado == null || estadoMarcado);
+            editor.chkReutilizarSemDuplicar.setDisable(false);
+            editor.chkReutilizarSemDuplicar.setVisible(true);
+            editor.chkReutilizarSemDuplicar.setManaged(true);
+        }
     }
 
     private String estilizarBotaoSecundario() {
@@ -557,12 +623,14 @@ public class FormEditorController {
         }
     }
 
-    public void adicionarQuestaoDoBanco(Questao q) {
+    private void restaurarEditorDeRascunho(Questao q) {
         adicionarQuestao();
         EditorQuestao editor = editores.get(editores.size() - 1);
 
         editor.enunciado.setText(q.getEnunciado() != null ? q.getEnunciado() : "");
-        editor.pontos.setText(String.valueOf(q.getPontos()));
+        if (q.getPontos() > 0) {
+            editor.pontos.setText(String.valueOf(q.getPontos()));
+        }
 
         String tipoCombo = mapearTipoParaCombo(q.getTipo());
         editor.tipo.setValue(tipoCombo);
@@ -597,49 +665,167 @@ public class FormEditorController {
             }
         }
 
-        editor.idOrigemBanco = q.getId();
+        if (q.getIdOrigemBanco() != null) {
+            configurarOpcaoReutilizacaoBanco(editor, q.getIdOrigemBanco(), q.isReutilizadaDoBanco());
+            editor.snapshotOriginal = normalizarSnapshot(q, PONTUACAO_PADRAO_PUXADA);
+        }
+    }
 
-        CheckBox chkNaoDuplicar = new CheckBox("Reaproveitar no banco sem duplicar (se alterar conteúdo, desmarque para criar nova)");
-        chkNaoDuplicar.setSelected(true);
-        chkNaoDuplicar.setStyle("-fx-text-fill: #285A36; -fx-font-size: 12px;");
-        editor.chkReutilizarSemDuplicar = chkNaoDuplicar;
-        editor.painel.getChildren().add(1, chkNaoDuplicar);
+    public void adicionarQuestaoDoBanco(Questao q) {
+        adicionarQuestao();
+        EditorQuestao editor = editores.get(editores.size() - 1);
 
-        editor.snapshotOriginal = clonarQuestao(q);
+        editor.enunciado.setText(q.getEnunciado() != null ? q.getEnunciado() : "");
+        // Sempre inicia com peso padrão 1.0 para o professor definir o valor na prova atual
+        editor.pontos.setText(String.format(Locale.US, "%.1f", PONTUACAO_PADRAO_PUXADA));
+
+        String tipoCombo = mapearTipoParaCombo(q.getTipo());
+        editor.tipo.setValue(tipoCombo);
+        atualizarTipo(editor);
+
+        if (Questao.DISSERTATIVA.equals(q.getTipo())) {
+            editor.respostaModelo.setText(q.getRespostaModelo() != null ? q.getRespostaModelo() : "");
+        } else if (Questao.CORRESPONDENCIA.equals(q.getTipo())) {
+            for (String item : q.getItensCorrespondencia()) {
+                adicionarItemCorrespondencia(editor);
+                TextField campoItem = editor.itensCorrespondencia.get(editor.itensCorrespondencia.size() - 1);
+                campoItem.setText(item);
+            }
+            List<String> altsCorr = q.getAlternativasCorrespondencia();
+            List<Integer> gabCorr = q.getGabaritoCorrespondencia();
+            for (int i = 0; i < altsCorr.size(); i++) {
+                adicionarOpcaoCorrespondencia(editor);
+                EditorCorrespondenciaOpcao op = editor.opcoesCorrespondencia.get(editor.opcoesCorrespondencia.size() - 1);
+                op.texto.setText(altsCorr.get(i));
+                if (i < gabCorr.size()) {
+                    op.numeroCorreto.setValue(gabCorr.get(i));
+                }
+            }
+        } else {
+            List<String> alts = q.getAlternativas();
+            List<Integer> corretas = q.getRespostasCorretas();
+            for (int i = 0; i < alts.size(); i++) {
+                adicionarAlternativa(editor);
+                EditorAlternativa alt = editor.alternativas.get(editor.alternativas.size() - 1);
+                alt.texto.setText(alts.get(i));
+                alt.correta.setSelected(corretas.contains(i));
+            }
+        }
+
+        Long idBanco = (q.getIdOrigemBanco() != null && q.getIdOrigemBanco() > 0)
+                ? q.getIdOrigemBanco()
+                : (q.getId() > 0 ? q.getId() : null);
+
+        configurarOpcaoReutilizacaoBanco(editor, idBanco, true);
+        editor.snapshotOriginal = normalizarSnapshot(q, PONTUACAO_PADRAO_PUXADA);
         atualizarResumoCabecalho();
     }
 
-    private Questao clonarQuestao(Questao original) {
+    private void salvarRascunhoEmMemoria() {
+        rascunhoEditorAtual.clear();
+
+        for (EditorQuestao editor : editores) {
+            Questao q = new Questao();
+            q.setEnunciado(editor.enunciado.getText() == null ? "" : editor.enunciado.getText().trim());
+
+            double pontos = 1.0;
+            String txtP = editor.pontos.getText() == null ? "" : editor.pontos.getText().trim().replace(",", ".");
+            if (!txtP.isEmpty()) {
+                try {
+                    pontos = Double.parseDouble(txtP);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+            q.setPontos(pontos);
+
+            String tipoSelecionado = editor.tipo.getValue();
+            if ("Múltipla escolha".equals(tipoSelecionado)) {
+                q.setTipo(Questao.MULTIPLA_ESCOLHA);
+            } else if ("Checklist numerado".equals(tipoSelecionado)) {
+                q.setTipo(Questao.CHECKLIST);
+            } else if ("Dissertativa".equals(tipoSelecionado)) {
+                q.setTipo(Questao.DISSERTATIVA);
+            } else if ("Correspondência".equals(tipoSelecionado)) {
+                q.setTipo(Questao.CORRESPONDENCIA);
+            }
+
+            if (Questao.DISSERTATIVA.equals(q.getTipo())) {
+                q.setRespostaModelo(editor.respostaModelo.getText() == null ? "" : editor.respostaModelo.getText().trim());
+            } else if (Questao.CORRESPONDENCIA.equals(q.getTipo())) {
+                for (TextField campoItem : editor.itensCorrespondencia) {
+                    q.getItensCorrespondencia().add(campoItem.getText() == null ? "" : campoItem.getText().trim());
+                }
+                for (EditorCorrespondenciaOpcao opcao : editor.opcoesCorrespondencia) {
+                    q.getAlternativasCorrespondencia().add(opcao.texto.getText() == null ? "" : opcao.texto.getText().trim());
+                    q.getGabaritoCorrespondencia().add(opcao.numeroCorreto.getValue());
+                }
+            } else {
+                for (int j = 0; j < editor.alternativas.size(); j++) {
+                    EditorAlternativa alt = editor.alternativas.get(j);
+                    q.getAlternativas().add(alt.texto.getText() == null ? "" : alt.texto.getText().trim());
+                    if (alt.correta.isSelected()) {
+                        q.getRespostasCorretas().add(j);
+                    }
+                }
+            }
+
+            if (editor.idOrigemBanco != null) {
+                q.setIdOrigemBanco(editor.idOrigemBanco);
+                q.setReutilizadaDoBanco(
+                        editor.chkReutilizarSemDuplicar == null || editor.chkReutilizarSemDuplicar.isSelected()
+                );
+            }
+
+            rascunhoEditorAtual.add(q);
+        }
+    }
+
+    private Questao normalizarSnapshot(Questao original, double pontosFixos) {
         if (original == null) {
             return null;
         }
 
         Questao copia = new Questao();
         copia.setId(original.getId());
-        copia.setTipo(original.getTipo());
-        copia.setEnunciado(original.getEnunciado());
-        copia.setPontos(original.getPontos());
-        copia.setRespostaModelo(original.getRespostaModelo());
+        copia.setTipo(original.getTipo() == null ? "" : original.getTipo().trim());
+        copia.setEnunciado(original.getEnunciado() == null ? "" : original.getEnunciado().trim());
+        copia.setPontos(pontosFixos);
+        copia.setRespostaModelo(original.getRespostaModelo() == null ? "" : original.getRespostaModelo().trim());
         copia.setIdOrigemBanco(original.getIdOrigemBanco());
         copia.setReutilizadaDoBanco(original.isReutilizadaDoBanco());
+        copia.setDisciplina(original.getDisciplina());
+        copia.setProva(original.getProva());
 
         if (original.getAlternativas() != null) {
-            copia.getAlternativas().addAll(original.getAlternativas());
+            for (String s : original.getAlternativas()) {
+                copia.getAlternativas().add(s == null ? "" : s.trim());
+            }
         }
         if (original.getRespostasCorretas() != null) {
             copia.getRespostasCorretas().addAll(original.getRespostasCorretas());
         }
         if (original.getItensCorrespondencia() != null) {
-            copia.getItensCorrespondencia().addAll(original.getItensCorrespondencia());
+            for (String s : original.getItensCorrespondencia()) {
+                copia.getItensCorrespondencia().add(s == null ? "" : s.trim());
+            }
         }
         if (original.getAlternativasCorrespondencia() != null) {
-            copia.getAlternativasCorrespondencia().addAll(original.getAlternativasCorrespondencia());
+            for (String s : original.getAlternativasCorrespondencia()) {
+                copia.getAlternativasCorrespondencia().add(s == null ? "" : s.trim());
+            }
         }
         if (original.getGabaritoCorrespondencia() != null) {
             copia.getGabaritoCorrespondencia().addAll(original.getGabaritoCorrespondencia());
         }
 
         return copia;
+    }
+
+    private Questao clonarQuestao(Questao original) {
+        if (original == null) {
+            return null;
+        }
+        return normalizarSnapshot(original, original.getPontos());
     }
 
     private String mapearTipoParaCombo(String tipoQuestao) {
@@ -661,32 +847,35 @@ public class FormEditorController {
             return false;
         }
 
-        String tipoOrig = original.getTipo() == null ? "" : original.getTipo().trim();
-        String tipoAtual = atual.getTipo() == null ? "" : atual.getTipo().trim();
+        Questao origNorm = normalizarSnapshot(original, original.getPontos());
+        Questao atualNorm = normalizarSnapshot(atual, atual.getPontos());
+
+        String tipoOrig = origNorm.getTipo() == null ? "" : origNorm.getTipo().trim();
+        String tipoAtual = atualNorm.getTipo() == null ? "" : atualNorm.getTipo().trim();
         if (!tipoOrig.equals(tipoAtual)) {
             return true;
         }
 
-        String enunOrig = original.getEnunciado() == null ? "" : original.getEnunciado().trim();
-        String enunAtual = atual.getEnunciado() == null ? "" : atual.getEnunciado().trim();
+        String enunOrig = origNorm.getEnunciado() == null ? "" : origNorm.getEnunciado().trim();
+        String enunAtual = atualNorm.getEnunciado() == null ? "" : atualNorm.getEnunciado().trim();
         if (!enunOrig.equals(enunAtual)) {
             return true;
         }
 
         if (Questao.DISSERTATIVA.equals(tipoAtual)) {
-            String modOrig = original.getRespostaModelo() == null ? "" : original.getRespostaModelo().trim();
-            String modAtual = atual.getRespostaModelo() == null ? "" : atual.getRespostaModelo().trim();
+            String modOrig = origNorm.getRespostaModelo() == null ? "" : origNorm.getRespostaModelo().trim();
+            String modAtual = atualNorm.getRespostaModelo() == null ? "" : atualNorm.getRespostaModelo().trim();
             return !modOrig.equals(modAtual);
         }
 
         if (Questao.CORRESPONDENCIA.equals(tipoAtual)) {
-            return !original.getItensCorrespondencia().equals(atual.getItensCorrespondencia())
-                    || !original.getAlternativasCorrespondencia().equals(atual.getAlternativasCorrespondencia())
-                    || !original.getGabaritoCorrespondencia().equals(atual.getGabaritoCorrespondencia());
+            return !origNorm.getItensCorrespondencia().equals(atualNorm.getItensCorrespondencia())
+                    || !origNorm.getAlternativasCorrespondencia().equals(atualNorm.getAlternativasCorrespondencia())
+                    || !origNorm.getGabaritoCorrespondencia().equals(atualNorm.getGabaritoCorrespondencia());
         }
 
-        return !original.getAlternativas().equals(atual.getAlternativas())
-                || !original.getRespostasCorretas().equals(atual.getRespostasCorretas());
+        return !origNorm.getAlternativas().equals(atualNorm.getAlternativas())
+                || !origNorm.getRespostasCorretas().equals(atualNorm.getRespostasCorretas());
     }
 
     @FXML
@@ -827,14 +1016,20 @@ public class FormEditorController {
                 }
             }
 
-            // Controle de reuso do Banco de Questões (sem duplicar ao mudar só pontos)
             if (editor.idOrigemBanco != null) {
-                boolean marcouReutilizar = editor.chkReutilizarSemDuplicar == null
+                boolean marcouManterVinculo = editor.chkReutilizarSemDuplicar == null
                         || editor.chkReutilizarSemDuplicar.isSelected();
-                boolean conteudoIgualAoOriginal = !conteudoFoiAlterado(editor.snapshotOriginal, questao);
+                boolean conteudoAlterado = conteudoFoiAlterado(editor.snapshotOriginal, questao);
 
-                questao.setIdOrigemBanco(editor.idOrigemBanco);
-                questao.setReutilizadaDoBanco(marcouReutilizar && conteudoIgualAoOriginal);
+                if (!marcouManterVinculo && conteudoAlterado) {
+                    // Desmarcou a checkbox E alterou o conteúdo: vira questão nova para o banco
+                    questao.setIdOrigemBanco(null);
+                    questao.setReutilizadaDoBanco(false);
+                } else {
+                    // Manteve marcada (mesmo alterada) ou não alterou o conteúdo: não reenvia como nova
+                    questao.setIdOrigemBanco(editor.idOrigemBanco);
+                    questao.setReutilizadaDoBanco(true);
+                }
             } else {
                 questao.setReutilizadaDoBanco(false);
             }
@@ -855,6 +1050,8 @@ public class FormEditorController {
 
         try {
             new ProvaDAO().salvaProvaCompleta(prova);
+            rascunhoEditorAtual.clear();
+            filaBancoQuestoes.clear();
 
             Alert alerta = new Alert(Alert.AlertType.INFORMATION);
             alerta.setTitle("Sucesso");
@@ -880,12 +1077,296 @@ public class FormEditorController {
     }
 
     @FXML
-    void entraa_banco_questoes(ActionEvent event) throws IOException {
-        App.setRoot("professorFluxo/BancoQuestoes");
+    void entraa_banco_questoes(ActionEvent event) {
+        if (SessaoApp.provaAtual == null) {
+            mostrarErro("Nenhuma prova em montagem foi encontrada.");
+            return;
+        }
+
+        List<Questao> disponiveis;
+        try {
+            disponiveis = new QuestaoDAO().listarQuestoes();
+        } catch (Exception e) {
+            e.printStackTrace();
+            mostrarErro("Não foi possível carregar as questões do banco:\n" + e.getMessage());
+            return;
+        }
+
+        if (disponiveis == null || disponiveis.isEmpty()) {
+            mostrarErro("Não há questões cadastradas no banco de questões.");
+            return;
+        }
+
+        Questao selecionada = abrirModalPuxarQuestao(disponiveis);
+        if (selecionada != null) {
+            adicionarQuestaoDoBanco(clonarQuestao(selecionada));
+        }
+    }
+
+    private Questao abrirModalPuxarQuestao(List<Questao> questoes) {
+        Dialog<Questao> dialog = new Dialog<>();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        if (container_dinamico != null && container_dinamico.getScene() != null) {
+            Window owner = container_dinamico.getScene().getWindow();
+            if (owner != null) {
+                dialog.initOwner(owner);
+            }
+        }
+
+        dialog.setTitle("Banco de Questões — Puxar para a Prova");
+        dialog.setHeaderText(null);
+        dialog.getDialogPane().setPrefSize(840, 580);
+        dialog.getDialogPane().setStyle(
+                "-fx-background-color: #F6F8F7;" +
+                        "-fx-border-color: #C4D6CA;" +
+                        "-fx-border-width: 1.5px;"
+        );
+
+        ButtonType btnConfirmarPuxar = new ButtonType("Puxar para a prova", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(btnConfirmarPuxar, ButtonType.CANCEL);
+
+        VBox topoModal = new VBox(3);
+        topoModal.setPadding(new Insets(14, 18, 12, 18));
+        topoModal.setStyle(
+                "-fx-background-color: #FFFFFF;" +
+                        "-fx-background-radius: 10px;" +
+                        "-fx-border-color: #D4DFD8;" +
+                        "-fx-border-radius: 10px;"
+        );
+
+        Label badge = new Label("BANCO DE QUESTÕES • SELEÇÃO PARA PROVA");
+        badge.setStyle(
+                "-fx-background-color: #DDEEE2;" +
+                        "-fx-text-fill: #285A36;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-font-size: 10px;" +
+                        "-fx-padding: 2 8 2 8;" +
+                        "-fx-background-radius: 8px;"
+        );
+
+        Label tituloModal = new Label("Selecione uma questão cadastrada para puxar");
+        tituloModal.setFont(Font.font("System", FontWeight.BOLD, 17));
+        tituloModal.setStyle("-fx-text-fill: #1B1B1B;");
+
+        Label subtituloModal = new Label("A questão será puxada com peso inicial 1.00 — você poderá ajustar a pontuação livremente na prova.");
+        subtituloModal.setStyle("-fx-text-fill: #5F6368; -fx-font-size: 12px;");
+
+        topoModal.getChildren().addAll(badge, tituloModal, subtituloModal);
+
+        TextField txtFiltro = new TextField();
+        txtFiltro.setPromptText("Filtrar por enunciado, disciplina ou tipo de questão...");
+        txtFiltro.setPrefHeight(36);
+        txtFiltro.setStyle(
+                "-fx-background-color: #FFFFFF;" +
+                        "-fx-border-color: #C4D6CA;" +
+                        "-fx-border-radius: 8px;" +
+                        "-fx-background-radius: 8px;" +
+                        "-fx-padding: 6 12 6 12;"
+        );
+
+        ObservableList<Questao> base = FXCollections.observableArrayList(questoes);
+        FilteredList<Questao> filtrada = new FilteredList<>(base, q -> true);
+
+        txtFiltro.textProperty().addListener((obs, oldV, newV) -> {
+            String termo = (newV == null) ? "" : newV.trim().toLowerCase(PT_BR);
+            filtrada.setPredicate(q -> {
+                if (termo.isEmpty()) return true;
+                String enun = q.getEnunciado() == null ? "" : q.getEnunciado().toLowerCase(PT_BR);
+                String tipo = q.getTipo() == null ? "" : q.getTipo().toLowerCase(PT_BR);
+                String disc = q.getDisciplina() == null ? "" : q.getDisciplina().toLowerCase(PT_BR);
+                return enun.contains(termo) || tipo.contains(termo) || disc.contains(termo);
+            });
+        });
+
+        ListView<Questao> listaQuestoes = new ListView<>(filtrada);
+        listaQuestoes.setPrefHeight(210);
+        listaQuestoes.setStyle(
+                "-fx-background-color: #FFFFFF;" +
+                        "-fx-border-color: #C4D6CA;" +
+                        "-fx-border-radius: 10px;" +
+                        "-fx-background-radius: 10px;"
+        );
+        listaQuestoes.setCellFactory(lv -> new ListCell<>() {
+            @Override
+            protected void updateItem(Questao item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                    setText(null);
+                } else {
+                    String tipoLabel = mapearTipoParaCombo(item.getTipo());
+                    String discLabel = (item.getDisciplina() != null && !item.getDisciplina().isBlank())
+                            ? item.getDisciplina()
+                            : "Sem disciplina";
+                    String enunResumo = item.getEnunciado() == null
+                            ? ""
+                            : item.getEnunciado().replaceAll("\\s+", " ");
+
+                    Label lblTag = new Label(tipoLabel + "  •  " + discLabel + "  •  Peso inicial: 1.00");
+                    lblTag.setStyle(
+                            "-fx-text-fill: #285A36;" +
+                                    "-fx-font-weight: bold;" +
+                                    "-fx-font-size: 11px;"
+                    );
+
+                    Label lblEnun = new Label(enunResumo);
+                    lblEnun.setStyle("-fx-text-fill: #1B1B1B; -fx-font-size: 13px;");
+                    lblEnun.setWrapText(true);
+
+                    VBox cardItem = new VBox(3, lblTag, lblEnun);
+                    cardItem.setPadding(new Insets(6, 8, 6, 8));
+                    setGraphic(cardItem);
+                    setText(null);
+                }
+            }
+        });
+
+        VBox painelPrevia = new VBox(8);
+        painelPrevia.setPadding(new Insets(14));
+        painelPrevia.setStyle(
+                "-fx-background-color: #FFFFFF;" +
+                        "-fx-background-radius: 10px;" +
+                        "-fx-border-color: #C4D6CA;" +
+                        "-fx-border-radius: 10px;"
+        );
+
+        Label tituloPrevia = new Label("Prévia detalhada da questão selecionada");
+        tituloPrevia.setFont(Font.font("System", FontWeight.BOLD, 13));
+        tituloPrevia.setStyle("-fx-text-fill: #285A36;");
+
+        VBox conteudoPrevia = new VBox(6);
+        ScrollPane scrollPrevia = new ScrollPane(conteudoPrevia);
+        scrollPrevia.setFitToWidth(true);
+        scrollPrevia.setPrefHeight(175);
+        scrollPrevia.setStyle(
+                "-fx-background-color: transparent;" +
+                        "-fx-background: transparent;" +
+                        "-fx-border-color: transparent;"
+        );
+
+        painelPrevia.getChildren().addAll(tituloPrevia, scrollPrevia);
+
+        listaQuestoes.getSelectionModel().selectedItemProperty().addListener((obs, oldQ, novaQ) ->
+                atualizarPreviaModal(conteudoPrevia, novaQ));
+
+        if (!filtrada.isEmpty()) {
+            listaQuestoes.getSelectionModel().selectFirst();
+        } else {
+            atualizarPreviaModal(conteudoPrevia, null);
+        }
+
+        VBox corpoModal = new VBox(10, topoModal, txtFiltro, listaQuestoes, painelPrevia);
+        corpoModal.setPadding(new Insets(12));
+        VBox.setVgrow(painelPrevia, Priority.ALWAYS);
+        dialog.getDialogPane().setContent(corpoModal);
+
+        Node botaoPuxar = dialog.getDialogPane().lookupButton(btnConfirmarPuxar);
+        botaoPuxar.disableProperty().bind(listaQuestoes.getSelectionModel().selectedItemProperty().isNull());
+        if (botaoPuxar instanceof Button) {
+            Button btn = (Button) botaoPuxar;
+            btn.setStyle(
+                    "-fx-background-color: #4A7C59;" +
+                            "-fx-text-fill: white;" +
+                            "-fx-font-weight: bold;" +
+                            "-fx-background-radius: 8px;" +
+                            "-fx-padding: 7 16 7 16;" +
+                            "-fx-cursor: hand;"
+            );
+        }
+
+        dialog.setResultConverter(botao ->
+                botao == btnConfirmarPuxar ? listaQuestoes.getSelectionModel().getSelectedItem() : null);
+
+        return dialog.showAndWait().orElse(null);
+    }
+
+    private void atualizarPreviaModal(VBox alvo, Questao q) {
+        alvo.getChildren().clear();
+
+        if (q == null) {
+            Label vazio = new Label("Nenhuma questão selecionada.");
+            vazio.setStyle("-fx-text-fill: #5F6368;");
+            alvo.getChildren().add(vazio);
+            return;
+        }
+
+        String tipoLabel = mapearTipoParaCombo(q.getTipo());
+        String discLabel = (q.getDisciplina() != null && !q.getDisciplina().isBlank())
+                ? q.getDisciplina()
+                : "Sem disciplina";
+
+        Label meta = new Label("Tipo: " + tipoLabel + "   •   Disciplina: " + discLabel + "   •   Peso ao puxar: 1.00 pts");
+        meta.setStyle("-fx-text-fill: #4A7C59; -fx-font-weight: bold; -fx-font-size: 12px;");
+
+        Label enun = new Label("Enunciado: " + (q.getEnunciado() != null ? q.getEnunciado() : ""));
+        enun.setWrapText(true);
+        enun.setStyle("-fx-text-fill: #1B1B1B; -fx-font-weight: bold; -fx-font-size: 13px;");
+
+        alvo.getChildren().addAll(meta, enun);
+
+        if (Questao.DISSERTATIVA.equals(q.getTipo())) {
+            String modelo = (q.getRespostaModelo() != null && !q.getRespostaModelo().isBlank())
+                    ? q.getRespostaModelo()
+                    : "(Sem resposta de referência cadastrada)";
+            Label lblMod = new Label("Resposta de referência / gabarito: " + modelo);
+            lblMod.setWrapText(true);
+            lblMod.setStyle("-fx-text-fill: #285A36; -fx-font-size: 12px;");
+            alvo.getChildren().add(lblMod);
+
+        } else if (Questao.CORRESPONDENCIA.equals(q.getTipo())) {
+            if (!q.getItensCorrespondencia().isEmpty()) {
+                Label lblItensTitulo = new Label("Itens (Coluna 1):");
+                lblItensTitulo.setStyle("-fx-text-fill: #285A36; -fx-font-weight: bold; -fx-font-size: 12px;");
+                alvo.getChildren().add(lblItensTitulo);
+                for (int i = 0; i < q.getItensCorrespondencia().size(); i++) {
+                    Label itemLbl = new Label("  " + (i + 1) + ". " + q.getItensCorrespondencia().get(i));
+                    itemLbl.setWrapText(true);
+                    itemLbl.setStyle("-fx-text-fill: #1B1B1B; -fx-font-size: 12px;");
+                    alvo.getChildren().add(itemLbl);
+                }
+            }
+            if (!q.getAlternativasCorrespondencia().isEmpty()) {
+                Label lblOpTitulo = new Label("Opções e gabarito (Coluna 2):");
+                lblOpTitulo.setStyle("-fx-text-fill: #285A36; -fx-font-weight: bold; -fx-font-size: 12px;");
+                alvo.getChildren().add(lblOpTitulo);
+                List<Integer> gab = q.getGabaritoCorrespondencia();
+                for (int i = 0; i < q.getAlternativasCorrespondencia().size(); i++) {
+                    String numGab = (gab != null && i < gab.size() && gab.get(i) != null)
+                            ? "  →  Correto: Item " + gab.get(i)
+                            : "";
+                    Label opLbl = new Label("  • " + q.getAlternativasCorrespondencia().get(i) + numGab);
+                    opLbl.setWrapText(true);
+                    opLbl.setStyle("-fx-text-fill: #1B1B1B; -fx-font-size: 12px;");
+                    alvo.getChildren().add(opLbl);
+                }
+            }
+
+        } else {
+            Label lblAltTitulo = new Label("Alternativas:");
+            lblAltTitulo.setStyle("-fx-text-fill: #285A36; -fx-font-weight: bold; -fx-font-size: 12px;");
+            alvo.getChildren().add(lblAltTitulo);
+
+            List<String> alts = q.getAlternativas();
+            List<Integer> corretas = q.getRespostasCorretas();
+            for (int i = 0; i < alts.size(); i++) {
+                boolean ehCorreta = corretas != null && corretas.contains(i);
+                String marcador = ehCorreta ? "  ✔ " + (i + 1) + ". " : "  • " + (i + 1) + ". ";
+                String sufixo = ehCorreta ? "  [CORRETA]" : "";
+
+                Label altLbl = new Label(marcador + alts.get(i) + sufixo);
+                altLbl.setWrapText(true);
+                altLbl.setStyle(ehCorreta
+                        ? "-fx-text-fill: #285A36; -fx-font-weight: bold; -fx-font-size: 12px;"
+                        : "-fx-text-fill: #1B1B1B; -fx-font-size: 12px;");
+                alvo.getChildren().add(altLbl);
+            }
+        }
     }
 
     @FXML
     private void cancelaFormulario(ActionEvent event) throws IOException {
+        rascunhoEditorAtual.clear();
+        filaBancoQuestoes.clear();
         App.setRoot("professorFluxo/ListaProva");
     }
 }

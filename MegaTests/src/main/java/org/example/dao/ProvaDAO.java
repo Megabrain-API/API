@@ -82,7 +82,7 @@ public class ProvaDAO {
                 for (Questao q : prova.getQuestoes()) {
                     long idQuestao;
 
-                    // Se veio do banco de questões e foi reutilizada, não insere novamente em mg_questoes
+                    // Se veio do banco de questões e foi mantida como reutilizada, não insere novamente em mg_questoes
                     if (q.isReutilizadaDoBanco() && q.getIdOrigemBanco() != null) {
                         idQuestao = q.getIdOrigemBanco();
                     } else {
