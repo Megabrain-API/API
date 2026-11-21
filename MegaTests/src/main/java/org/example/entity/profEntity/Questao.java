@@ -28,6 +28,11 @@ public class Questao {
     private List<Integer> respostasCorretas;
     private String respostaModelo;
     private double pontos = 1.0; // Pontuação/Valor atribuído à questão
+    private String disciplina;
+    private String prova;
+
+    private Long idOrigemBanco;
+    private boolean reutilizadaDoBanco;
 
     public Questao() {
         this.alternativas = new ArrayList<>();
@@ -120,5 +125,39 @@ public class Questao {
 
     public void setRespostaModelo(String respostaModelo) {
         this.respostaModelo = respostaModelo;
+    }
+
+
+    // Armazenar a disciplina com base na tabela mg_prova
+    public String getDisciplina() {
+        return disciplina;
+    }
+
+    public void setDisciplina(String disciplina) {
+        this.disciplina = disciplina;
+    }
+
+    public String getProva() {
+        return prova;
+    }
+
+    public void setProva(String prova) {
+        this.prova = prova;
+    }
+
+    public Long getIdOrigemBanco() {
+        return idOrigemBanco;
+    }
+
+    public void setIdOrigemBanco(Long idOrigemBanco) {
+        this.idOrigemBanco = idOrigemBanco;
+    }
+
+    public boolean isReutilizadaDoBanco() {
+        return reutilizadaDoBanco;
+    }
+
+    public void setReutilizadaDoBanco(boolean reutilizadaDoBanco) {
+        this.reutilizadaDoBanco = reutilizadaDoBanco;
     }
 }

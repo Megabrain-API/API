@@ -12,10 +12,9 @@ import org.example.App;
 import org.example.dao.DisciplinaDAO;
 import org.example.entity.profEntity.Prova;
 import org.example.entity.profEntity.SessaoApp;
-
+import java.time.ZoneId;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 import java.util.List;
@@ -51,6 +50,9 @@ public class CriaProvaController {
 
     @FXML
     private ComboBox<String> selectDisciplina;
+
+    @FXML
+    private ComboBox<?> selectQuestoes;
 
     @FXML
     public void initialize() {
@@ -182,7 +184,7 @@ public class CriaProvaController {
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm")
-                .withResolverStyle(ResolverStyle.STRICT);
+                .withResolverStyle(java.time.format.ResolverStyle.STRICT);
         LocalDateTime agora = LocalDateTime.now(ZoneId.of("America/Sao_Paulo"));
         LocalDateTime dataInicialParsed = null;
         LocalDateTime dataLimiteParsed = null;
@@ -192,6 +194,7 @@ public class CriaProvaController {
         String strDataFim = dataFim.getText() == null ? "" : dataFim.getText().trim();
         String strHoraFim = horarioFim.getText() == null ? "" : horarioFim.getText().trim();
 
+        // Valida se preencheu apenas data ou apenas hora
         if (strDataIni.isEmpty() != strHoraIni.isEmpty()) {
             mostrarErro("Início incompleto", "Preencha tanto a data quanto o horário inicial, ou deixe ambos em branco.");
             return;

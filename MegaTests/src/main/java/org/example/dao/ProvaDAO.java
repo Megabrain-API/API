@@ -80,72 +80,78 @@ public class ProvaDAO {
                 int ordemQuestao = 1;
 
                 for (Questao q : prova.getQuestoes()) {
-                    String tipoBanco = Questao.DISSERTATIVA.equalsIgnoreCase(q.getTipo())
-                            ? "Dissertativa"
-                            : "Objetiva";
-
-                    String gabarito = montarGabarito(q);
-                    if (gabarito == null) {
-                        gabarito = "";
-                    }
-
                     long idQuestao;
 
-                    try (PreparedStatement stmtQuestao = conn.prepareStatement(sqlQuestao, Statement.RETURN_GENERATED_KEYS)) {
-                        stmtQuestao.setString(1, tipoBanco);
-                        stmtQuestao.setString(2, q.getEnunciado());
-                        stmtQuestao.setString(3, gabarito);
-                        stmtQuestao.setDouble(4, q.getPontos());
-                        stmtQuestao.executeUpdate();
+                    // Se veio do banco de questões e foi reutilizada, não insere novamente em mg_questoes
+                    if (q.isReutilizadaDoBanco() && q.getIdOrigemBanco() != null) {
+                        idQuestao = q.getIdOrigemBanco();
+                    } else {
+                        String tipoBanco = Questao.DISSERTATIVA.equalsIgnoreCase(q.getTipo())
+                                ? "Dissertativa"
+                                : "Objetiva";
 
-                        try (ResultSet rsQuestaoKeys = stmtQuestao.getGeneratedKeys()) {
-                            if (!rsQuestaoKeys.next()) {
-                                throw new SQLException("Não foi possível obter o ID da questão recém-criada.");
+                        String gabarito = montarGabarito(q);
+                        if (gabarito == null) {
+                            gabarito = "";
+                        }
+
+                        try (PreparedStatement stmtQuestao = conn.prepareStatement(sqlQuestao, Statement.RETURN_GENERATED_KEYS)) {
+                            stmtQuestao.setString(1, tipoBanco);
+                            stmtQuestao.setString(2, q.getEnunciado());
+                            stmtQuestao.setString(3, gabarito);
+                            stmtQuestao.setDouble(4, q.getPontos());
+                            stmtQuestao.executeUpdate();
+
+                            try (ResultSet rsQuestaoKeys = stmtQuestao.getGeneratedKeys()) {
+                                if (!rsQuestaoKeys.next()) {
+                                    throw new SQLException("Não foi possível obter o ID da questão recém-criada.");
+                                }
+                                idQuestao = rsQuestaoKeys.getLong(1);
                             }
-                            idQuestao = rsQuestaoKeys.getLong(1);
+                        }
+
+                        if (Questao.CORRESPONDENCIA.equals(q.getTipo())) {
+                            for (int i = 0; i < q.getItensCorrespondencia().size(); i++) {
+                                try (PreparedStatement stmt = conn.prepareStatement(sqlItemCorrespondencia)) {
+                                    stmt.setLong(1, idQuestao);
+                                    stmt.setInt(2, i + 1);
+                                    stmt.setString(3, q.getItensCorrespondencia().get(i));
+                                    stmt.executeUpdate();
+                                }
+                            }
+
+                            for (int i = 0; i < q.getAlternativasCorrespondencia().size(); i++) {
+                                try (PreparedStatement stmt = conn.prepareStatement(sqlOpcaoCorrespondencia)) {
+                                    stmt.setLong(1, idQuestao);
+                                    stmt.setString(2, q.getAlternativasCorrespondencia().get(i));
+                                    stmt.setInt(3, q.getGabaritoCorrespondencia().get(i));
+                                    stmt.executeUpdate();
+                                }
+                            }
+                        } else if (!Questao.DISSERTATIVA.equals(q.getTipo())) {
+                            List<String> alternativas = q.getAlternativas();
+                            List<Integer> respostasCorretas = q.getRespostasCorretas();
+
+                            for (int i = 0; i < alternativas.size(); i++) {
+                                boolean correta = respostasCorretas.contains(i);
+
+                                try (PreparedStatement stmtAlternativa = conn.prepareStatement(sqlAlternativa)) {
+                                    stmtAlternativa.setLong(1, idQuestao);
+                                    stmtAlternativa.setInt(2, i + 1);
+                                    stmtAlternativa.setString(3, alternativas.get(i));
+                                    stmtAlternativa.setBoolean(4, correta);
+                                    stmtAlternativa.executeUpdate();
+                                }
+                            }
                         }
                     }
 
+                    // Liga a questão (nova ou reutilizada) à prova mantendo a ordem definida
                     try (PreparedStatement stmtAssoc = conn.prepareStatement(sqlAssociativa)) {
                         stmtAssoc.setLong(1, idProva);
                         stmtAssoc.setLong(2, idQuestao);
                         stmtAssoc.setInt(3, ordemQuestao++);
                         stmtAssoc.executeUpdate();
-                    }
-
-                    if (Questao.CORRESPONDENCIA.equals(q.getTipo())) {
-                        for (int i = 0; i < q.getItensCorrespondencia().size(); i++) {
-                            try (PreparedStatement stmt = conn.prepareStatement(sqlItemCorrespondencia)) {
-                                stmt.setLong(1, idQuestao);
-                                stmt.setInt(2, i + 1);
-                                stmt.setString(3, q.getItensCorrespondencia().get(i));
-                                stmt.executeUpdate();
-                            }
-                        }
-
-                        for (int i = 0; i < q.getAlternativasCorrespondencia().size(); i++) {
-                            try (PreparedStatement stmt = conn.prepareStatement(sqlOpcaoCorrespondencia)) {
-                                stmt.setLong(1, idQuestao);
-                                stmt.setString(2, q.getAlternativasCorrespondencia().get(i));
-                                stmt.setInt(3, q.getGabaritoCorrespondencia().get(i));
-                                stmt.executeUpdate();
-                            }
-                        }
-                    } else if (!Questao.DISSERTATIVA.equals(q.getTipo())) {
-                        List<String> alternativas = q.getAlternativas();
-                        List<Integer> respostasCorretas = q.getRespostasCorretas();
-
-                        for (int i = 0; i < alternativas.size(); i++) {
-                            boolean correta = respostasCorretas.contains(i);
-
-                            try (PreparedStatement stmtAlternativa = conn.prepareStatement(sqlAlternativa)) {
-                                stmtAlternativa.setLong(1, idQuestao);
-                                stmtAlternativa.setInt(2, i + 1);
-                                stmtAlternativa.setString(3, alternativas.get(i));
-                                stmtAlternativa.setBoolean(4, correta);
-                                stmtAlternativa.executeUpdate();
-                            }
-                        }
                     }
                 }
 
