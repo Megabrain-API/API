@@ -45,6 +45,9 @@ public class CriaProvaController {
     private TextField tempoMinutos;
 
     @FXML
+    private TextField pesoProva;
+
+    @FXML
     private ComboBox<String> selectDisciplina;
 
     @FXML
@@ -58,6 +61,7 @@ public class CriaProvaController {
         aplicarMascaraHora(horarioInicio);
         aplicarMascaraHora(horarioFim);
         aplicarMascaraApenasNumeros(tempoMinutos);
+        aplicarMascaraDecimal(pesoProva);
     }
 
     public void CarregaCombobox() {
@@ -127,6 +131,16 @@ public class CriaProvaController {
         });
     }
 
+    private void aplicarMascaraDecimal(TextField textField) {
+        if (textField == null) return;
+        textField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue == null) return;
+            if (!newValue.matches("[\\d.,]*")) {
+                textField.setText(newValue.replaceAll("[^\\d.,]", ""));
+            }
+        });
+    }
+
     @FXML
     void confirmCriarProva(ActionEvent event) throws IOException {
         String disciplinaEscolhida = selectDisciplina.getValue();
@@ -150,6 +164,20 @@ public class CriaProvaController {
         } catch (NumberFormatException e) {
             mostrarErro("Duração inválida", "Informe o tempo da prova em minutos utilizando apenas números.");
             return;
+        }
+
+        double peso = 1.0;
+        if (pesoProva != null && pesoProva.getText() != null && !pesoProva.getText().trim().isEmpty()) {
+            try {
+                peso = Double.parseDouble(pesoProva.getText().trim().replace(",", "."));
+                if (peso <= 0 || peso > 99.99) {
+                    mostrarErro("Peso inválido", "Informe um peso maior que zero e até 99,99.");
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                mostrarErro("Peso inválido", "Informe um valor numérico válido para o peso da prova (ex: 1, 2, 3).");
+                return;
+            }
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm")
@@ -203,6 +231,7 @@ public class CriaProvaController {
         SessaoApp.provaAtual.setNome(nomeProva.getText().trim());
         SessaoApp.provaAtual.setDisciplina(disciplinaEscolhida);
         SessaoApp.provaAtual.setDuracaoMinutos(minutos);
+        SessaoApp.provaAtual.setPeso(peso);
         SessaoApp.provaAtual.setDataInicial(dataInicialParsed);
         SessaoApp.provaAtual.setDataLimite(dataLimiteParsed);
 

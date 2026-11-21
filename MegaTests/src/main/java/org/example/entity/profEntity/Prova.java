@@ -12,6 +12,7 @@ public class Prova {
     private LocalDateTime dataInicial;
     private LocalDateTime dataLimite;
     private Integer duracaoMinutos;
+    private Double peso = 1.0;
     private String disciplina;
     private String tipoQuestoes;
     private int id;
@@ -56,6 +57,14 @@ public class Prova {
 
     public void setDuracaoMinutos(Integer duracaoMinutos) {
         this.duracaoMinutos = duracaoMinutos;
+    }
+
+    public Double getPeso() {
+        return peso;
+    }
+
+    public void setPeso(Double peso) {
+        this.peso = peso;
     }
 
     public String getDisciplina() {

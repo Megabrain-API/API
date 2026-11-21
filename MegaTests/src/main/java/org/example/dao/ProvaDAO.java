@@ -13,7 +13,7 @@ public class ProvaDAO {
     public void salvaProvaCompleta(Prova prova) {
         // Queries usadas durante o salvamento completo da prova.
         String sqlBuscaDisciplina = "SELECT id FROM mg_disciplina WHERE nome = ?";
-        String sqlProva = "INSERT INTO mg_provas (nome, data_inicial, data_limite, duracao_minutos, id_disciplina, matricula_professor) VALUES (?, ?, ?, ?, ?, ?)";
+        String sqlProva = "INSERT INTO mg_provas (nome, data_inicial, data_limite, duracao_minutos, peso, id_disciplina, matricula_professor) VALUES (?, ?, ?, ?, ?, ?, ?)";
         String sqlQuestao = "INSERT INTO mg_questoes (tipo, enunciado, gabarito, pontos) VALUES (?, ?, ?, ?)";
         String sqlAssociativa = "INSERT INTO mg_prova_questao (id_prova, id_questao, ordem) VALUES (?, ?, ?)";
         String sqlAlternativa = "INSERT INTO mg_questao_alternativa (id_questao, ordem, texto, correta) VALUES (?, ?, ?, ?)";
@@ -69,8 +69,9 @@ public class ProvaDAO {
                         stmtProva.setNull(4, Types.INTEGER);
                     }
 
-                    stmtProva.setLong(5, idDisciplina);
-                    stmtProva.setLong(6, matriculaProfessorLogado);
+                    stmtProva.setDouble(5, prova.getPeso() != null ? prova.getPeso() : 1.0);
+                    stmtProva.setLong(6, idDisciplina);
+                    stmtProva.setLong(7, matriculaProfessorLogado);
                     stmtProva.executeUpdate();
 
                     try (ResultSet rsKeys = stmtProva.getGeneratedKeys()) {
@@ -289,7 +290,7 @@ public class ProvaDAO {
     }
 
     public Prova buscarProvaCompleta(int idProva) {
-        String sqlProva = "SELECT p.id, p.nome, p.data_inicial, p.data_limite, p.duracao_minutos, d.nome AS disciplina " +
+        String sqlProva = "SELECT p.id, p.nome, p.data_inicial, p.data_limite, p.duracao_minutos, p.peso, d.nome AS disciplina " +
                 "FROM mg_provas p " +
                 "INNER JOIN mg_disciplina d ON p.id_disciplina = d.id " +
                 "WHERE p.id = ?";
@@ -333,6 +334,7 @@ public class ProvaDAO {
                         prova.setNome(rs.getString("nome"));
                         prova.setDisciplina(rs.getString("disciplina"));
                         prova.setDuracaoMinutos(rs.getInt("duracao_minutos"));
+                        prova.setPeso(rs.getDouble("peso"));
 
                         Timestamp dataInicial = rs.getTimestamp("data_inicial");
                         if (dataInicial != null) {
@@ -458,7 +460,7 @@ public class ProvaDAO {
     public List<Prova> listarProvasPorAluno(long raAluno) {
         List<Prova> listaProvas = new ArrayList<>();
 
-        String sql = "SELECT DISTINCT p.id, p.nome, p.data_inicial, p.data_limite, p.duracao_minutos, d.nome AS disciplina " +
+        String sql = "SELECT DISTINCT p.id, p.nome, p.data_inicial, p.data_limite, p.duracao_minutos, p.peso, d.nome AS disciplina " +
                 "FROM mg_aluno a " +
                 "INNER JOIN mg_curso_disciplina cd ON cd.id_curso = a.id_curso " +
                 "INNER JOIN mg_disciplina d ON d.id = cd.id_disciplina " +
@@ -485,6 +487,7 @@ public class ProvaDAO {
                     prova.setNome(rs.getString("nome"));
                     prova.setDisciplina(rs.getString("disciplina"));
                     prova.setDuracaoMinutos(rs.getInt("duracao_minutos"));
+                    prova.setPeso(rs.getDouble("peso"));
 
                     Timestamp dataInicial = rs.getTimestamp("data_inicial");
                     if (dataInicial != null) {
@@ -530,15 +533,6 @@ public class ProvaDAO {
     public List<Prova> listarNomeProvas() {
         List<Prova> listaProvas = new ArrayList<>();
         String sql = "SELECT * FROM mg_provas"; //Query para puxar todas as provas
-        //Query para puxar prova por disciplina
-       /*  "SELECT
-                provas.nome AS nome_da_prova,
-                disciplinas.nome AS nome_da_disciplina
-            FROM
-                provas
-            INNER JOIN
-                disciplinas ON provas.id_disciplina = disciplinas.id;"*/
-        //Implantar essa função futuramente.
 
         try (Connection conn = new ConexaoDAO().conectaBD();
              PreparedStatement statement = conn.prepareStatement(sql);
@@ -549,6 +543,7 @@ public class ProvaDAO {
                 prova.setId(rs.getInt("id"));
                 prova.setNome(rs.getString("Nome"));
                 prova.setDuracaoMinutos(rs.getInt("duracao_minutos"));
+                prova.setPeso(rs.getDouble("peso"));
 
                 Timestamp dataInicial = rs.getTimestamp("data_inicial");
                 if (dataInicial != null) {
