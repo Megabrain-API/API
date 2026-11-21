@@ -498,6 +498,13 @@ public class TurmaProfessorDAO {
                     } else {
                         resposta.setCorrigida(true);
                         avaliarQuestaoAutomatica(resposta, respostaAluno, gabarito, pontosQuestao);
+
+                        BigDecimal notaSalva = rs.getBigDecimal("nota_salva");
+                        if (notaSalva != null) {
+                            double nota = arredondarDuasCasas(notaSalva.doubleValue());
+                            resposta.setNota(nota);
+                            resposta.setCorreta(nota > 0.0);
+                        }
                     }
 
                     if (!Questao.DISSERTATIVA.equals(resposta.getTipo())

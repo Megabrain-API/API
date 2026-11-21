@@ -13,7 +13,7 @@ public class ProvaDAO {
     public void salvaProvaCompleta(Prova prova) {
         String sqlBuscaDisciplina = "SELECT id FROM mg_disciplina WHERE nome = ?";
         String sqlProva = "INSERT INTO mg_provas (nome, data_inicial, data_limite, duracao_minutos, peso, id_disciplina, matricula_professor) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        String sqlQuestao = "INSERT INTO mg_questoes (tipo, enunciado, gabarito, pontos) VALUES (?, ?, ?, ?)";
+        String sqlQuestao = "INSERT INTO mg_questoes (tipo, enunciado, gabarito, pontos, id_disciplina, matricula_professor) VALUES (?, ?, ?, ?, ?, ?)";
         String sqlAssociativa = "INSERT INTO mg_prova_questao (id_prova, id_questao, ordem) VALUES (?, ?, ?)";
         String sqlAlternativa = "INSERT INTO mg_questao_alternativa (id_questao, ordem, texto, correta) VALUES (?, ?, ?, ?)";
         String sqlItemCorrespondencia = "INSERT INTO mg_questao_correspondencia_item (id_questao, ordem, texto) VALUES (?, ?, ?)";
@@ -100,6 +100,8 @@ public class ProvaDAO {
                             stmtQuestao.setString(2, q.getEnunciado());
                             stmtQuestao.setString(3, gabarito);
                             stmtQuestao.setDouble(4, q.getPontos());
+                            stmtQuestao.setLong(5, idDisciplina);
+                            stmtQuestao.setLong(6, matriculaProfessorLogado);
                             stmtQuestao.executeUpdate();
 
                             try (ResultSet rsQuestaoKeys = stmtQuestao.getGeneratedKeys()) {

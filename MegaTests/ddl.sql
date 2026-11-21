@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS mg_aluno_prova (
     FOREIGN KEY (id_prova) REFERENCES mg_provas(id) ON DELETE CASCADE
     );
 
-CREATE TABLE mg_questao_correspondencia_item (
+CREATE TABLE IF NOT EXISTS mg_questao_correspondencia_item (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     id_questao BIGINT NOT NULL,
     ordem INT NOT NULL,
@@ -116,8 +116,8 @@ CREATE TABLE mg_questao_correspondencia_item (
     FOREIGN KEY (id_questao)
     REFERENCES mg_questoes(id)
     ON DELETE CASCADE
-);
-CREATE TABLE mg_questao_correspondencia_alternativa (
+    );
+CREATE TABLE IF NOT EXISTS mg_questao_correspondencia_alternativa (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     id_questao BIGINT NOT NULL,
     texto VARCHAR(255) NOT NULL,
@@ -125,7 +125,7 @@ CREATE TABLE mg_questao_correspondencia_alternativa (
     FOREIGN KEY (id_questao)
     REFERENCES mg_questoes(id)
     ON DELETE CASCADE
-);
+    );
 -- Cada linha representa a resposta de um aluno para uma questão de uma prova.
 CREATE TABLE IF NOT EXISTS mg_resposta_aluno (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -255,6 +255,40 @@ CREATE TABLE IF NOT EXISTS mg_media_final (
     CONSTRAINT fk_media_final_aluno FOREIGN KEY (ra_aluno) REFERENCES mg_aluno(ra) ON DELETE CASCADE,
     CONSTRAINT fk_media_final_disciplina FOREIGN KEY (id_disciplina) REFERENCES mg_disciplina(id) ON DELETE CASCADE
     );
+
+-- Coluna 'id_disciplina' em mg_questoes (para questões avulsas no Banco de Questões)
+SET @mg_questoes_tem_disc = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_questoes'
+      AND COLUMN_NAME = 'id_disciplina'
+);
+SET @sql_mg_questoes_disc = IF(
+    @mg_questoes_tem_disc = 0,
+    'ALTER TABLE mg_questoes ADD COLUMN id_disciplina BIGINT NULL, ADD CONSTRAINT fk_questao_disciplina FOREIGN KEY (id_disciplina) REFERENCES mg_disciplina(id) ON DELETE SET NULL',
+    'SELECT 1'
+);
+PREPARE stmt_mg_questoes_disc FROM @sql_mg_questoes_disc;
+EXECUTE stmt_mg_questoes_disc;
+DEALLOCATE PREPARE stmt_mg_questoes_disc;
+
+-- Coluna 'matricula_professor' em mg_questoes
+SET @mg_questoes_tem_prof = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_questoes'
+      AND COLUMN_NAME = 'matricula_professor'
+);
+SET @sql_mg_questoes_prof = IF(
+    @mg_questoes_tem_prof = 0,
+    'ALTER TABLE mg_questoes ADD COLUMN matricula_professor BIGINT NULL, ADD CONSTRAINT fk_questao_professor FOREIGN KEY (matricula_professor) REFERENCES mg_professor(matricula) ON DELETE CASCADE',
+    'SELECT 1'
+);
+PREPARE stmt_mg_questoes_prof FROM @sql_mg_questoes_prof;
+EXECUTE stmt_mg_questoes_prof;
+DEALLOCATE PREPARE stmt_mg_questoes_prof;
 
 -- (Mantenha todas as suas criações de tabelas e migrações que já estão no seu arquivo...)
 
