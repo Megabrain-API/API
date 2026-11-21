@@ -68,6 +68,8 @@ public class QuestaoDAO {
 
                 if (!mapaQuestoes.containsKey(idQuestao)) {
                     Questao q = new Questao();
+                    q.setIdOrigemBanco(idQuestao);
+                    q.setReutilizadaDoBanco(true);
                     q.setId(idQuestao);
                     q.setEnunciado(rs.getString("enunciado"));
                     q.setPontos(rs.getDouble("pontos"));

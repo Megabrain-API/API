@@ -31,6 +31,9 @@ public class Questao {
     private String disciplina;
     private String prova;
 
+    private Long idOrigemBanco;
+    private boolean reutilizadaDoBanco;
+
     public Questao() {
         this.alternativas = new ArrayList<>();
         this.respostasCorretas = new ArrayList<>();
@@ -140,5 +143,21 @@ public class Questao {
 
     public void setProva(String prova) {
         this.prova = prova;
+    }
+
+    public Long getIdOrigemBanco() {
+        return idOrigemBanco;
+    }
+
+    public void setIdOrigemBanco(Long idOrigemBanco) {
+        this.idOrigemBanco = idOrigemBanco;
+    }
+
+    public boolean isReutilizadaDoBanco() {
+        return reutilizadaDoBanco;
+    }
+
+    public void setReutilizadaDoBanco(boolean reutilizadaDoBanco) {
+        this.reutilizadaDoBanco = reutilizadaDoBanco;
     }
 }

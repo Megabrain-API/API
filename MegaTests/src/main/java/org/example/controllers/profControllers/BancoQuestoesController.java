@@ -62,6 +62,11 @@ public class BancoQuestoesController implements Initializable {
     @FXML
     private VBox vbox_questoes_banco;
 
+    @FXML
+    private Label lbl_selecionadas_banco;
+
+    private final Map<Long, Questao> selecionadasParaLevar = new LinkedHashMap<>();
+
     private final Map<Button, String> textosOriginais = new HashMap<>();
     private final List<Questao> todasQuestoes = new ArrayList<>();
     private Button[] botoesMenu;
@@ -163,6 +168,12 @@ public class BancoQuestoesController implements Initializable {
         renderizarQuestoes(filtradas);
     }
 
+    private void atualizarContadorSelecionadas() {
+        if (lbl_selecionadas_banco == null) return;
+        int qtd = selecionadasParaLevar.size();
+        lbl_selecionadas_banco.setText(qtd == 1 ? "1 selecionada" : qtd + " selecionadas");
+    }
+
     private void renderizarQuestoes(List<Questao> lista) {
         vbox_questoes_banco.getChildren().clear();
 
@@ -221,6 +232,18 @@ public class BancoQuestoesController implements Initializable {
                         "-fx-padding: 4px 8px;"
         );
 
+        CheckBox chkReutilizar = new CheckBox("Reutilizar questão");
+        chkReutilizar.setStyle("-fx-text-fill: #00674F; -fx-font-weight: bold;");
+        chkReutilizar.setSelected(selecionadasParaLevar.containsKey(q.getId()));
+        chkReutilizar.setOnAction(e -> {
+            if (chkReutilizar.isSelected()) {
+                selecionadasParaLevar.put(q.getId(), q);
+            } else {
+                selecionadasParaLevar.remove(q.getId());
+            }
+            atualizarContadorSelecionadas();
+        });
+
         Region espacador = new Region();
         HBox.setHgrow(espacador, Priority.ALWAYS);
 
@@ -245,6 +268,14 @@ public class BancoQuestoesController implements Initializable {
         } else {
             card.getChildren().add(criarBlocoAlternativas(q));
         }
+
+
+        // Rodapé do card com o CheckBox "Reutilizar questão"
+        HBox rodapeCard = new HBox(chkReutilizar);
+        rodapeCard.setAlignment(Pos.CENTER_RIGHT);
+        rodapeCard.setPadding(new Insets(6, 0, 0, 0));
+
+        card.getChildren().addAll(new Separator(), rodapeCard);
 
         return card;
     }
@@ -351,6 +382,21 @@ public class BancoQuestoesController implements Initializable {
         }
     }
 
+    @FXML
+    private void levarQuestoesParaEditor(ActionEvent event) throws IOException {
+        if (selecionadasParaLevar.isEmpty()) {
+            Alert alerta = new Alert(Alert.AlertType.WARNING);
+            alerta.setTitle("Atenção");
+            alerta.setHeaderText("Nenhuma questão selecionada");
+            alerta.setContentText("Marque \"Reutilizar questão\" em pelo menos uma questão antes de levar.");
+            alerta.showAndWait();
+            return;
+        }
+
+        FormEditorController.receberQuestoesDoBanco(new ArrayList<>(selecionadasParaLevar.values()));
+        App.setRoot("professorFluxo/FormEditor");
+    }
+
     // --- Animação da Barra Lateral ---
     @FXML
     private void expande_barra() {
@@ -389,30 +435,23 @@ public class BancoQuestoesController implements Initializable {
     // --- Navegação do Menu do Professor ---
     @FXML
     void entra_minhaturma(ActionEvent event) throws IOException {
-        // TODO: Ajustar para o nome exato do FXML de turmas do professor
-        // App.setRoot("professorFluxo/MinhaTurmaProf");
     }
 
     @FXML
     void entra_listaprova(ActionEvent event) throws IOException {
-        // TODO: Ajustar para o nome exato do FXML de lista de provas do professor
-        // App.setRoot("professorFluxo/ListaProvas");
     }
 
     @FXML
     void entra_dados_pessoais_prof(ActionEvent event) throws IOException {
-        // TODO: Implementar navegação para dados pessoais do professor
+        App.abrirDadosPessoais();
     }
 
     @FXML
     void deslogar_prof(ActionEvent event) throws IOException {
-        // TODO: Ajustar para o nome exato da tela de login do professor
-        // App.setRoot("professorFluxo/TelaLoginProf");
     }
 
     @FXML
-    void voltarMenuProfessor(ActionEvent event) throws IOException {
-        // TODO: Ajustar para o menu principal do professor
-        // App.setRoot("professorFluxo/MenuProf");
+    private void voltarFormEditor(ActionEvent event) throws IOException {
+        App.setRoot("professorFluxo/FormEditor");
     }
 }

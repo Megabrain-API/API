@@ -85,81 +85,94 @@ public class ProvaDAO {
 
                 // Salva cada questão da prova.
                 for (Questao q : prova.getQuestoes()) {
-                    String tipoBanco = Questao.DISSERTATIVA.equalsIgnoreCase(q.getTipo())
-                            ? "Dissertativa"
-                            : "Objetiva";
-
-                    // O campo gabarito é obrigatório em mg_questoes.
-                    // Ele é montado antes do INSERT para garantir que sempre exista um valor.
-                    String gabarito = montarGabarito(q);
-                    if (gabarito == null) {
-                        gabarito = "";
-                    }
+                    // teste
+                    System.out.println("DEBUG Questao -> enunciado=" + q.getEnunciado()
+                            + " | reutilizada=" + q.isReutilizadaDoBanco()
+                            + " | idOrigem=" + q.getIdOrigemBanco());
 
                     long idQuestao;
+                    // 1. Se veio do banco e foi marcada para reutilizar, NÃO faz INSERT em mg_questoes
+                    if (q.isReutilizadaDoBanco() && q.getIdOrigemBanco() != null) {
+                        idQuestao = q.getIdOrigemBanco();
+                    } else {
+                        String tipoBanco = Questao.DISSERTATIVA.equalsIgnoreCase(q.getTipo())
+                                ? "Dissertativa"
+                                : "Objetiva";
 
-                    try (PreparedStatement stmtQuestao = conn.prepareStatement(sqlQuestao, Statement.RETURN_GENERATED_KEYS)) {
-                        stmtQuestao.setString(1, tipoBanco);
-                        stmtQuestao.setString(2, q.getEnunciado());
-                        stmtQuestao.setString(3, gabarito);
-                        stmtQuestao.setDouble(4, q.getPontos()); // Persiste os pontos salvos na Questao
-                        stmtQuestao.executeUpdate();
+                        // O campo gabarito é obrigatório em mg_questoes.
+                        // Ele é montado antes do INSERT para garantir que sempre exista um valor.
+                        String gabarito = montarGabarito(q);
+                        if (gabarito == null) {
+                            gabarito = "";
+                        }
 
-                        try (ResultSet rsQuestaoKeys = stmtQuestao.getGeneratedKeys()) {
-                            if (!rsQuestaoKeys.next()) {
-                                throw new SQLException("Não foi possível obter o ID da questão recém-criada.");
+
+                        try (PreparedStatement stmtQuestao = conn.prepareStatement(sqlQuestao, Statement.RETURN_GENERATED_KEYS)) {
+                            stmtQuestao.setString(1, tipoBanco);
+                            stmtQuestao.setString(2, q.getEnunciado());
+                            stmtQuestao.setString(3, gabarito);
+                            stmtQuestao.setDouble(4, q.getPontos()); // Persiste os pontos salvos na Questao
+                            stmtQuestao.executeUpdate();
+
+                            try (ResultSet rsQuestaoKeys = stmtQuestao.getGeneratedKeys()) {
+                                if (!rsQuestaoKeys.next()) {
+                                    throw new SQLException("Não foi possível obter o ID da questão recém-criada.");
+                                }
+                                idQuestao = rsQuestaoKeys.getLong(1);
                             }
-                            idQuestao = rsQuestaoKeys.getLong(1);
+                        }
+
+
+                        // Tratamento isolado por tipo de questão (Evita duplicação e usa as queries certas)
+                        if (Questao.CORRESPONDENCIA.equals(q.getTipo())) {
+                            // Salva os itens numerados da correspondência
+                            for (int i = 0; i < q.getItensCorrespondencia().size(); i++) {
+                                try (PreparedStatement stmt = conn.prepareStatement(sqlItemCorrespondencia)) {
+                                    stmt.setLong(1, idQuestao);
+                                    stmt.setInt(2, i + 1);
+                                    stmt.setString(3, q.getItensCorrespondencia().get(i));
+                                    stmt.executeUpdate();
+                                }
+                            }
+
+                            // Salva as opções e o número correto da correspondência
+                            for (int i = 0; i < q.getAlternativasCorrespondencia().size(); i++) {
+                                try (PreparedStatement stmt = conn.prepareStatement(sqlOpcaoCorrespondencia)) {
+                                    stmt.setLong(1, idQuestao);
+                                    stmt.setString(2, q.getAlternativasCorrespondencia().get(i));
+                                    stmt.setInt(3, q.getGabaritoCorrespondencia().get(i));
+                                    stmt.executeUpdate();
+                                }
+                            }
+                        } else if (!Questao.DISSERTATIVA.equals(q.getTipo())) {
+                            // Salva as alternativas comuns APENAS UMA VEZ para Múltipla Escolha e Checklist
+                            List<String> alternativas = q.getAlternativas();
+                            List<Integer> respostasCorretas = q.getRespostasCorretas();
+
+                            for (int i = 0; i < alternativas.size(); i++) {
+                                boolean correta = respostasCorretas.contains(i);
+
+                                try (PreparedStatement stmtAlternativa = conn.prepareStatement(sqlAlternativa)) {
+                                    stmtAlternativa.setLong(1, idQuestao);
+                                    stmtAlternativa.setInt(2, i + 1);
+                                    stmtAlternativa.setString(3, alternativas.get(i));
+                                    stmtAlternativa.setBoolean(4, correta);
+                                    stmtAlternativa.executeUpdate();
+                                }
+                            }
                         }
                     }
-
                     // Liga a questão à prova e mantém a ordem definida no formulário.
-                    try (PreparedStatement stmtAssoc = conn.prepareStatement(sqlAssociativa)) {
-                        stmtAssoc.setLong(1, idProva);
-                        stmtAssoc.setLong(2, idQuestao);
-                        stmtAssoc.setInt(3, ordemQuestao++);
-                        stmtAssoc.executeUpdate();
-                    }
-                    // Tratamento isolado por tipo de questão (Evita duplicação e usa as queries certas)
-                    if (Questao.CORRESPONDENCIA.equals(q.getTipo())) {
-                        // Salva os itens numerados da correspondência
-                        for (int i = 0; i < q.getItensCorrespondencia().size(); i++) {
-                            try (PreparedStatement stmt = conn.prepareStatement(sqlItemCorrespondencia)) {
-                                stmt.setLong(1, idQuestao);
-                                stmt.setInt(2, i + 1);
-                                stmt.setString(3, q.getItensCorrespondencia().get(i));
-                                stmt.executeUpdate();
-                            }
+                        try (PreparedStatement stmtAssoc = conn.prepareStatement(sqlAssociativa)) {
+                            stmtAssoc.setLong(1, idProva);
+                            stmtAssoc.setLong(2, idQuestao);
+                            stmtAssoc.setInt(3, ordemQuestao++);
+                            stmtAssoc.executeUpdate();
                         }
 
-                        // Salva as opções e o número correto da correspondência
-                        for (int i = 0; i < q.getAlternativasCorrespondencia().size(); i++) {
-                            try (PreparedStatement stmt = conn.prepareStatement(sqlOpcaoCorrespondencia)) {
-                                stmt.setLong(1, idQuestao);
-                                stmt.setString(2, q.getAlternativasCorrespondencia().get(i));
-                                stmt.setInt(3, q.getGabaritoCorrespondencia().get(i));
-                                stmt.executeUpdate();
-                            }
-                        }
-                    }
-                    else if (!Questao.DISSERTATIVA.equals(q.getTipo())) {
-                        // Salva as alternativas comuns APENAS UMA VEZ para Múltipla Escolha e Checklist
-                        List<String> alternativas = q.getAlternativas();
-                        List<Integer> respostasCorretas = q.getRespostasCorretas();
+            }
 
-                        for (int i = 0; i < alternativas.size(); i++) {
-                            boolean correta = respostasCorretas.contains(i);
 
-                            try (PreparedStatement stmtAlternativa = conn.prepareStatement(sqlAlternativa)) {
-                                stmtAlternativa.setLong(1, idQuestao);
-                                stmtAlternativa.setInt(2, i + 1);
-                                stmtAlternativa.setString(3, alternativas.get(i));
-                                stmtAlternativa.setBoolean(4, correta);
-                                stmtAlternativa.executeUpdate();
-                            }
-                        }
-                    }
-                }
 
                 conn.commit();
                 System.out.println("Prova, questões e alternativas salvas com sucesso no MySQL!");

@@ -44,6 +44,15 @@ public class FormEditorController {
 
     private final List<EditorQuestao> editores = new ArrayList<>();
 
+    public void initialize() {
+        if (!filaBancoQuestoes.isEmpty()) {
+            List<Questao> paraCarregar = new ArrayList<>(filaBancoQuestoes);
+            filaBancoQuestoes.clear();
+            for (Questao q : paraCarregar) {
+                adicionarQuestaoDoBanco(q);
+            }
+        }
+    }
     private static class EditorQuestao {
         private final VBox painel;
         private final TextField enunciado;
@@ -61,6 +70,10 @@ public class FormEditorController {
         private final List<TextField> itensCorrespondencia = new ArrayList<>();
         private final List<EditorCorrespondenciaOpcao> opcoesCorrespondencia = new ArrayList<>();
 
+        private Long idOrigemBanco;
+        private CheckBox chkReutilizarSemDuplicar;
+        private Questao snapshotOriginal;
+
         private EditorQuestao(
                 VBox painel,
                 TextField enunciado,
@@ -73,7 +86,10 @@ public class FormEditorController {
                 VBox areaItensCorrespondencia,
                 VBox areaOpcoesCorrespondencia,
                 Label tituloModelo,
-                TextArea respostaModelo){
+                TextArea respostaModelo,
+                Long idOrigemBanco,
+                CheckBox chkReutilizarSemDuplicar,
+                Questao snapshotOriginal){
             this.painel = painel;
             this.enunciado = enunciado;
             this.pontos = pontos;
@@ -86,6 +102,9 @@ public class FormEditorController {
             this.areaCorrespondencia = areaCorrespondencia;
             this.areaItensCorrespondencia = areaItensCorrespondencia;
             this.areaOpcoesCorrespondencia = areaOpcoesCorrespondencia;
+            this.idOrigemBanco = idOrigemBanco;
+            this.chkReutilizarSemDuplicar = chkReutilizarSemDuplicar;
+            this.snapshotOriginal = snapshotOriginal;
         }
     }
 
@@ -168,7 +187,7 @@ public class FormEditorController {
         EditorQuestao editor = new EditorQuestao(
                 painel, txtPergunta, txtPontos, cmbTipo, areaAlternativas,
                 tituloAlternativas, btnAdicionarAlternativa, areaCorrespondencia, areaItensCorrespondencia,
-                areaOpcoesCorrespondencia, tituloModelo, txtRespostaModelo
+                areaOpcoesCorrespondencia, tituloModelo, txtRespostaModelo, null, null, null
         );
 
         btnAdicionarItem.setOnAction(
@@ -368,6 +387,147 @@ public class FormEditorController {
         }
     }
 
+
+    public void adicionarQuestaoDoBanco(Questao q) {
+        // 1. Cria a estrutura visual padrão chamando adicionarQuestao()
+        adicionarQuestao();
+        EditorQuestao editor = editores.get(editores.size() - 1);
+
+        // 2. Preenche enunciado e pontuação
+        editor.enunciado.setText(q.getEnunciado() != null ? q.getEnunciado() : "");
+        editor.pontos.setText(String.valueOf(q.getPontos()));
+
+        // 3. Seleciona o tipo correspondente ao ComboBox do editor
+        String tipoCombo = mapearTipoParaCombo(q.getTipo());
+        editor.tipo.setValue(tipoCombo);
+        atualizarTipo(editor);
+
+        // 4. Preenche conforme o tipo
+        if (Questao.DISSERTATIVA.equals(q.getTipo())) {
+            editor.respostaModelo.setText(q.getRespostaModelo() != null ? q.getRespostaModelo() : "");
+        } else if (Questao.CORRESPONDENCIA.equals(q.getTipo())) {
+            for (String item : q.getItensCorrespondencia()) {
+                adicionarItemCorrespondencia(editor);
+                TextField campoItem = editor.itensCorrespondencia.get(editor.itensCorrespondencia.size() - 1);
+                campoItem.setText(item);
+            }
+            List<String> altsCorr = q.getAlternativasCorrespondencia();
+            List<Integer> gabCorr = q.getGabaritoCorrespondencia();
+            for (int i = 0; i < altsCorr.size(); i++) {
+                adicionarOpcaoCorrespondencia(editor);
+                EditorCorrespondenciaOpcao op = editor.opcoesCorrespondencia.get(editor.opcoesCorrespondencia.size() - 1);
+                op.texto.setText(altsCorr.get(i));
+                if (i < gabCorr.size()) {
+                    op.numeroCorreto.setValue(gabCorr.get(i));
+                }
+            }
+        } else {
+            // Múltipla escolha ou Checklist numerado
+            List<String> alts = q.getAlternativas();
+            List<Integer> corretas = q.getRespostasCorretas();
+            for (int i = 0; i < alts.size(); i++) {
+                adicionarAlternativa(editor);
+                EditorAlternativa alt = editor.alternativas.get(editor.alternativas.size() - 1);
+                alt.texto.setText(alts.get(i));
+                alt.correta.setSelected(corretas.contains(i));
+            }
+        }
+
+        // 5. Vincula a origem do banco e o checkbox ao EditorQuestao
+        editor.idOrigemBanco = q.getId();
+
+        CheckBox chkNaoDuplicar = new CheckBox("Reaproveitar no banco sem duplicar (se alterar conteúdo, desmarque para criar nova)");
+        chkNaoDuplicar.setSelected(true);
+        editor.chkReutilizarSemDuplicar = chkNaoDuplicar;
+        editor.painel.getChildren().add(1, chkNaoDuplicar);
+
+        // 6. Guarda o snapshot da questão original para detectar alteração de conteúdo depois
+        editor.snapshotOriginal = clonarQuestao(q);
+    }
+
+    private Questao clonarQuestao(Questao original) {
+        if (original == null) {
+            return null;
+        }
+
+        Questao copia = new Questao();
+        copia.setId(original.getId());
+        copia.setTipo(original.getTipo());
+        copia.setEnunciado(original.getEnunciado());
+        copia.setPontos(original.getPontos());
+        copia.setRespostaModelo(original.getRespostaModelo());
+        copia.setIdOrigemBanco(original.getIdOrigemBanco());
+        copia.setReutilizadaDoBanco(original.isReutilizadaDoBanco());
+
+        if (original.getAlternativas() != null) {
+            copia.getAlternativas().addAll(original.getAlternativas());
+        }
+        if (original.getRespostasCorretas() != null) {
+            copia.getRespostasCorretas().addAll(original.getRespostasCorretas());
+        }
+        if (original.getItensCorrespondencia() != null) {
+            copia.getItensCorrespondencia().addAll(original.getItensCorrespondencia());
+        }
+        if (original.getAlternativasCorrespondencia() != null) {
+            copia.getAlternativasCorrespondencia().addAll(original.getAlternativasCorrespondencia());
+        }
+        if (original.getGabaritoCorrespondencia() != null) {
+            copia.getGabaritoCorrespondencia().addAll(original.getGabaritoCorrespondencia());
+        }
+
+        return copia;
+    }
+
+    private String mapearTipoParaCombo(String tipoQuestao) {
+        if (Questao.CHECKLIST.equals(tipoQuestao)) return "Checklist numerado";
+        if (Questao.DISSERTATIVA.equals(tipoQuestao)) return "Dissertativa";
+        if (Questao.CORRESPONDENCIA.equals(tipoQuestao)) return "Correspondência";
+        return "Múltipla escolha";
+    }
+
+    private static final List<Questao> filaBancoQuestoes = new ArrayList<>();
+
+    public static void receberQuestoesDoBanco(List<Questao> questoes) {
+        filaBancoQuestoes.clear();
+        if (questoes != null) {
+            filaBancoQuestoes.addAll(questoes);
+        }
+    }
+
+    private boolean conteudoFoiAlterado(Questao original, Questao atual) {
+        if (original == null || atual == null) {
+            return false;
+        }
+
+        String tipoOrig = original.getTipo() == null ? "" : original.getTipo().trim();
+        String tipoAtual = atual.getTipo() == null ? "" : atual.getTipo().trim();
+        if (!tipoOrig.equals(tipoAtual)) {
+            return true;
+        }
+
+        String enunOrig = original.getEnunciado() == null ? "" : original.getEnunciado().trim();
+        String enunAtual = atual.getEnunciado() == null ? "" : atual.getEnunciado().trim();
+        if (!enunOrig.equals(enunAtual)) {
+            return true;
+        }
+
+        if (Questao.DISSERTATIVA.equals(tipoAtual)) {
+            String modOrig = original.getRespostaModelo() == null ? "" : original.getRespostaModelo().trim();
+            String modAtual = atual.getRespostaModelo() == null ? "" : atual.getRespostaModelo().trim();
+            return !modOrig.equals(modAtual);
+        }
+
+        if (Questao.CORRESPONDENCIA.equals(tipoAtual)) {
+            return !original.getItensCorrespondencia().equals(atual.getItensCorrespondencia())
+                    || !original.getAlternativasCorrespondencia().equals(atual.getAlternativasCorrespondencia())
+                    || !original.getGabaritoCorrespondencia().equals(atual.getGabaritoCorrespondencia());
+        }
+
+        // Múltipla escolha ou Checklist
+        return !original.getAlternativas().equals(atual.getAlternativas())
+                || !original.getRespostasCorretas().equals(atual.getRespostasCorretas());
+    }
+
     @FXML
     private void GeraProva(ActionEvent event){
         Prova prova = SessaoApp.provaAtual;
@@ -420,6 +580,29 @@ public class FormEditorController {
             questao.setEnunciado(enunciado);
             questao.setPontos(pontos);
             String tipoSelecionado = editor.tipo.getValue();
+            questao.setTipo(tipoSelecionado); // garanta que o tipo já esteja setado antes de comparar
+
+            // ... preencha alternativas / correspondência / respostaModelo de 'questao' aqui ...
+
+            boolean querReutilizar = editor.idOrigemBanco != null
+                    && editor.chkReutilizarSemDuplicar != null
+                    && editor.chkReutilizarSemDuplicar.isSelected();
+
+            boolean alterada = editor.snapshotOriginal != null && conteudoFoiAlterado(editor.snapshotOriginal, questao);
+
+
+            System.out.println("EDITOR -> idOrigem=" + editor.idOrigemBanco
+                    + " | chkSelected=" + (editor.chkReutilizarSemDuplicar != null && editor.chkReutilizarSemDuplicar.isSelected())
+                    + " | alterada=" + alterada
+                    + " | tipo=" + questao.getTipo());
+
+            if (querReutilizar && !alterada) {
+                questao.setIdOrigemBanco(editor.idOrigemBanco);
+                questao.setReutilizadaDoBanco(true);
+            } else {
+                questao.setIdOrigemBanco(null);
+                questao.setReutilizadaDoBanco(false);
+            }
 
             if ("Múltipla escolha".equals(tipoSelecionado)) {
                 questao.setTipo(Questao.MULTIPLA_ESCOLHA);
@@ -510,6 +693,23 @@ public class FormEditorController {
                     mostrarErro("A questão de múltipla escolha " + (i + 1) + " deve ter exatamente uma alternativa correta.");
                     return;
                 }
+            }
+
+            // --- Controle de reuso do Banco de Questões (sem duplicar ao mudar só pontos) ---
+            if (editor.idOrigemBanco != null) {
+                boolean marcouReutilizar = editor.chkReutilizarSemDuplicar == null
+                        || editor.chkReutilizarSemDuplicar.isSelected();
+                boolean conteudoIgualAoOriginal = !conteudoFoiAlterado(editor.snapshotOriginal, questao);
+
+                if (marcouReutilizar && conteudoIgualAoOriginal) {
+                    questao.setIdOrigemBanco(editor.idOrigemBanco);
+                    questao.setReutilizadaDoBanco(true);
+                } else {
+                    questao.setIdOrigemBanco(editor.idOrigemBanco);
+                    questao.setReutilizadaDoBanco(false);
+                }
+            } else {
+                questao.setReutilizadaDoBanco(false);
             }
 
             questoesNovas.add(questao);
