@@ -44,6 +44,7 @@
                   </VBox>
                   <Region HBox.hgrow="ALWAYS" />
                   <Button mnemonicParsing="false" onAction="#VoltarInicio" prefHeight="38.0" prefWidth="110.0" style="-fx-background-color: #F1F4F2; -fx-border-color: #C4D0C8; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-text-fill: #2B362F; -fx-font-weight: bold; -fx-cursor: hand;" text="Voltar" />
+                  <Button mnemonicParsing="false" onAction="#AbrirBancoQuestoes" prefHeight="38.0" prefWidth="165.0" style="-fx-background-color: #EEF5F0; -fx-border-color: #C4D6CA; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-text-fill: #285A36; -fx-font-weight: bold; -fx-cursor: hand;" text="Banco de Questões" />
                   <Button mnemonicParsing="false" onAction="#CriarProva" prefHeight="38.0" prefWidth="140.0" style="-fx-background-color: #4A7C59; -fx-background-radius: 8px; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="+ Criar Prova" />
                </children>
             </HBox>

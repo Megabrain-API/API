@@ -6,100 +6,30 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="600.0" prefWidth="960.0" styleClass="fundo-inicio" stylesheets="@../estilo.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.profControllers.BancoQuestoesController">
+<BorderPane prefHeight="650.0" prefWidth="980.0" styleClass="fundo-inicio" stylesheets="@../estilo.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.profControllers.BancoQuestoesController">
     <left>
-        <VBox fx:id="barra_lateral" alignment="CENTER_LEFT" minHeight="200.0" minWidth="60.0" onMouseEntered="#expande_barra" onMouseExited="#minimiza_barra" prefHeight="600.0" prefWidth="60.0" style="-fx-background-color: #00674f;" styleClass="barralateral" BorderPane.alignment="CENTER">
-            <children>
-
-                <Button fx:id="menu_minhaturma" alignment="BASELINE_LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#entra_minhaturma" prefHeight="48.0" prefWidth="200.0" style="-fx-background-color: #00674f; -fx-padding: 0 0 0 10;" text="Minhas Turmas" textFill="WHITE">
-                    <VBox.margin>
-                        <Insets bottom="25.0" top="30.0" />
-                    </VBox.margin>
-                    <graphic>
-                        <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
-                            <image>
-                                <Image url="@../Imagens/turma.png" />
-                            </image>
-                        </ImageView>
-                    </graphic>
-                    <font>
-                        <Font name="System Bold" size="12.0" />
-                    </font>
-                </Button>
-
-                <Button fx:id="minhas_provas" alignment="BASELINE_LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#entra_listaprova" prefHeight="48.0" prefWidth="200.0" style="-fx-background-color: #00674F; -fx-padding: 0 0 0 10;" text="Minhas Provas" textFill="WHITE">
-                    <VBox.margin>
-                        <Insets bottom="25.0" top="30.0" />
-                    </VBox.margin>
-                    <graphic>
-                        <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
-                            <image>
-                                <Image url="@../Imagens/prova.png" />
-                            </image>
-                        </ImageView>
-                    </graphic>
-                    <font>
-                        <Font name="System Bold" size="12.0" />
-                    </font>
-                </Button>
-
-                <Button fx:id="menu_dados_pessoais_prof" alignment="BASELINE_LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#entra_dados_pessoais_prof" prefHeight="48.0" prefWidth="200.0" style="-fx-background-color: #00674F; -fx-padding: 0 0 0 10;" text="Dados Pessoais" textFill="WHITE">
-                    <VBox.margin>
-                        <Insets bottom="25.0" top="30.0" />
-                    </VBox.margin>
-                    <graphic>
-                        <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
-                            <image>
-                                <Image url="@../Imagens/dados.png" />
-                            </image>
-                        </ImageView>
-                    </graphic>
-                    <font>
-                        <Font name="System Bold" size="12.0" />
-                    </font>
-                </Button>
-
-                <Button fx:id="menu_sair_prof" alignment="BASELINE_LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#deslogar_prof" prefHeight="48.0" prefWidth="200.0" style="-fx-background-color: #00674f; -fx-padding: 0 0 0 10;" text="Sair" textFill="WHITE">
-                    <VBox.margin>
-                        <Insets bottom="25.0" left="5.0" top="30.0" />
-                    </VBox.margin>
-                    <graphic>
-                        <ImageView fitHeight="42.0" fitWidth="39.0" pickOnBounds="true" preserveRatio="true">
-                            <image>
-                                <Image url="@../Imagens/aa.png" />
-                            </image>
-                        </ImageView>
-                    </graphic>
-                    <font>
-                        <Font name="System Bold" size="12.0" />
-                    </font>
-                </Button>
-
-            </children>
-        </VBox>
+        <fx:include source="BarraLateralProf.fxml" />
     </left>
     <center>
-        <VBox prefHeight="600.0" prefWidth="880.0" spacing="0.0" BorderPane.alignment="CENTER">
+        <VBox prefHeight="650.0" prefWidth="880.0" spacing="0.0" BorderPane.alignment="CENTER">
             <children>
-                <!-- Cabeçalho superior com título e barra de filtros (TextField + ComboBox) -->
-                <VBox spacing="14.0" style="-fx-background-color: rgba(255, 255, 255, 0.92); -fx-border-color: #DCE3EC; -fx-border-width: 0 0 1 0;">
+                <!-- Cabeçalho superior padronizado com filtros e botão + Criar Questão -->
+                <VBox spacing="14.0" style="-fx-background-color: rgba(255, 255, 255, 0.94); -fx-border-color: #DCE5DF; -fx-border-width: 0 0 1 0;">
                     <padding>
-                        <Insets bottom="16.0" left="28.0" right="28.0" top="16.0" />
+                        <Insets bottom="16.0" left="28.0" right="28.0" top="18.0" />
                     </padding>
                     <children>
                         <HBox alignment="CENTER_LEFT" spacing="12.0">
                             <children>
-                                <VBox spacing="2.0">
+                                <VBox spacing="4.0">
                                     <children>
-                                        <Label text="PROFESSOR" textFill="#00674F">
+                                        <Label fx:id="lbl_subtitulo_topo" text="REPOSITÓRIO DO PROFESSOR" textFill="#4A7C59">
                                             <font>
                                                 <Font name="System Bold" size="11.0" />
                                             </font>
@@ -109,31 +39,34 @@
                                                 <Font name="System Bold" size="22.0" />
                                             </font>
                                         </Label>
+                                        <Label fx:id="lbl_total_questoes" text="0 questões" textFill="#5F6368">
+                                            <font>
+                                                <Font size="13.0" />
+                                            </font>
+                                        </Label>
                                     </children>
                                 </VBox>
                                 <Region HBox.hgrow="ALWAYS" />
-                                <Label fx:id="lbl_total_questoes" text="0 questões" textFill="#5F6368">
-                                    <font>
-                                        <Font name="System Bold" size="13.0" />
-                                    </font>
-                                </Label>
+                                <Button fx:id="btn_voltar_topo" mnemonicParsing="false" onAction="#voltarOrigem" prefHeight="38.0" prefWidth="110.0" style="-fx-background-color: #F1F4F2; -fx-border-color: #C4D0C8; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-text-fill: #2B362F; -fx-font-weight: bold; -fx-cursor: hand;" text="Voltar" />
+                                <Button fx:id="btn_nova_questao" mnemonicParsing="false" onAction="#abrirModalNovaQuestao" prefHeight="38.0" prefWidth="155.0" style="-fx-background-color: #4A7C59; -fx-background-radius: 8px; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="+ Criar Questão" />
                             </children>
                         </HBox>
 
-                        <!-- Filtro por enunciado à esquerda e ComboBox de disciplinas ao lado -->
+                        <!-- Barra de filtros: Enunciado, Disciplina e Tipo -->
                         <HBox alignment="CENTER_LEFT" spacing="12.0">
                             <children>
-                                <TextField fx:id="txt_filtro_enunciado" prefHeight="38.0" promptText="Buscar questão pelo enunciado..." style="-fx-background-color: #FFFFFF; -fx-border-color: #C4CEDB; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-padding: 0 12 0 12; -fx-font-size: 13px;" HBox.hgrow="ALWAYS" />
-                                <ComboBox fx:id="cb_filtro_disciplina" prefHeight="38.0" prefWidth="240.0" promptText="Todas as disciplinas" style="-fx-background-color: #FFFFFF; -fx-border-color: #C4CEDB; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-font-size: 13px;" />
+                                <TextField fx:id="txt_filtro_enunciado" prefHeight="38.0" promptText="Buscar questão pelo enunciado..." style="-fx-background-color: #FFFFFF; -fx-border-color: #C4D6CA; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-padding: 0 12 0 12; -fx-font-size: 13px;" HBox.hgrow="ALWAYS" />
+                                <ComboBox fx:id="cb_filtro_disciplina" prefHeight="38.0" prefWidth="220.0" promptText="Todas as disciplinas" style="-fx-background-color: #FFFFFF; -fx-border-color: #C4D6CA; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-font-size: 13px;" />
+                                <ComboBox fx:id="cb_filtro_tipo" prefHeight="38.0" prefWidth="190.0" promptText="Todos os tipos" style="-fx-background-color: #FFFFFF; -fx-border-color: #C4D6CA; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-font-size: 13px;" />
                             </children>
                         </HBox>
                     </children>
                 </VBox>
 
-                <!-- Área rolável com o VBox das questões -->
+                <!-- Área rolável com os cards das questões -->
                 <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
                     <content>
-                        <VBox fx:id="vbox_questoes_banco" fillWidth="true" spacing="16.0">
+                        <VBox fx:id="vbox_questoes_banco" fillWidth="true" spacing="14.0">
                             <padding>
                                 <Insets bottom="26.0" left="28.0" right="28.0" top="22.0" />
                             </padding>
@@ -141,20 +74,20 @@
                     </content>
                 </ScrollPane>
 
-                <!-- Rodapé fixo com ações de voltar e levar questões -->
-                <HBox alignment="CENTER_LEFT" spacing="14.0" style="-fx-background-color: rgba(255, 255, 255, 0.92); -fx-border-color: #DCE3EC; -fx-border-width: 1 0 0 0;">
+                <!-- Rodapé fixo exibido quando aberto a partir da Montagem da Prova -->
+                <HBox fx:id="rodape_selecao" alignment="CENTER_LEFT" spacing="14.0" style="-fx-background-color: rgba(255, 255, 255, 0.94); -fx-border-color: #DCE5DF; -fx-border-width: 1 0 0 0;">
                     <padding>
                         <Insets bottom="14.0" left="28.0" right="28.0" top="14.0" />
                     </padding>
                     <children>
-                        <Label fx:id="lbl_selecionadas_banco" text="0 selecionada(s)" textFill="#5F6368">
+                        <Label fx:id="lbl_selecionadas_banco" text="0 selecionada(s)" textFill="#285A36">
                             <font>
                                 <Font name="System Bold" size="13.0" />
                             </font>
                         </Label>
                         <Region HBox.hgrow="ALWAYS" />
-                        <Button mnemonicParsing="false" onAction="#voltarFormEditor" prefHeight="38.0" prefWidth="120.0" style="-fx-background-color: #F1F4F8; -fx-border-color: #C4CEDB; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-text-fill: #2B3340; -fx-font-weight: bold; -fx-cursor: hand;" text="Voltar" />
-                        <Button fx:id="btn_levar_questoes" mnemonicParsing="false" onAction="#levarQuestoesParaEditor" prefHeight="38.0" prefWidth="160.0" style="-fx-background-color: #4A7C59; -fx-background-radius: 8px; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="Levar questões" />
+                        <Button mnemonicParsing="false" onAction="#voltarOrigem" prefHeight="38.0" prefWidth="120.0" style="-fx-background-color: #F1F4F2; -fx-border-color: #C4D0C8; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-text-fill: #2B362F; -fx-font-weight: bold; -fx-cursor: hand;" text="Cancelar" />
+                        <Button fx:id="btn_levar_questoes" mnemonicParsing="false" onAction="#levarQuestoesParaEditor" prefHeight="38.0" prefWidth="175.0" style="-fx-background-color: #4A7C59; -fx-background-radius: 8px; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="Adicionar à Prova" />
                     </children>
                 </HBox>
             </children>

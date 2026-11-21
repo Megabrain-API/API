@@ -271,4 +271,11 @@ public class ListaProvaController {
     void VoltarInicio(ActionEvent event) throws IOException {
         App.setRoot("professorFluxo/MenuProf");
     }
+
+    @FXML
+    void AbrirBancoQuestoes(ActionEvent event) throws IOException {
+        BancoQuestoesController.configurarModoGerenciamento();
+        App.setRoot("professorFluxo/BancoQuestoes");
+    }
+
 }
