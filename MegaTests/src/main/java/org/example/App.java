@@ -14,6 +14,7 @@ import java.sql.Connection;
 public class App extends Application {
 
     private static Scene scene;
+    private static Parent telaAntesDosDados;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -80,7 +81,29 @@ public class App extends Application {
         if (FazerProvaController.isProvaEmAndamento()) {
             FazerProvaController.submeterProvaAutomaticamenteNoEncerramento();
         }
-        scene.setRoot(loadFXML(fxml));
+        Parent destino = loadFXML(fxml);
+        telaAntesDosDados = null;
+        scene.setRoot(destino);
+    }
+
+    /** Mantém a tela anterior viva, incluindo respostas e cronômetro de uma prova. */
+    public static void abrirDadosPessoais() throws IOException {
+        if (telaAntesDosDados != null) return;
+        Parent dados = loadFXML("DadosPessoais");
+        telaAntesDosDados = scene.getRoot();
+        scene.setRoot(dados);
+    }
+
+    public static void voltarDosDadosPessoais() throws IOException {
+        if (telaAntesDosDados != null) {
+            Parent anterior = telaAntesDosDados;
+            telaAntesDosDados = null;
+            scene.setRoot(anterior);
+        } else {
+            boolean aluno = "Aluno".equalsIgnoreCase(
+                    org.example.controllers.profControllers.SessaoUsuarioController.getTipoUsuario());
+            setRoot(aluno ? "alunoFluxo/MenuAluno" : "professorFluxo/MenuProf");
+        }
     }
 
     private static Parent loadFXML(String fxml) throws IOException {

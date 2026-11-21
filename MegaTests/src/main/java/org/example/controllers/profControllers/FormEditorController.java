@@ -1,9 +1,8 @@
 package org.example.controllers.profControllers;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -14,7 +13,10 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import org.example.App;
 import org.example.dao.ProvaDAO;
 import org.example.entity.profEntity.Prova;
@@ -22,16 +24,16 @@ import org.example.entity.profEntity.Questao;
 import org.example.entity.profEntity.SessaoApp;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /** Editor dinâmico que permite criar provas com tipos de questão mistos. */
 public class FormEditorController {
+
+    private static final Locale PT_BR = Locale.forLanguageTag("pt-BR");
+    private static final DateTimeFormatter DATA_HORA_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm");
 
     @FXML
     private VBox container_dinamico;
@@ -42,10 +44,29 @@ public class FormEditorController {
     @FXML
     private Button btn_cancelar_form;
 
+    @FXML
+    private Button btn_finalizar;
+
+    @FXML
+    private Label lbl_titulo_editor;
+
+    @FXML
+    private Label lbl_disciplina_editor;
+
+    @FXML
+    private Label lbl_info_editor;
+
+    @FXML
+    private Label lbl_resumo_questoes_editor;
+
+    @FXML
+    private Label lbl_resumo_pontos_editor;
+
     private final List<EditorQuestao> editores = new ArrayList<>();
 
     private static class EditorQuestao {
         private final VBox painel;
+        private final Label tituloQuestao;
         private final TextField enunciado;
         private final TextField pontos;
         private final ComboBox<String> tipo;
@@ -63,6 +84,7 @@ public class FormEditorController {
 
         private EditorQuestao(
                 VBox painel,
+                Label tituloQuestao,
                 TextField enunciado,
                 TextField pontos,
                 ComboBox<String> tipo,
@@ -73,8 +95,9 @@ public class FormEditorController {
                 VBox areaItensCorrespondencia,
                 VBox areaOpcoesCorrespondencia,
                 Label tituloModelo,
-                TextArea respostaModelo){
+                TextArea respostaModelo) {
             this.painel = painel;
+            this.tituloQuestao = tituloQuestao;
             this.enunciado = enunciado;
             this.pontos = pontos;
             this.tipo = tipo;
@@ -90,14 +113,10 @@ public class FormEditorController {
     }
 
     private static class EditorCorrespondenciaOpcao {
-
         private final TextField texto;
         private final ComboBox<Integer> numeroCorreto;
 
-        private EditorCorrespondenciaOpcao(
-                TextField texto,
-                ComboBox<Integer> numeroCorreto
-        ) {
+        private EditorCorrespondenciaOpcao(TextField texto, ComboBox<Integer> numeroCorreto) {
             this.texto = texto;
             this.numeroCorreto = numeroCorreto;
         }
@@ -109,8 +128,7 @@ public class FormEditorController {
         private final TextField texto;
         private final CheckBox correta;
 
-        private EditorAlternativa(HBox painel, Label numero,
-                                  TextField texto, CheckBox correta) {
+        private EditorAlternativa(HBox painel, Label numero, TextField texto, CheckBox correta) {
             this.painel = painel;
             this.numero = numero;
             this.texto = texto;
@@ -119,73 +137,202 @@ public class FormEditorController {
     }
 
     @FXML
+    public void initialize() {
+        preencherCabecalho();
+        atualizarResumoCabecalho();
+    }
+
+    private void preencherCabecalho() {
+        Prova prova = SessaoApp.provaAtual;
+        if (prova == null) {
+            return;
+        }
+
+        if (lbl_titulo_editor != null && prova.getNome() != null && !prova.getNome().isBlank()) {
+            lbl_titulo_editor.setText(prova.getNome());
+        }
+
+        if (lbl_disciplina_editor != null) {
+            String disc = prova.getDisciplina();
+            lbl_disciplina_editor.setText((disc != null && !disc.isBlank()) ? "•  " + disc : "");
+        }
+
+        if (lbl_info_editor != null) {
+            StringBuilder info = new StringBuilder();
+            if (prova.getDuracaoMinutos() != null && prova.getDuracaoMinutos() > 0) {
+                info.append("Duração: ").append(prova.getDuracaoMinutos()).append(" min");
+            }
+            if (prova.getDataInicial() != null) {
+                if (info.length() > 0) info.append("  •  ");
+                info.append("Início: ").append(prova.getDataInicial().format(DATA_HORA_FMT));
+            }
+            if (prova.getDataLimite() != null) {
+                if (info.length() > 0) info.append("  •  ");
+                info.append("Limite: ").append(prova.getDataLimite().format(DATA_HORA_FMT));
+            }
+            if (info.length() > 0) {
+                lbl_info_editor.setText(info.toString());
+            }
+        }
+    }
+
+    private void atualizarResumoCabecalho() {
+        int qtd = editores.size();
+        double somaPontos = 0.0;
+
+        for (EditorQuestao editor : editores) {
+            String txtP = editor.pontos.getText() == null ? "" : editor.pontos.getText().trim().replace(",", ".");
+            if (txtP.isEmpty()) {
+                somaPontos += 1.0;
+            } else {
+                try {
+                    double val = Double.parseDouble(txtP);
+                    if (val > 0) {
+                        somaPontos += val;
+                    }
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+
+        if (lbl_resumo_questoes_editor != null) {
+            lbl_resumo_questoes_editor.setText(qtd + (qtd == 1 ? " questão" : " questões"));
+        }
+        if (lbl_resumo_pontos_editor != null) {
+            lbl_resumo_pontos_editor.setText(String.format(PT_BR, "Total: %.2f pts", somaPontos));
+        }
+    }
+
+    @FXML
     private void adicionarQuestao() {
-        VBox painel = new VBox(8);
-        painel.setStyle("-fx-border-color: #cccccc; -fx-border-radius: 6; -fx-padding: 12;");
+        VBox painel = new VBox(12);
+        painel.setPadding(new Insets(16));
+        painel.setMaxWidth(Double.MAX_VALUE);
+        painel.setStyle(
+                "-fx-background-color: rgba(255, 255, 255, 0.96);" +
+                        "-fx-background-radius: 12px;" +
+                        "-fx-border-color: #C4D6CA;" +
+                        "-fx-border-radius: 12px;" +
+                        "-fx-border-width: 1.5px;"
+        );
 
-        Label titulo = new Label("Nova questão " + (editores.size() + 1));
+        // Cabeçalho do card da questão
+        HBox topoCard = new HBox(10);
+        topoCard.setAlignment(Pos.CENTER_LEFT);
 
-        TextField txtPergunta = new TextField();
-        txtPergunta.setPromptText("Digite o enunciado da questão...");
-        txtPergunta.setMaxWidth(Double.MAX_VALUE);
+        Label titulo = new Label("Questão " + (editores.size() + 1));
+        titulo.setFont(Font.font("System", FontWeight.BOLD, 16));
+        titulo.setStyle("-fx-text-fill: #285A36;");
 
-        // Campo de pontuação inicia vazio usando promptText (marca d'água opaca)
-        TextField txtPontos = new TextField();
-        txtPontos.setPromptText("Ex: 1.0 (Padrão)");
-        txtPontos.setMaxWidth(180);
+        Region espacadorTopo = new Region();
+        HBox.setHgrow(espacadorTopo, Priority.ALWAYS);
+
+        Button btnRemover = new Button("Remover questão");
+        btnRemover.setStyle(
+                "-fx-background-color: #FCE8E6;" +
+                        "-fx-border-color: #F2B8B5;" +
+                        "-fx-border-radius: 6px;" +
+                        "-fx-background-radius: 6px;" +
+                        "-fx-text-fill: #B3261E;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-font-size: 11px;" +
+                        "-fx-padding: 4 10 4 10;" +
+                        "-fx-cursor: hand;"
+        );
+
+        topoCard.getChildren().addAll(titulo, espacadorTopo, btnRemover);
+
+        // Linha de configuração: Tipo de questão + Pontuação
+        HBox linhaConfig = new HBox(14);
+        linhaConfig.setAlignment(Pos.CENTER_LEFT);
+
+        VBox colTipo = new VBox(4);
+        HBox.setHgrow(colTipo, Priority.ALWAYS);
+        Label lblTipo = new Label("Tipo de questão:");
+        lblTipo.setStyle("-fx-font-weight: bold; -fx-text-fill: #1B1B1B; -fx-font-size: 12px;");
 
         ComboBox<String> cmbTipo = new ComboBox<>();
         cmbTipo.getItems().addAll(
-                "Múltipla escolha" ,
+                "Múltipla escolha",
                 "Checklist numerado",
-                "Dissertativa" ,
+                "Dissertativa",
                 "Correspondência"
         );
         cmbTipo.setValue("Múltipla escolha");
         cmbTipo.setMaxWidth(Double.MAX_VALUE);
+        colTipo.getChildren().addAll(lblTipo, cmbTipo);
 
-        Label tituloAlternativas = new Label("Alternativas / itens:");
-        VBox areaAlternativas = new VBox(6);
+        VBox colPontos = new VBox(4);
+        colPontos.setPrefWidth(190);
+        Label lblPontos = new Label("Pontuação (pts):");
+        lblPontos.setStyle("-fx-font-weight: bold; -fx-text-fill: #1B1B1B; -fx-font-size: 12px;");
 
-        Button btnAdicionarAlternativa = new Button("Adicionar alternativa");
+        TextField txtPontos = new TextField();
+        txtPontos.setPromptText("Ex: 1.0 (Padrão)");
+        txtPontos.setMaxWidth(Double.MAX_VALUE);
+        txtPontos.textProperty().addListener((obs, oldVal, newVal) -> atualizarResumoCabecalho());
+        colPontos.getChildren().addAll(lblPontos, txtPontos);
 
-        Label tituloModelo = new Label("Resposta de referência (opcional):");
+        linhaConfig.getChildren().addAll(colTipo, colPontos);
+
+        // Enunciado
+        VBox colEnunciado = new VBox(4);
+        Label lblEnunciado = new Label("Enunciado da questão:");
+        lblEnunciado.setStyle("-fx-font-weight: bold; -fx-text-fill: #1B1B1B; -fx-font-size: 12px;");
+
+        TextField txtPergunta = new TextField();
+        txtPergunta.setPromptText("Digite o enunciado da questão...");
+        txtPergunta.setMaxWidth(Double.MAX_VALUE);
+        colEnunciado.getChildren().addAll(lblEnunciado, txtPergunta);
+
+        // Alternativas (Múltipla escolha / Checklist)
+        Label tituloAlternativas = new Label("Alternativas (marque a(s) correta(s)):");
+        tituloAlternativas.setStyle("-fx-font-weight: bold; -fx-text-fill: #1B1B1B; -fx-font-size: 12px;");
+        VBox areaAlternativas = new VBox(8);
+
+        Button btnAdicionarAlternativa = new Button("+ Adicionar alternativa");
+        btnAdicionarAlternativa.setStyle(estilizarBotaoSecundario());
+
+        // Dissertativa
+        Label tituloModelo = new Label("Resposta de referência / gabarito (opcional):");
+        tituloModelo.setStyle("-fx-font-weight: bold; -fx-text-fill: #1B1B1B; -fx-font-size: 12px;");
         TextArea txtRespostaModelo = new TextArea();
-        txtRespostaModelo.setPromptText("Digite uma resposta de referência...");
+        txtRespostaModelo.setPromptText("Digite uma resposta de referência para auxiliar na correção...");
         txtRespostaModelo.setWrapText(true);
         txtRespostaModelo.setPrefRowCount(3);
 
+        // Correspondência
         VBox areaCorrespondencia = new VBox(10);
+        areaCorrespondencia.setStyle("-fx-background-color: #F6F8F7; -fx-background-radius: 8px; -fx-padding: 12;");
 
-        Label tituloItens = new Label("Itens:");
+        Label tituloItens = new Label("Coluna 1 — Itens numerados:");
+        tituloItens.setStyle("-fx-font-weight: bold; -fx-text-fill: #1B1B1B; -fx-font-size: 12px;");
         VBox areaItensCorrespondencia = new VBox(6);
-        Button btnAdicionarItem = new Button("Adicionar item");
+        Button btnAdicionarItem = new Button("+ Adicionar item");
+        btnAdicionarItem.setStyle(estilizarBotaoSecundario());
 
-        Label tituloOpcoes = new Label("Alternativas:");
+        Label tituloOpcoes = new Label("Coluna 2 — Alternativas e número correspondente:");
+        tituloOpcoes.setStyle("-fx-font-weight: bold; -fx-text-fill: #1B1B1B; -fx-font-size: 12px;");
         VBox areaOpcoesCorrespondencia = new VBox(6);
-        Button btnAdicionarOpcao = new Button("Adicionar Opção");
+        Button btnAdicionarOpcao = new Button("+ Adicionar opção");
+        btnAdicionarOpcao.setStyle(estilizarBotaoSecundario());
 
         EditorQuestao editor = new EditorQuestao(
-                painel, txtPergunta, txtPontos, cmbTipo, areaAlternativas,
+                painel, titulo, txtPergunta, txtPontos, cmbTipo, areaAlternativas,
                 tituloAlternativas, btnAdicionarAlternativa, areaCorrespondencia, areaItensCorrespondencia,
                 areaOpcoesCorrespondencia, tituloModelo, txtRespostaModelo
         );
 
-        btnAdicionarItem.setOnAction(
-                event -> adicionarItemCorrespondencia(editor)
-        );
-
-        btnAdicionarOpcao.setOnAction(
-                event -> adicionarOpcaoCorrespondencia(editor)
-        );
+        btnAdicionarItem.setOnAction(event -> adicionarItemCorrespondencia(editor));
+        btnAdicionarOpcao.setOnAction(event -> adicionarOpcaoCorrespondencia(editor));
         btnAdicionarAlternativa.setOnAction(event -> adicionarAlternativa(editor));
         cmbTipo.setOnAction(event -> atualizarTipo(editor));
 
-        Button btnRemover = new Button("Remover questão");
         btnRemover.setOnAction(event -> {
             container_dinamico.getChildren().remove(painel);
             editores.remove(editor);
             atualizarTitulosQuestoes();
+            atualizarResumoCabecalho();
         });
 
         areaCorrespondencia.getChildren().addAll(
@@ -198,25 +345,44 @@ public class FormEditorController {
         );
 
         painel.getChildren().addAll(
-                titulo,
-                new Label("Tipo de questão:"),
-                cmbTipo,
-                new Label("Pontuação / Valor da questão:"),
-                txtPontos,
-                new Label("Enunciado:"),
-                txtPergunta,
+                topoCard,
+                linhaConfig,
+                colEnunciado,
                 tituloAlternativas,
                 areaAlternativas,
                 btnAdicionarAlternativa,
                 areaCorrespondencia,
                 tituloModelo,
-                txtRespostaModelo,
-                btnRemover
+                txtRespostaModelo
         );
 
         editores.add(editor);
         container_dinamico.getChildren().add(painel);
         atualizarTipo(editor);
+        atualizarResumoCabecalho();
+    }
+
+    private String estilizarBotaoSecundario() {
+        return "-fx-background-color: #EEF5F0;" +
+                "-fx-border-color: #C4D6CA;" +
+                "-fx-border-radius: 6px;" +
+                "-fx-background-radius: 6px;" +
+                "-fx-text-fill: #285A36;" +
+                "-fx-font-weight: bold;" +
+                "-fx-font-size: 12px;" +
+                "-fx-padding: 5 12 5 12;" +
+                "-fx-cursor: hand;";
+    }
+
+    private String estilizarBotaoRemoverPequeno() {
+        return "-fx-background-color: #F4F4F4;" +
+                "-fx-border-color: #D0D0D0;" +
+                "-fx-border-radius: 6px;" +
+                "-fx-background-radius: 6px;" +
+                "-fx-text-fill: #555555;" +
+                "-fx-font-size: 11px;" +
+                "-fx-padding: 4 9 4 9;" +
+                "-fx-cursor: hand;";
     }
 
     private void atualizarTipo(EditorQuestao editor) {
@@ -224,11 +390,8 @@ public class FormEditorController {
 
         boolean dissertativa = "Dissertativa".equals(tipo);
         boolean correspondencia = "Correspondência".equals(tipo);
-
-        // Visível apenas para Múltipla Escolha ou Checklist numerado
         boolean objetivaOuChecklist = !dissertativa && !correspondencia;
 
-        // Controle das alternativas comuns (Múltipla escolha / Checklist)
         editor.areaAlternativas.setVisible(objetivaOuChecklist);
         editor.areaAlternativas.setManaged(objetivaOuChecklist);
         editor.tituloAlternativas.setVisible(objetivaOuChecklist);
@@ -236,13 +399,11 @@ public class FormEditorController {
         editor.btnAdicionarAlternativa.setVisible(objetivaOuChecklist);
         editor.btnAdicionarAlternativa.setManaged(objetivaOuChecklist);
 
-        // Controle da resposta (Dissertativa)
         editor.respostaModelo.setVisible(dissertativa);
         editor.respostaModelo.setManaged(dissertativa);
         editor.tituloModelo.setVisible(dissertativa);
         editor.tituloModelo.setManaged(dissertativa);
 
-        // Controle da área de correspondência (Correspondência)
         editor.areaCorrespondencia.setVisible(correspondencia);
         editor.areaCorrespondencia.setManaged(correspondencia);
     }
@@ -274,17 +435,22 @@ public class FormEditorController {
 
     private void adicionarAlternativa(EditorQuestao editor) {
         Label numero = new Label();
+        numero.setStyle("-fx-font-weight: bold; -fx-text-fill: #285A36; -fx-min-width: 22;");
+
         TextField txtAlternativa = new TextField();
-        txtAlternativa.setPromptText("Digite a alternativa / item");
+        txtAlternativa.setPromptText("Digite a alternativa...");
         txtAlternativa.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(txtAlternativa, Priority.ALWAYS);
 
         CheckBox chkCorreta = new CheckBox("Correta");
+        chkCorreta.setStyle("-fx-text-fill: #285A36; -fx-font-weight: bold;");
+
         HBox linha = new HBox(8);
         linha.setAlignment(Pos.CENTER_LEFT);
 
         EditorAlternativa alternativa = new EditorAlternativa(linha, numero, txtAlternativa, chkCorreta);
         Button btnRemover = new Button("Remover");
+        btnRemover.setStyle(estilizarBotaoRemoverPequeno());
         btnRemover.setOnAction(event -> {
             editor.areaAlternativas.getChildren().remove(linha);
             editor.alternativas.remove(alternativa);
@@ -302,14 +468,18 @@ public class FormEditorController {
         linha.setAlignment(Pos.CENTER_LEFT);
 
         ComboBox<Integer> numero = new ComboBox<>();
+        numero.setPromptText("Item");
+        numero.setPrefWidth(80);
+
         TextField texto = new TextField();
-        texto.setPromptText("Digite a alternativa...");
+        texto.setPromptText("Digite a alternativa correspondente...");
         texto.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(texto, Priority.ALWAYS);
 
         EditorCorrespondenciaOpcao opcao = new EditorCorrespondenciaOpcao(texto, numero);
 
         Button remover = new Button("Remover");
+        remover.setStyle(estilizarBotaoRemoverPequeno());
         remover.setOnAction(event -> {
             editor.areaOpcoesCorrespondencia.getChildren().remove(linha);
             editor.opcoesCorrespondencia.remove(opcao);
@@ -327,6 +497,7 @@ public class FormEditorController {
         linha.setAlignment(Pos.CENTER_LEFT);
 
         Label numero = new Label((editor.itensCorrespondencia.size() + 1) + ".");
+        numero.setStyle("-fx-font-weight: bold; -fx-text-fill: #285A36; -fx-min-width: 22;");
 
         TextField campo = new TextField();
         campo.setPromptText("Digite o item...");
@@ -334,6 +505,7 @@ public class FormEditorController {
         HBox.setHgrow(campo, Priority.ALWAYS);
 
         Button remover = new Button("Remover");
+        remover.setStyle(estilizarBotaoRemoverPequeno());
         remover.setOnAction(event -> {
             editor.areaItensCorrespondencia.getChildren().remove(linha);
             editor.itensCorrespondencia.remove(campo);
@@ -356,20 +528,12 @@ public class FormEditorController {
 
     private void atualizarTitulosQuestoes() {
         for (int i = 0; i < editores.size(); i++) {
-            for (javafx.scene.Node node : editores.get(i).painel.getChildren()) {
-                if (node instanceof Label) {
-                    Label label = (Label) node;
-                    if (label.getText().startsWith("Nova questão ")) {
-                        label.setText("Nova questão " + (i + 1));
-                        break;
-                    }
-                }
-            }
+            editores.get(i).tituloQuestao.setText("Questão " + (i + 1));
         }
     }
 
     @FXML
-    private void GeraProva(ActionEvent event){
+    private void GeraProva(ActionEvent event) {
         Prova prova = SessaoApp.provaAtual;
         if (prova == null) {
             mostrarErro("Nenhuma prova foi inicializada. Volte e crie a prova novamente.");
@@ -395,7 +559,6 @@ public class FormEditorController {
                 return;
             }
 
-            // Se o campo estiver vazio, mantém o valor padrão de 1.0 ponto
             double pontos = 1.0;
             String txtP = editor.pontos.getText() == null ? "" : editor.pontos.getText().trim().replace(",", ".");
 
@@ -435,14 +598,11 @@ public class FormEditorController {
                 temCorrespondencia = true;
             }
 
-            // Dissertativa
             if (Questao.DISSERTATIVA.equals(questao.getTipo())) {
                 String modelo = editor.respostaModelo.getText();
                 questao.setRespostaModelo(modelo == null ? "" : modelo.trim());
 
-            }
-            // Correspondência
-            else if (Questao.CORRESPONDENCIA.equals(questao.getTipo())) {
+            } else if (Questao.CORRESPONDENCIA.equals(questao.getTipo())) {
                 if (editor.itensCorrespondencia.size() < 2) {
                     mostrarErro("A questão de correspondência " + (i + 1) + " precisa ter pelo menos dois itens.");
                     return;
@@ -478,9 +638,7 @@ public class FormEditorController {
                     questao.getGabaritoCorrespondencia().add(numCorreto);
                 }
 
-            }
-            // Múltipla escolha ou Checklist
-            else {
+            } else {
                 if (editor.alternativas.size() < 2) {
                     mostrarErro("A questão " + (i + 1) + " precisa ter pelo menos duas alternativas.");
                     return;
@@ -536,7 +694,7 @@ public class FormEditorController {
             alerta.showAndWait();
 
             App.setRoot("professorFluxo/ListaProva");
-        } catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             mostrarErro("Não foi possível salvar a prova no banco de dados. "
                     + "Confira a conexão, a disciplina selecionada e a sessão do professor.\n"

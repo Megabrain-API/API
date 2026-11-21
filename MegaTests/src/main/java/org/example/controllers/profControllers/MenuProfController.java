@@ -7,10 +7,10 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import org.example.App;
-import org.example.controllers.profControllers.ListaProvaController;
 
 import java.io.IOException;
 import java.net.URL;
@@ -30,7 +30,10 @@ public class MenuProfController implements Initializable {
 
     @FXML private Button minhas_provas;
 
-    // Mapa para salvar dinamicamente os textos configurados no FXML/Scene Builder
+    @FXML private Label lbl_boas_vindas_prof;
+
+    @FXML private Label lbl_subtitulo_prof;
+
     private final Map<Button, String> textosOriginais = new HashMap<>();
     private Button[] botoesMenu;
 
@@ -38,15 +41,31 @@ public class MenuProfController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         botoesMenu = new Button[]{menu_minhaturma, minhas_provas, menu_dados_pessoais_prof, menu_sair_prof};
 
-        // 1. Salva na memória o texto de cada botão definido no FXML
         for (Button btn : botoesMenu) {
             if (btn != null) {
                 textosOriginais.put(btn, btn.getText());
             }
         }
 
-        // 2. Garante que os botões comecem ocultando os textos (barra inicializada em 60px)
         ocultarTextosBotoes();
+        carregarSaudacaoUsuario();
+    }
+
+    private void carregarSaudacaoUsuario() {
+        String nome = SessaoUsuarioController.getNomeUsuarioLogado();
+        Long matricula = SessaoUsuarioController.getIdUsuarioLogado();
+
+        if (lbl_boas_vindas_prof != null) {
+            if (nome != null && !nome.isBlank()) {
+                lbl_boas_vindas_prof.setText("Bem-vindo(a), " + nome + "!");
+            } else {
+                lbl_boas_vindas_prof.setText("Bem-vindo(a) ao MegaTests!");
+            }
+        }
+
+        if (lbl_subtitulo_prof != null && matricula != null) {
+            lbl_subtitulo_prof.setText("Matrícula: " + matricula + "  •  Selecione uma opção abaixo ou na barra lateral para começar.");
+        }
     }
 
     @FXML
@@ -56,14 +75,12 @@ public class MenuProfController implements Initializable {
         KeyFrame kf = new KeyFrame(Duration.millis(130), kv);
         timeline.getKeyFrames().add(kf);
 
-        // O texto só reaparece quando a animação de abertura chega ao fim
         timeline.setOnFinished(event -> mostrarTextosBotoes());
         timeline.play();
     }
 
     @FXML
     private void minimiza_barra() {
-        // Remove os textos instantaneamente antes de começar a fechar
         ocultarTextosBotoes();
 
         Timeline timeline = new Timeline();
@@ -76,7 +93,7 @@ public class MenuProfController implements Initializable {
     private void ocultarTextosBotoes() {
         for (Button btn : botoesMenu) {
             if (btn != null) {
-                btn.setText(""); // Esvazia o texto para fixar o ícone na esquerda
+                btn.setText("");
             }
         }
     }
@@ -84,19 +101,20 @@ public class MenuProfController implements Initializable {
     private void mostrarTextosBotoes() {
         for (Button btn : botoesMenu) {
             if (btn != null) {
-                btn.setText(textosOriginais.get(btn)); // Devolve o texto salvo originalmente
+                btn.setText(textosOriginais.get(btn));
             }
         }
     }
 
     @FXML
     void deslogar_prof(ActionEvent event) throws IOException {
+        SessaoUsuarioController.encerrarSessao();
         App.setRoot("professorFluxo/TelaLoginProf");
     }
 
     @FXML
-    void entra_dados_pessoais_prof(ActionEvent event) {
-        // Lógica futura
+    void entra_dados_pessoais_prof(ActionEvent event) throws IOException {
+        App.abrirDadosPessoais();
     }
 
     @FXML
@@ -106,7 +124,6 @@ public class MenuProfController implements Initializable {
 
     @FXML
     void entra_minhaturma(ActionEvent event) throws IOException {
-        // Abre a navegação Disciplina -> Curso -> Prova -> Aluno.
         TurmasProfessorController.limparContexto();
         App.setRoot("professorFluxo/turmas_professor");
     }

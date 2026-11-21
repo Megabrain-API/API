@@ -15,7 +15,9 @@ import org.example.entity.profEntity.SessaoApp;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 import java.util.List;
 
 public class CriaProvaController {
@@ -51,9 +53,6 @@ public class CriaProvaController {
     private ComboBox<String> selectDisciplina;
 
     @FXML
-    private ComboBox<?> selectQuestoes;
-
-    @FXML
     public void initialize() {
         CarregaCombobox();
         aplicarMascaraData(dataInicio);
@@ -68,7 +67,9 @@ public class CriaProvaController {
         DisciplinaDAO dao = new DisciplinaDAO();
         List<String> listaNomes = dao.listarNomesDisciplinas();
         ObservableList<String> dadosObservable = FXCollections.observableArrayList(listaNomes);
-        selectDisciplina.setItems(dadosObservable);
+        if (selectDisciplina != null) {
+            selectDisciplina.setItems(dadosObservable);
+        }
     }
 
     private void aplicarMascaraData(TextField textField) {
@@ -181,8 +182,8 @@ public class CriaProvaController {
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm")
-                .withResolverStyle(java.time.format.ResolverStyle.STRICT);
-        LocalDateTime agora = LocalDateTime.now();
+                .withResolverStyle(ResolverStyle.STRICT);
+        LocalDateTime agora = LocalDateTime.now(ZoneId.of("America/Sao_Paulo"));
         LocalDateTime dataInicialParsed = null;
         LocalDateTime dataLimiteParsed = null;
 
@@ -191,7 +192,6 @@ public class CriaProvaController {
         String strDataFim = dataFim.getText() == null ? "" : dataFim.getText().trim();
         String strHoraFim = horarioFim.getText() == null ? "" : horarioFim.getText().trim();
 
-        // Valida se preencheu apenas data ou apenas hora
         if (strDataIni.isEmpty() != strHoraIni.isEmpty()) {
             mostrarErro("Início incompleto", "Preencha tanto a data quanto o horário inicial, ou deixe ambos em branco.");
             return;
