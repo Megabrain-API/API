@@ -114,7 +114,7 @@ public class CriarQuestaoDialog {
         // Área Dissertativa
         VBox areaDissertativaBox = new VBox(4);
         Label lblMod = new Label("Resposta de referência / gabarito (opcional):");
-        lblMod.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
+        lblMod.setStyle("-fx-text-fill: #111111; -fx-font-weight: bold; -fx-font-size: 12px;");
         TextArea txtModelo = new TextArea();
         txtModelo.setPromptText("Digite a resposta esperada...");
         txtModelo.setWrapText(true);
@@ -124,12 +124,12 @@ public class CriarQuestaoDialog {
         // Área Correspondência
         VBox areaCorrBox = new VBox(8);
         Label lblItensC = new Label("Coluna 1 — Itens numerados:");
-        lblItensC.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
+        lblItensC.setStyle("-fx-text-fill: #111111; -fx-font-weight: bold; -fx-font-size: 12px;");
         VBox listaItensC = new VBox(6);
         List<TextField> camposItensC = new ArrayList<>();
 
         Label lblOpcoesC = new Label("Coluna 2 — Opções e item correspondente:");
-        lblOpcoesC.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
+        lblOpcoesC.setStyle("-fx-text-fill: #111111; -fx-font-weight: bold; -fx-font-size: 12px;");
         VBox listaOpcoesC = new VBox(6);
         List<TextField> camposOpcoesC = new ArrayList<>();
         List<ComboBox<Integer>> combosOpcoesC = new ArrayList<>();
