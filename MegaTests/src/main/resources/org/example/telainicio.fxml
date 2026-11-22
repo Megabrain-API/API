@@ -15,7 +15,7 @@
          <children>
             <VBox alignment="CENTER" maxWidth="360.0" minHeight="0.0" minWidth="0.0" spacing="30.0" style="-fx-background-color: #FFFG;">
                <children>
-                  <Label prefHeight="45.0" prefWidth="308.0" style="-fx-background-color: #E5E5E7;" text="Quem esta acessando?">
+                  <Label prefHeight="45.0" prefWidth="347.0" style="-fx-background-color: #E5E5E7;" text="Quem esta acessando?">
                      <font>
                         <Font size="30.0" />
                      </font>
