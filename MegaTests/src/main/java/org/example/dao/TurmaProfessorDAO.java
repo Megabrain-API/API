@@ -75,7 +75,8 @@ public class TurmaProfessorDAO {
         }
 
         public boolean isCorrigida() {
-            return "CORRIGIDA".equalsIgnoreCase(status) && notaTotal != null;
+            return notaTotal != null &&
+                    ("CORRIGIDA".equalsIgnoreCase(status) || "EXPIRADA".equalsIgnoreCase(status));
         }
     }
 
@@ -213,12 +214,54 @@ public class TurmaProfessorDAO {
     }
 
     /**
+     * Para provas cujo prazo (data_limite) já encerrou e que o aluno não enviou/respondeu,
+     * registra status = 'EXPIRADA' e nota_total = 0.00 para que entrem na média.
+     */
+    public void aplicarZeroParaProvasExpiradasSemEnvio(long matriculaProfessor,
+                                                       long idDisciplina,
+                                                       long raAluno) {
+        String sqlExpiradasSemEnvio =
+                "INSERT INTO mg_aluno_prova (ra_aluno, id_prova, data_inicio, data_envio, status, nota_total) " +
+                        "SELECT a.ra, p.id, NOW(), p.data_limite, 'EXPIRADA', 0.00 " +
+                        "FROM mg_provas p " +
+                        "INNER JOIN mg_aluno a ON a.ra = ? " +
+                        "INNER JOIN mg_curso_disciplina cd ON cd.id_curso = a.id_curso AND cd.id_disciplina = p.id_disciplina " +
+                        "LEFT JOIN mg_aluno_prova ap ON ap.ra_aluno = a.ra AND ap.id_prova = p.id " +
+                        "WHERE p.matricula_professor = ? " +
+                        "AND p.id_disciplina = ? " +
+                        "AND p.data_limite IS NOT NULL AND p.data_limite < NOW() " +
+                        "AND NOT EXISTS (" +
+                        "    SELECT 1 FROM mg_resposta_aluno r " +
+                        "    WHERE r.ra_aluno = a.ra AND r.id_prova = p.id" +
+                        ") " +
+                        "AND (ap.id IS NULL OR ap.status NOT IN ('FINALIZADA', 'CORRIGIDA')) " +
+                        "ON DUPLICATE KEY UPDATE " +
+                        "    status = CASE WHEN mg_aluno_prova.status NOT IN ('FINALIZADA', 'CORRIGIDA') THEN 'EXPIRADA' ELSE mg_aluno_prova.status END, " +
+                        "    nota_total = CASE WHEN mg_aluno_prova.status NOT IN ('FINALIZADA', 'CORRIGIDA') THEN COALESCE(mg_aluno_prova.nota_total, 0.00) ELSE mg_aluno_prova.nota_total END, " +
+                        "    data_envio = COALESCE(mg_aluno_prova.data_envio, p.data_limite)";
+
+        try (Connection conn = new ConexaoDAO().conectaBD();
+             PreparedStatement stmt = conn.prepareStatement(sqlExpiradasSemEnvio)) {
+
+            stmt.setLong(1, raAluno);
+            stmt.setLong(2, matriculaProfessor);
+            stmt.setLong(3, idDisciplina);
+            stmt.executeUpdate();
+        } catch (SQLException erro) {
+            throw new RuntimeException(
+                    "Erro ao registrar nota 0,00 para provas expiradas sem envio: " + erro.getMessage(), erro);
+        }
+    }
+
+    /**
      * Busca todas as provas lançadas pelo professor naquela disciplina, trazendo
-     * o peso de cada prova e a nota obtida pelo aluno (caso já corrigida).
+     * o peso de cada prova e a nota obtida pelo aluno (caso já corrigida ou expirada com 0,00).
      */
     public List<NotaProvaBoletim> listarBoletimAlunoNaDisciplina(long matriculaProfessor,
                                                                  long idDisciplina,
                                                                  long raAluno) {
+        aplicarZeroParaProvasExpiradasSemEnvio(matriculaProfessor, idDisciplina, raAluno);
+
         List<NotaProvaBoletim> boletim = new ArrayList<>();
 
         String sql = "SELECT p.id, p.nome, COALESCE(p.peso, 1.0) AS peso, " +
@@ -263,9 +306,9 @@ public class TurmaProfessorDAO {
     }
 
     /**
-     * Garante que todas as avaliações já corrigidas do aluno nesta disciplina estejam
-     * com status = 'CORRIGIDA' e nota_total consolidada em mg_aluno_prova,
-     * além de gravar a média final em mg_media_final para exibição na área "Ver Curso" do aluno.
+     * Garante que todas as avaliações já corrigidas (ou expiradas sem envio com 0,00)
+     * do aluno nesta disciplina estejam consolidadas em mg_aluno_prova e tenham
+     * a média final gravada em mg_media_final.
      */
     public int fecharNotasEEnviarParaAluno(long matriculaProfessor,
                                            long idDisciplina,
@@ -275,7 +318,7 @@ public class TurmaProfessorDAO {
         );
 
         String sqlConsolidar = "UPDATE mg_aluno_prova " +
-                "SET status = 'CORRIGIDA', nota_total = ? " +
+                "SET status = ?, nota_total = ? " +
                 "WHERE ra_aluno = ? AND id_prova = ?";
 
         String sqlUpsertMedia = "INSERT INTO mg_media_final (ra_aluno, id_disciplina, media_final, data_fechamento) " +
@@ -302,9 +345,14 @@ public class TurmaProfessorDAO {
                         BigDecimal notaConsolidada = BigDecimal.valueOf(item.getNotaTotal())
                                 .setScale(2, RoundingMode.HALF_UP);
 
-                        stmt.setBigDecimal(1, notaConsolidada);
-                        stmt.setLong(2, raAluno);
-                        stmt.setInt(3, item.getIdProva());
+                        String statusConsolidado = "EXPIRADA".equalsIgnoreCase(item.getStatus())
+                                ? "EXPIRADA"
+                                : "CORRIGIDA";
+
+                        stmt.setString(1, statusConsolidado);
+                        stmt.setBigDecimal(2, notaConsolidada);
+                        stmt.setLong(3, raAluno);
+                        stmt.setInt(4, item.getIdProva());
 
                         provasEnviadas += stmt.executeUpdate();
                     }
