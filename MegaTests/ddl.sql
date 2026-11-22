@@ -81,10 +81,28 @@ CREATE TABLE IF NOT EXISTS mg_prova_questao (
     id_prova BIGINT NOT NULL,
     id_questao BIGINT NOT NULL,
     ordem INT,
+    pontos DECIMAL(4,2) NULL DEFAULT NULL,
     PRIMARY KEY (id_prova, id_questao),
     FOREIGN KEY (id_prova) REFERENCES mg_provas(id) ON DELETE CASCADE,
     FOREIGN KEY (id_questao) REFERENCES mg_questoes(id) ON DELETE CASCADE
     );
+
+-- Coluna 'pontos' em mg_prova_questao (garante compatibilidade caso o banco já exista sem a coluna)
+SET @mg_pq_tem_pontos = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_prova_questao'
+      AND COLUMN_NAME = 'pontos'
+);
+SET @sql_mg_pq_pontos = IF(
+    @mg_pq_tem_pontos = 0,
+    'ALTER TABLE mg_prova_questao ADD COLUMN pontos DECIMAL(4,2) NULL DEFAULT NULL',
+    'SELECT 1'
+);
+PREPARE stmt_mg_pq_pontos FROM @sql_mg_pq_pontos;
+EXECUTE stmt_mg_pq_pontos;
+DEALLOCATE PREPARE stmt_mg_pq_pontos;
 
 CREATE TABLE IF NOT EXISTS mg_questao_alternativa (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

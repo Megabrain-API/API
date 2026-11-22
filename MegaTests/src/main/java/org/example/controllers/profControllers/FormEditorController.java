@@ -413,7 +413,7 @@ public class FormEditorController {
             return;
         }
 
-        Label avisoBanco = new Label("Puxada do Banco de Questões • Peso inicial 1.0 (editável na prova)");
+        Label avisoBanco = new Label("Puxada do Banco de Questões • Valor inicial 1.0 (ajuste o campo Pontuação para esta prova)");
         avisoBanco.setStyle(
                 "-fx-background-color: #DDEEE2;" +
                         "-fx-text-fill: #285A36;" +
@@ -676,8 +676,10 @@ public class FormEditorController {
         EditorQuestao editor = editores.get(editores.size() - 1);
 
         editor.enunciado.setText(q.getEnunciado() != null ? q.getEnunciado() : "");
-        // Sempre inicia com peso padrão 1.0 para o professor definir o valor na prova atual
+        // Sempre inicia com peso padrão 1.0, mas editável pelo professor para esta prova
         editor.pontos.setText(String.format(Locale.US, "%.1f", PONTUACAO_PADRAO_PUXADA));
+        editor.pontos.setDisable(false);
+        editor.pontos.setEditable(true);
 
         String tipoCombo = mapearTipoParaCombo(q.getTipo());
         editor.tipo.setValue(tipoCombo);
@@ -719,65 +721,6 @@ public class FormEditorController {
         configurarOpcaoReutilizacaoBanco(editor, idBanco, true);
         editor.snapshotOriginal = normalizarSnapshot(q, PONTUACAO_PADRAO_PUXADA);
         atualizarResumoCabecalho();
-    }
-
-    private void salvarRascunhoEmMemoria() {
-        rascunhoEditorAtual.clear();
-
-        for (EditorQuestao editor : editores) {
-            Questao q = new Questao();
-            q.setEnunciado(editor.enunciado.getText() == null ? "" : editor.enunciado.getText().trim());
-
-            double pontos = 1.0;
-            String txtP = editor.pontos.getText() == null ? "" : editor.pontos.getText().trim().replace(",", ".");
-            if (!txtP.isEmpty()) {
-                try {
-                    pontos = Double.parseDouble(txtP);
-                } catch (NumberFormatException ignored) {
-                }
-            }
-            q.setPontos(pontos);
-
-            String tipoSelecionado = editor.tipo.getValue();
-            if ("Múltipla escolha".equals(tipoSelecionado)) {
-                q.setTipo(Questao.MULTIPLA_ESCOLHA);
-            } else if ("Checklist numerado".equals(tipoSelecionado)) {
-                q.setTipo(Questao.CHECKLIST);
-            } else if ("Dissertativa".equals(tipoSelecionado)) {
-                q.setTipo(Questao.DISSERTATIVA);
-            } else if ("Correspondência".equals(tipoSelecionado)) {
-                q.setTipo(Questao.CORRESPONDENCIA);
-            }
-
-            if (Questao.DISSERTATIVA.equals(q.getTipo())) {
-                q.setRespostaModelo(editor.respostaModelo.getText() == null ? "" : editor.respostaModelo.getText().trim());
-            } else if (Questao.CORRESPONDENCIA.equals(q.getTipo())) {
-                for (TextField campoItem : editor.itensCorrespondencia) {
-                    q.getItensCorrespondencia().add(campoItem.getText() == null ? "" : campoItem.getText().trim());
-                }
-                for (EditorCorrespondenciaOpcao opcao : editor.opcoesCorrespondencia) {
-                    q.getAlternativasCorrespondencia().add(opcao.texto.getText() == null ? "" : opcao.texto.getText().trim());
-                    q.getGabaritoCorrespondencia().add(opcao.numeroCorreto.getValue());
-                }
-            } else {
-                for (int j = 0; j < editor.alternativas.size(); j++) {
-                    EditorAlternativa alt = editor.alternativas.get(j);
-                    q.getAlternativas().add(alt.texto.getText() == null ? "" : alt.texto.getText().trim());
-                    if (alt.correta.isSelected()) {
-                        q.getRespostasCorretas().add(j);
-                    }
-                }
-            }
-
-            if (editor.idOrigemBanco != null) {
-                q.setIdOrigemBanco(editor.idOrigemBanco);
-                q.setReutilizadaDoBanco(
-                        editor.chkReutilizarSemDuplicar == null || editor.chkReutilizarSemDuplicar.isSelected()
-                );
-            }
-
-            rascunhoEditorAtual.add(q);
-        }
     }
 
     private Questao normalizarSnapshot(Questao original, double pontosFixos) {
@@ -1024,11 +967,9 @@ public class FormEditorController {
                 boolean conteudoAlterado = conteudoFoiAlterado(editor.snapshotOriginal, questao);
 
                 if (!marcouManterVinculo && conteudoAlterado) {
-                    // Desmarcou a checkbox E alterou o conteúdo: vira questão nova para o banco
                     questao.setIdOrigemBanco(null);
                     questao.setReutilizadaDoBanco(false);
                 } else {
-                    // Manteve marcada (mesmo alterada) ou não alterou o conteúdo: não reenvia como nova
                     questao.setIdOrigemBanco(editor.idOrigemBanco);
                     questao.setReutilizadaDoBanco(true);
                 }
@@ -1130,7 +1071,7 @@ public class FormEditorController {
 
         Label titulo = new Label("Banco de Questões");
         titulo.getStyleClass().add("seletor-titulo");
-        Label subtitulo = new Label("Escolha uma questão para a prova. O peso inicial é 1,00 ponto e pode ser ajustado na montagem.");
+        Label subtitulo = new Label("Escolha uma questão para a prova. O valor inicial é 1,00 ponto e pode ser alterado para esta prova.");
         subtitulo.setWrapText(true);
         subtitulo.getStyleClass().add("seletor-secundario");
 
@@ -1223,10 +1164,10 @@ public class FormEditorController {
             filtradas.setPredicate(q ->
                     (termo.isEmpty() || (q.getEnunciado() != null
                             && q.getEnunciado().toLowerCase(PT_BR).contains(termo)))
-                    && (todasDisciplinas.equals(disciplinaSelecionada) || (q.getDisciplina() != null
+                            && (todasDisciplinas.equals(disciplinaSelecionada) || (q.getDisciplina() != null
                             && q.getDisciplina().trim().equalsIgnoreCase(disciplinaSelecionada)))
-                    && (todosTipos.equals(tipoSelecionado) || mapearTipoParaCombo(q.getTipo()).equals(tipoSelecionado))
-                    && (autorSelecionado == null || autorSelecionado.aceita(q)));
+                            && (todosTipos.equals(tipoSelecionado) || mapearTipoParaCombo(q.getTipo()).equals(tipoSelecionado))
+                            && (autorSelecionado == null || autorSelecionado.aceita(q)));
             if (selecionada != null && filtradas.contains(selecionada)) {
                 listaQuestoes.getSelectionModel().select(selecionada);
             } else {
@@ -1291,7 +1232,7 @@ public class FormEditorController {
                 ? q.getDisciplina()
                 : "Sem disciplina";
 
-        Label meta = new Label("Tipo: " + tipoLabel + "   •   Disciplina: " + discLabel + "   •   Peso ao puxar: 1.00 pts");
+        Label meta = new Label("Tipo: " + tipoLabel + "   •   Disciplina: " + discLabel + "   •   Valor inicial: 1.00 pts");
         meta.setStyle("-fx-text-fill: #4A7C59; -fx-font-weight: bold; -fx-font-size: 12px;");
 
         Label enun = new Label("Enunciado: " + (q.getEnunciado() != null ? q.getEnunciado() : ""));

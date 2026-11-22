@@ -14,7 +14,7 @@ public class ProvaDAO {
         String sqlBuscaDisciplina = "SELECT id FROM mg_disciplina WHERE nome = ?";
         String sqlProva = "INSERT INTO mg_provas (nome, data_inicial, data_limite, duracao_minutos, peso, id_disciplina, matricula_professor) VALUES (?, ?, ?, ?, ?, ?, ?)";
         String sqlQuestao = "INSERT INTO mg_questoes (tipo, enunciado, gabarito, pontos, id_disciplina, matricula_professor) VALUES (?, ?, ?, ?, ?, ?)";
-        String sqlAssociativa = "INSERT INTO mg_prova_questao (id_prova, id_questao, ordem) VALUES (?, ?, ?)";
+        String sqlAssociativa = "INSERT INTO mg_prova_questao (id_prova, id_questao, ordem, pontos) VALUES (?, ?, ?, ?)";
         String sqlAlternativa = "INSERT INTO mg_questao_alternativa (id_questao, ordem, texto, correta) VALUES (?, ?, ?, ?)";
         String sqlItemCorrespondencia = "INSERT INTO mg_questao_correspondencia_item (id_questao, ordem, texto) VALUES (?, ?, ?)";
         String sqlOpcaoCorrespondencia = "INSERT INTO mg_questao_correspondencia_alternativa (id_questao, texto, numero_correto) VALUES (?, ?, ?)";
@@ -81,6 +81,7 @@ public class ProvaDAO {
 
                 for (Questao q : prova.getQuestoes()) {
                     long idQuestao;
+                    double pontosNaProva = q.getPontos() > 0 ? q.getPontos() : 1.0;
 
                     // Se veio do banco de questões e foi mantida como reutilizada, não insere novamente em mg_questoes
                     if (q.isReutilizadaDoBanco() && q.getIdOrigemBanco() != null) {
@@ -99,7 +100,7 @@ public class ProvaDAO {
                             stmtQuestao.setString(1, tipoBanco);
                             stmtQuestao.setString(2, q.getEnunciado());
                             stmtQuestao.setString(3, gabarito);
-                            stmtQuestao.setDouble(4, q.getPontos());
+                            stmtQuestao.setDouble(4, pontosNaProva);
                             stmtQuestao.setLong(5, idDisciplina);
                             stmtQuestao.setLong(6, matriculaProfessorLogado);
                             stmtQuestao.executeUpdate();
@@ -148,11 +149,12 @@ public class ProvaDAO {
                         }
                     }
 
-                    // Liga a questão (nova ou reutilizada) à prova mantendo a ordem definida
+                    // Liga a questão (nova ou reutilizada) à prova mantendo ordem e pontuação específica da prova
                     try (PreparedStatement stmtAssoc = conn.prepareStatement(sqlAssociativa)) {
                         stmtAssoc.setLong(1, idProva);
                         stmtAssoc.setLong(2, idQuestao);
                         stmtAssoc.setInt(3, ordemQuestao++);
+                        stmtAssoc.setDouble(4, pontosNaProva);
                         stmtAssoc.executeUpdate();
                     }
                 }
@@ -280,7 +282,7 @@ public class ProvaDAO {
                 "WHERE p.id = ?";
 
         String sqlQuestoes =
-                "SELECT q.id, q.tipo, q.enunciado, q.pontos, " +
+                "SELECT q.id, q.tipo, q.enunciado, COALESCE(pq.pontos, q.pontos) AS pontos, " +
                         "COALESCE(SUM(CASE WHEN a.correta = TRUE THEN 1 ELSE 0 END), 0) AS quantidade_corretas, " +
                         "COUNT(DISTINCT ci.id) AS quantidade_itens_correspondencia " +
                         "FROM mg_prova_questao pq " +
@@ -288,7 +290,7 @@ public class ProvaDAO {
                         "LEFT JOIN mg_questao_alternativa a ON a.id_questao = q.id " +
                         "LEFT JOIN mg_questao_correspondencia_item ci ON ci.id_questao = q.id " +
                         "WHERE pq.id_prova = ? " +
-                        "GROUP BY q.id, q.tipo, q.enunciado, q.pontos, pq.ordem " +
+                        "GROUP BY q.id, q.tipo, q.enunciado, pq.pontos, q.pontos, pq.ordem " +
                         "ORDER BY pq.ordem";
 
         String sqlItensCorrespondencia =

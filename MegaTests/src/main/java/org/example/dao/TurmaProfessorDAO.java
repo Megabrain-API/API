@@ -223,7 +223,7 @@ public class TurmaProfessorDAO {
 
         String sql = "SELECT p.id, p.nome, COALESCE(p.peso, 1.0) AS peso, " +
                 "ap.nota_total, ap.status, " +
-                "COALESCE((SELECT SUM(q.pontos) FROM mg_prova_questao pq " +
+                "COALESCE((SELECT SUM(COALESCE(pq.pontos, q.pontos)) FROM mg_prova_questao pq " +
                 "          INNER JOIN mg_questoes q ON q.id = pq.id_questao " +
                 "          WHERE pq.id_prova = p.id), 0) AS pontos_maximos " +
                 "FROM mg_provas p " +
@@ -374,8 +374,8 @@ public class TurmaProfessorDAO {
                                                            long matriculaProfessor) {
         List<RespostaAlunoProva> respostas = new ArrayList<>();
 
-        String sqlQuestoes = "SELECT q.id, pq.ordem, q.tipo, q.pontos, q.enunciado, q.gabarito, " +
-                "r.resposta_texto, r.correta AS correta_salva, r.nota AS nota_salva, " +
+        String sqlQuestoes = "SELECT q.id, pq.ordem, q.tipo, COALESCE(pq.pontos, q.pontos) AS pontos, " +
+                "q.enunciado, q.gabarito, r.resposta_texto, r.correta AS correta_salva, r.nota AS nota_salva, " +
                 "COALESCE(SUM(CASE WHEN alt.correta = TRUE THEN 1 ELSE 0 END), 0) AS quantidade_corretas, " +
                 "COUNT(DISTINCT ci.id) AS quantidade_itens_correspondencia " +
                 "FROM mg_provas p " +
@@ -386,7 +386,7 @@ public class TurmaProfessorDAO {
                 "LEFT JOIN mg_questao_alternativa alt ON alt.id_questao = q.id " +
                 "LEFT JOIN mg_questao_correspondencia_item ci ON ci.id_questao = q.id " +
                 "WHERE p.id = ? AND p.matricula_professor = ? " +
-                "GROUP BY q.id, pq.ordem, q.tipo, q.pontos, q.enunciado, q.gabarito, r.resposta_texto, r.correta, r.nota " +
+                "GROUP BY q.id, pq.ordem, q.tipo, pq.pontos, q.pontos, q.enunciado, q.gabarito, r.resposta_texto, r.correta, r.nota " +
                 "ORDER BY pq.ordem";
 
         String sqlItensCorrespondencia =

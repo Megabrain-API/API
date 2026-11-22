@@ -261,7 +261,7 @@ public class AlunoDAO {
         String sqlProvasCorrigidas = "SELECT p.id AS id_prova, p.nome AS nome_prova, " +
                 "d.id AS id_disciplina, d.nome AS nome_disciplina, " +
                 "ap.nota_total, ap.data_envio, " +
-                "COALESCE(SUM(q.pontos), 0) AS pontos_maximos " +
+                "COALESCE(SUM(COALESCE(pq.pontos, q.pontos)), 0) AS pontos_maximos " +
                 "FROM mg_aluno_prova ap " +
                 "INNER JOIN mg_provas p ON p.id = ap.id_prova " +
                 "INNER JOIN mg_disciplina d ON d.id = p.id_disciplina " +
@@ -354,8 +354,8 @@ public class AlunoDAO {
     public List<RespostaAlunoProva> buscarCorrecaoProvaDoAluno(int idProva, long raAluno) {
         List<RespostaAlunoProva> respostas = new ArrayList<>();
 
-        String sqlQuestoes = "SELECT q.id, pq.ordem, q.tipo, q.pontos, q.enunciado, q.gabarito, " +
-                "r.resposta_texto, r.correta AS correta_salva, r.nota AS nota_salva, " +
+        String sqlQuestoes = "SELECT q.id, pq.ordem, q.tipo, COALESCE(pq.pontos, q.pontos) AS pontos, " +
+                "q.enunciado, q.gabarito, r.resposta_texto, r.correta AS correta_salva, r.nota AS nota_salva, " +
                 "COALESCE(SUM(CASE WHEN alt.correta = TRUE THEN 1 ELSE 0 END), 0) AS quantidade_corretas, " +
                 "COUNT(DISTINCT ci.id) AS quantidade_itens_correspondencia " +
                 "FROM mg_provas p " +
@@ -366,7 +366,7 @@ public class AlunoDAO {
                 "LEFT JOIN mg_questao_alternativa alt ON alt.id_questao = q.id " +
                 "LEFT JOIN mg_questao_correspondencia_item ci ON ci.id_questao = q.id " +
                 "WHERE p.id = ? " +
-                "GROUP BY q.id, pq.ordem, q.tipo, q.pontos, q.enunciado, q.gabarito, r.resposta_texto, r.correta, r.nota " +
+                "GROUP BY q.id, pq.ordem, q.tipo, pq.pontos, q.pontos, q.enunciado, q.gabarito, r.resposta_texto, r.correta, r.nota " +
                 "ORDER BY pq.ordem";
 
         String sqlAlternativas = "SELECT texto, correta " +
