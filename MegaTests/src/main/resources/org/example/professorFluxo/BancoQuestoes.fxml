@@ -19,7 +19,7 @@
     <center>
         <VBox prefHeight="650.0" prefWidth="880.0" spacing="0.0" BorderPane.alignment="CENTER">
             <children>
-                <!-- Cabeçalho superior padronizado com filtros e botão + Criar Questão -->
+                <!-- Cabeçalho superior padronizado com filtros -->
                 <VBox spacing="14.0" style="-fx-background-color: rgba(255, 255, 255, 0.94); -fx-border-color: #DCE5DF; -fx-border-width: 0 0 1 0;">
                     <padding>
                         <Insets bottom="16.0" left="28.0" right="28.0" top="18.0" />
@@ -48,7 +48,6 @@
                                 </VBox>
                                 <Region HBox.hgrow="ALWAYS" />
                                 <Button fx:id="btn_voltar_topo" mnemonicParsing="false" onAction="#voltarOrigem" prefHeight="38.0" prefWidth="110.0" style="-fx-background-color: #F1F4F2; -fx-border-color: #C4D0C8; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-text-fill: #2B362F; -fx-font-weight: bold; -fx-cursor: hand;" text="Voltar" />
-                                <Button fx:id="btn_nova_questao" mnemonicParsing="false" onAction="#abrirModalNovaQuestao" prefHeight="38.0" prefWidth="155.0" style="-fx-background-color: #4A7C59; -fx-background-radius: 8px; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="+ Criar Questão" />
                             </children>
                         </HBox>
 

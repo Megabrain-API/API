@@ -273,9 +273,9 @@ public class ListaProvaController {
     }
 
     @FXML
-    void AbrirBancoQuestoes(ActionEvent event) throws IOException {
-        BancoQuestoesController.configurarModoGerenciamento();
-        App.setRoot("professorFluxo/BancoQuestoes");
+    void abrirCriarQuestao(ActionEvent event) {
+        var botao = (javafx.scene.Node) event.getSource();
+        CriarQuestaoDialog.abrir(botao.getScene().getWindow());
     }
 
 }

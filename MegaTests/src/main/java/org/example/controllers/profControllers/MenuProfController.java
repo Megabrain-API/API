@@ -30,6 +30,8 @@ public class MenuProfController implements Initializable {
 
     @FXML private Button minhas_provas;
 
+    @FXML private Button banco_questoes;
+
     @FXML private Label lbl_boas_vindas_prof;
 
     @FXML private Label lbl_subtitulo_prof;
@@ -39,7 +41,7 @@ public class MenuProfController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        botoesMenu = new Button[]{menu_minhaturma, minhas_provas, menu_dados_pessoais_prof, menu_sair_prof};
+        botoesMenu = new Button[]{menu_minhaturma, minhas_provas, banco_questoes, menu_dados_pessoais_prof, menu_sair_prof};
 
         for (Button btn : botoesMenu) {
             if (btn != null) {
@@ -120,6 +122,12 @@ public class MenuProfController implements Initializable {
     @FXML
     void entra_listaprova(ActionEvent event) throws IOException {
         App.setRoot("professorFluxo/ListaProva");
+    }
+
+    @FXML
+    void entra_banco_questoes(ActionEvent event) throws IOException {
+        BancoQuestoesController.configurarModoGerenciamento();
+        App.setRoot("professorFluxo/BancoQuestoes");
     }
 
     @FXML

@@ -1,7 +1,6 @@
 package org.example.controllers.profControllers;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -15,6 +14,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -1114,168 +1114,148 @@ public class FormEditorController {
         }
 
         dialog.setTitle("Banco de Questões — Puxar para a Prova");
-        dialog.setHeaderText(null);
-        dialog.getDialogPane().setPrefSize(840, 580);
-        dialog.getDialogPane().setStyle(
-                "-fx-background-color: #F6F8F7;" +
-                        "-fx-border-color: #C4D6CA;" +
-                        "-fx-border-width: 1.5px;"
-        );
+        dialog.setResizable(true);
+        DialogPane painel = dialog.getDialogPane();
+        painel.setPrefSize(900, 600);
+        painel.getStyleClass().add("seletor-questoes");
+        painel.getStylesheets().add(FormEditorController.class
+                .getResource("/org/example/professorFluxo/SeletorQuestoes.css").toExternalForm());
 
-        ButtonType btnConfirmarPuxar = new ButtonType("Puxar para a prova", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(btnConfirmarPuxar, ButtonType.CANCEL);
+        ButtonType confirmar = new ButtonType("Puxar para a prova", ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+        painel.getButtonTypes().addAll(confirmar, cancelar);
+        painel.lookupButton(confirmar).getStyleClass().add("seletor-confirmar");
 
-        VBox topoModal = new VBox(3);
-        topoModal.setPadding(new Insets(14, 18, 12, 18));
-        topoModal.setStyle(
-                "-fx-background-color: #FFFFFF;" +
-                        "-fx-background-radius: 10px;" +
-                        "-fx-border-color: #D4DFD8;" +
-                        "-fx-border-radius: 10px;"
-        );
+        Label titulo = new Label("Banco de Questões");
+        titulo.getStyleClass().add("seletor-titulo");
+        Label subtitulo = new Label("Escolha uma questão para a prova. O peso inicial é 1,00 ponto e pode ser ajustado na montagem.");
+        subtitulo.setWrapText(true);
+        subtitulo.getStyleClass().add("seletor-secundario");
 
-        Label badge = new Label("BANCO DE QUESTÕES • SELEÇÃO PARA PROVA");
-        badge.setStyle(
-                "-fx-background-color: #DDEEE2;" +
-                        "-fx-text-fill: #285A36;" +
-                        "-fx-font-weight: bold;" +
-                        "-fx-font-size: 10px;" +
-                        "-fx-padding: 2 8 2 8;" +
-                        "-fx-background-radius: 8px;"
-        );
+        String todasDisciplinas = "Todas as disciplinas";
+        String todosTipos = "Todos os tipos";
+        TextField busca = new TextField();
+        busca.setPromptText("Buscar pelo enunciado");
+        busca.setAccessibleText("Buscar pelo enunciado");
+        HBox.setHgrow(busca, Priority.ALWAYS);
 
-        Label tituloModal = new Label("Selecione uma questão cadastrada para puxar");
-        tituloModal.setFont(Font.font("System", FontWeight.BOLD, 17));
-        tituloModal.setStyle("-fx-text-fill: #1B1B1B;");
+        ComboBox<String> disciplina = new ComboBox<>();
+        disciplina.setAccessibleText("Filtrar por disciplina");
+        disciplina.getItems().add(todasDisciplinas);
+        questoes.stream().map(Questao::getDisciplina)
+                .filter(d -> d != null && !d.isBlank()).map(String::trim)
+                .distinct().sorted(String.CASE_INSENSITIVE_ORDER).forEach(disciplina.getItems()::add);
+        disciplina.setValue(todasDisciplinas);
 
-        Label subtituloModal = new Label("A questão será puxada com peso inicial 1.00 — você poderá ajustar a pontuação livremente na prova.");
-        subtituloModal.setStyle("-fx-text-fill: #5F6368; -fx-font-size: 12px;");
+        ComboBox<String> tipo = new ComboBox<>();
+        tipo.setAccessibleText("Filtrar por tipo");
+        tipo.getItems().add(todosTipos);
+        questoes.stream().map(q -> mapearTipoParaCombo(q.getTipo()))
+                .distinct().sorted().forEach(tipo.getItems()::add);
+        tipo.setValue(todosTipos);
 
-        topoModal.getChildren().addAll(badge, tituloModal, subtituloModal);
-
-        TextField txtFiltro = new TextField();
-        txtFiltro.setPromptText("Filtrar por enunciado, disciplina ou tipo de questão...");
-        txtFiltro.setPrefHeight(36);
-        txtFiltro.setStyle(
-                "-fx-background-color: #FFFFFF;" +
-                        "-fx-border-color: #C4D6CA;" +
-                        "-fx-border-radius: 8px;" +
-                        "-fx-background-radius: 8px;" +
-                        "-fx-padding: 6 12 6 12;"
-        );
-
-        ObservableList<Questao> base = FXCollections.observableArrayList(questoes);
-        FilteredList<Questao> filtrada = new FilteredList<>(base, q -> true);
-
-        txtFiltro.textProperty().addListener((obs, oldV, newV) -> {
-            String termo = (newV == null) ? "" : newV.trim().toLowerCase(PT_BR);
-            filtrada.setPredicate(q -> {
-                if (termo.isEmpty()) return true;
-                String enun = q.getEnunciado() == null ? "" : q.getEnunciado().toLowerCase(PT_BR);
-                String tipo = q.getTipo() == null ? "" : q.getTipo().toLowerCase(PT_BR);
-                String disc = q.getDisciplina() == null ? "" : q.getDisciplina().toLowerCase(PT_BR);
-                return enun.contains(termo) || tipo.contains(termo) || disc.contains(termo);
-            });
+        Button limpar = new Button("Limpar filtros");
+        limpar.setOnAction(e -> {
+            busca.clear();
+            disciplina.setValue(todasDisciplinas);
+            tipo.setValue(todosTipos);
         });
+        HBox filtros = new HBox(10, busca, disciplina, tipo, limpar);
+        filtros.setAlignment(Pos.CENTER_LEFT);
 
-        ListView<Questao> listaQuestoes = new ListView<>(filtrada);
-        listaQuestoes.setPrefHeight(210);
-        listaQuestoes.setStyle(
-                "-fx-background-color: #FFFFFF;" +
-                        "-fx-border-color: #C4D6CA;" +
-                        "-fx-border-radius: 10px;" +
-                        "-fx-background-radius: 10px;"
-        );
-        listaQuestoes.setCellFactory(lv -> new ListCell<>() {
+        FilteredList<Questao> filtradas = new FilteredList<>(FXCollections.observableArrayList(questoes));
+        ListView<Questao> listaQuestoes = new ListView<>(filtradas);
+        listaQuestoes.getStyleClass().add("seletor-resultados");
+        listaQuestoes.setAccessibleText("Questões encontradas");
+        listaQuestoes.setPlaceholder(new Label("Nenhuma questão corresponde aos filtros."));
+        listaQuestoes.setCellFactory(lv -> new ListCell<Questao>() {
             @Override
-            protected void updateItem(Questao item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
+            protected void updateItem(Questao q, boolean vazio) {
+                super.updateItem(q, vazio);
+                setText(null);
+                if (vazio || q == null) {
                     setGraphic(null);
-                    setText(null);
-                } else {
-                    String tipoLabel = mapearTipoParaCombo(item.getTipo());
-                    String discLabel = (item.getDisciplina() != null && !item.getDisciplina().isBlank())
-                            ? item.getDisciplina()
-                            : "Sem disciplina";
-                    String enunResumo = item.getEnunciado() == null
-                            ? ""
-                            : item.getEnunciado().replaceAll("\\s+", " ");
-
-                    Label lblTag = new Label(tipoLabel + "  •  " + discLabel + "  •  Peso inicial: 1.00");
-                    lblTag.setStyle(
-                            "-fx-text-fill: #285A36;" +
-                                    "-fx-font-weight: bold;" +
-                                    "-fx-font-size: 11px;"
-                    );
-
-                    Label lblEnun = new Label(enunResumo);
-                    lblEnun.setStyle("-fx-text-fill: #1B1B1B; -fx-font-size: 13px;");
-                    lblEnun.setWrapText(true);
-
-                    VBox cardItem = new VBox(3, lblTag, lblEnun);
-                    cardItem.setPadding(new Insets(6, 8, 6, 8));
-                    setGraphic(cardItem);
-                    setText(null);
+                    return;
                 }
+
+                String nome = q.getDisciplina();
+                Label tagDisciplina = new Label(nome == null || nome.isBlank() ? "Sem disciplina" : nome.trim());
+                tagDisciplina.getStyleClass().add("seletor-tag-disciplina");
+                Label tagTipo = new Label(mapearTipoParaCombo(q.getTipo()));
+                tagTipo.getStyleClass().add("seletor-tag-tipo");
+                javafx.scene.layout.FlowPane etiquetas = new javafx.scene.layout.FlowPane(6, 4, tagDisciplina, tagTipo);
+
+                Label enunciado = new Label(q.getEnunciado());
+                enunciado.setWrapText(true);
+                enunciado.maxWidthProperty().bind(widthProperty().subtract(44));
+                enunciado.getStyleClass().add("seletor-enunciado");
+                VBox cartao = new VBox(7, etiquetas, enunciado);
+                cartao.getStyleClass().add("seletor-cartao");
+                setGraphic(cartao);
             }
         });
 
-        VBox painelPrevia = new VBox(8);
-        painelPrevia.setPadding(new Insets(14));
-        painelPrevia.setStyle(
-                "-fx-background-color: #FFFFFF;" +
-                        "-fx-background-radius: 10px;" +
-                        "-fx-border-color: #C4D6CA;" +
-                        "-fx-border-radius: 10px;"
-        );
+        Label contador = new Label();
+        contador.getStyleClass().add("seletor-secundario");
+        Runnable atualizarContador = () -> contador.setText(filtradas.size() == 1
+                ? "1 questão encontrada" : filtradas.size() + " questões encontradas");
+        atualizarContador.run();
 
-        Label tituloPrevia = new Label("Prévia detalhada da questão selecionada");
-        tituloPrevia.setFont(Font.font("System", FontWeight.BOLD, 13));
-        tituloPrevia.setStyle("-fx-text-fill: #285A36;");
+        Runnable filtrar = () -> {
+            Questao selecionada = listaQuestoes.getSelectionModel().getSelectedItem();
+            String termo = busca.getText().trim().toLowerCase(PT_BR);
+            String disciplinaSelecionada = disciplina.getValue();
+            String tipoSelecionado = tipo.getValue();
+            filtradas.setPredicate(q ->
+                    (termo.isEmpty() || (q.getEnunciado() != null
+                            && q.getEnunciado().toLowerCase(PT_BR).contains(termo)))
+                    && (todasDisciplinas.equals(disciplinaSelecionada) || (q.getDisciplina() != null
+                            && q.getDisciplina().trim().equalsIgnoreCase(disciplinaSelecionada)))
+                    && (todosTipos.equals(tipoSelecionado) || mapearTipoParaCombo(q.getTipo()).equals(tipoSelecionado)));
+            if (selecionada != null && filtradas.contains(selecionada)) {
+                listaQuestoes.getSelectionModel().select(selecionada);
+            } else {
+                listaQuestoes.getSelectionModel().clearSelection();
+            }
+            atualizarContador.run();
+        };
+        busca.textProperty().addListener((obs, anterior, atual) -> filtrar.run());
+        disciplina.valueProperty().addListener((obs, anterior, atual) -> filtrar.run());
+        tipo.valueProperty().addListener((obs, anterior, atual) -> filtrar.run());
 
-        VBox conteudoPrevia = new VBox(6);
+        Label tituloPrevia = new Label("Prévia da questão");
+        tituloPrevia.getStyleClass().add("seletor-enunciado");
+        VBox conteudoPrevia = new VBox(8);
         ScrollPane scrollPrevia = new ScrollPane(conteudoPrevia);
         scrollPrevia.setFitToWidth(true);
-        scrollPrevia.setPrefHeight(175);
-        scrollPrevia.setStyle(
-                "-fx-background-color: transparent;" +
-                        "-fx-background: transparent;" +
-                        "-fx-border-color: transparent;"
-        );
+        scrollPrevia.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        VBox.setVgrow(scrollPrevia, Priority.ALWAYS);
+        VBox painelPrevia = new VBox(12, tituloPrevia, scrollPrevia);
+        painelPrevia.getStyleClass().add("seletor-previa");
 
-        painelPrevia.getChildren().addAll(tituloPrevia, scrollPrevia);
+        listaQuestoes.getSelectionModel().selectedItemProperty().addListener((obs, anterior, atual) -> {
+            atualizarPreviaModal(conteudoPrevia, atual);
+            scrollPrevia.setVvalue(0);
+        });
+        atualizarPreviaModal(conteudoPrevia, null);
+        painel.lookupButton(confirmar).disableProperty()
+                .bind(listaQuestoes.getSelectionModel().selectedItemProperty().isNull());
 
-        listaQuestoes.getSelectionModel().selectedItemProperty().addListener((obs, oldQ, novaQ) ->
-                atualizarPreviaModal(conteudoPrevia, novaQ));
-
-        if (!filtrada.isEmpty()) {
-            listaQuestoes.getSelectionModel().selectFirst();
-        } else {
-            atualizarPreviaModal(conteudoPrevia, null);
-        }
-
-        VBox corpoModal = new VBox(10, topoModal, txtFiltro, listaQuestoes, painelPrevia);
-        corpoModal.setPadding(new Insets(12));
-        VBox.setVgrow(painelPrevia, Priority.ALWAYS);
-        dialog.getDialogPane().setContent(corpoModal);
-
-        Node botaoPuxar = dialog.getDialogPane().lookupButton(btnConfirmarPuxar);
-        botaoPuxar.disableProperty().bind(listaQuestoes.getSelectionModel().selectedItemProperty().isNull());
-        if (botaoPuxar instanceof Button) {
-            Button btn = (Button) botaoPuxar;
-            btn.setStyle(
-                    "-fx-background-color: #4A7C59;" +
-                            "-fx-text-fill: white;" +
-                            "-fx-font-weight: bold;" +
-                            "-fx-background-radius: 8px;" +
-                            "-fx-padding: 7 16 7 16;" +
-                            "-fx-cursor: hand;"
-            );
-        }
+        VBox resultados = new VBox(8, contador, listaQuestoes);
+        VBox.setVgrow(listaQuestoes, Priority.ALWAYS);
+        HBox.setHgrow(resultados, Priority.ALWAYS);
+        HBox.setHgrow(painelPrevia, Priority.ALWAYS);
+        resultados.setPrefWidth(390);
+        painelPrevia.setPrefWidth(390);
+        HBox paineis = new HBox(14, resultados, painelPrevia);
+        VBox topo = new VBox(6, titulo, subtitulo, filtros);
+        topo.getStyleClass().add("seletor-topo");
+        VBox corpo = new VBox(14, topo, paineis);
+        VBox.setVgrow(paineis, Priority.ALWAYS);
+        painel.setContent(corpo);
 
         dialog.setResultConverter(botao ->
-                botao == btnConfirmarPuxar ? listaQuestoes.getSelectionModel().getSelectedItem() : null);
+                botao == confirmar ? listaQuestoes.getSelectionModel().getSelectedItem() : null);
 
         return dialog.showAndWait().orElse(null);
     }
