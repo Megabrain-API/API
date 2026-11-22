@@ -16,17 +16,61 @@ public class Questao {
     public static final String MULTIPLA_ESCOLHA = "MULTIPLA_ESCOLHA";
     public static final String CHECKLIST = "CHECKLIST";
     public static final String DISSERTATIVA = "DISSERTATIVA";
+    public static final String CORRESPONDENCIA = "CORRESPONDENCIA";
 
     private long id;
+    private List<String> itensCorrespondencia;
+    private List<String> alternativasCorrespondencia;
+    private List<Integer> gabaritoCorrespondencia;
     private String tipo;
     private String enunciado;
     private List<String> alternativas;
     private List<Integer> respostasCorretas;
     private String respostaModelo;
+    private double pontos = 1.0; // Pontuação/Valor atribuído à questão
+    private String disciplina;
+    private String prova;
+    private Long matriculaAutor;
+    private String nomeAutor;
+
+    private Long idOrigemBanco;
+    private boolean reutilizadaDoBanco;
 
     public Questao() {
         this.alternativas = new ArrayList<>();
         this.respostasCorretas = new ArrayList<>();
+        this.itensCorrespondencia = new ArrayList<>();
+        this.alternativasCorrespondencia = new ArrayList<>();
+        this.gabaritoCorrespondencia = new ArrayList<>();
+    }
+
+    public double getPontos() {
+        return pontos;
+    }
+
+    public void setPontos(double pontos) {
+        this.pontos = pontos;
+    }
+
+    public List<String> getItensCorrespondencia() {
+        if (itensCorrespondencia == null) {
+            itensCorrespondencia = new ArrayList<>();
+        }
+        return itensCorrespondencia;
+    }
+
+    public List<String> getAlternativasCorrespondencia() {
+        if (alternativasCorrespondencia == null) {
+            alternativasCorrespondencia = new ArrayList<>();
+        }
+        return alternativasCorrespondencia;
+    }
+
+    public List<Integer> getGabaritoCorrespondencia() {
+        if (gabaritoCorrespondencia == null) {
+            gabaritoCorrespondencia = new ArrayList<>();
+        }
+        return gabaritoCorrespondencia;
     }
 
     public long getId() {
@@ -83,5 +127,55 @@ public class Questao {
 
     public void setRespostaModelo(String respostaModelo) {
         this.respostaModelo = respostaModelo;
+    }
+
+
+    // Armazenar a disciplina com base na tabela mg_prova
+    public String getDisciplina() {
+        return disciplina;
+    }
+
+    public void setDisciplina(String disciplina) {
+        this.disciplina = disciplina;
+    }
+
+    public Long getMatriculaAutor() {
+        return matriculaAutor;
+    }
+
+    public void setMatriculaAutor(Long matriculaAutor) {
+        this.matriculaAutor = matriculaAutor;
+    }
+
+    public String getNomeAutor() {
+        return nomeAutor;
+    }
+
+    public void setNomeAutor(String nomeAutor) {
+        this.nomeAutor = nomeAutor;
+    }
+
+    public String getProva() {
+        return prova;
+    }
+
+    public void setProva(String prova) {
+        this.prova = prova;
+    }
+
+    public Long getIdOrigemBanco() {
+        return idOrigemBanco;
+    }
+
+    public void setIdOrigemBanco(Long idOrigemBanco) {
+        this.idOrigemBanco = idOrigemBanco;
+    }
+
+    public boolean isReutilizadaDoBanco() {
+        return reutilizadaDoBanco;
+    }
+
+    public void setReutilizadaDoBanco(boolean reutilizadaDoBanco) {
+        this.reutilizadaDoBanco = reutilizadaDoBanco;
     }
 }

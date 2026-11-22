@@ -7,13 +7,13 @@ CREATE TABLE IF NOT EXISTS mg_professor (
     nome VARCHAR(50) NOT NULL,
     senha VARCHAR(50) NOT NULL,
     data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+    );
 
 -- Cursos precisam existir antes do cadastro do aluno e da associação curso/disciplina.
 CREATE TABLE IF NOT EXISTS mg_cursos (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     nome_curso VARCHAR(100) NOT NULL UNIQUE
-);
+    );
 
 CREATE TABLE IF NOT EXISTS mg_aluno (
     ra BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -23,12 +23,12 @@ CREATE TABLE IF NOT EXISTS mg_aluno (
     id_curso BIGINT,
     data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_curso) REFERENCES mg_cursos(id) ON DELETE SET NULL
-);
+    );
 
 CREATE TABLE IF NOT EXISTS mg_disciplina (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(50) NOT NULL
-);
+    );
 
 -- Liga cada curso às disciplinas que fazem parte dele.
 CREATE TABLE IF NOT EXISTS mg_curso_disciplina (
@@ -38,34 +38,71 @@ CREATE TABLE IF NOT EXISTS mg_curso_disciplina (
     PRIMARY KEY (id_disciplina, id_curso),
     FOREIGN KEY (id_curso) REFERENCES mg_cursos(id) ON DELETE CASCADE,
     FOREIGN KEY (id_disciplina) REFERENCES mg_disciplina(id) ON DELETE CASCADE
-);
+    );
 
 CREATE TABLE IF NOT EXISTS mg_provas (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(50) NOT NULL,
-    data_inicial DATE,
-    data_limite DATE,
+    data_inicial DATETIME,
+    data_limite DATETIME,
+    duracao_minutos INT NOT NULL DEFAULT 120,
+    peso DECIMAL(4,2) NOT NULL DEFAULT 1.00,
     id_disciplina BIGINT NOT NULL,
     matricula_professor BIGINT NOT NULL,
     FOREIGN KEY (id_disciplina) REFERENCES mg_disciplina(id) ON DELETE CASCADE,
     FOREIGN KEY (matricula_professor) REFERENCES mg_professor(matricula) ON DELETE CASCADE
+    );
+
+SET @mg_provas_tem_peso = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_provas'
+      AND COLUMN_NAME = 'peso'
 );
+SET @sql_mg_provas_peso = IF(
+    @mg_provas_tem_peso = 0,
+    'ALTER TABLE mg_provas ADD COLUMN peso DECIMAL(4,2) NOT NULL DEFAULT 1.00',
+    'SELECT 1'
+);
+PREPARE stmt_mg_provas_peso FROM @sql_mg_provas_peso;
+EXECUTE stmt_mg_provas_peso;
+DEALLOCATE PREPARE stmt_mg_provas_peso;
 
 CREATE TABLE IF NOT EXISTS mg_questoes (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     tipo ENUM("Dissertativa", "Objetiva") NOT NULL,
+    pontos DECIMAL(3,2) NOT NULL DEFAULT 1.00,
     enunciado TEXT NOT NULL,
     gabarito TEXT NOT NULL
-);
+    );
 
 CREATE TABLE IF NOT EXISTS mg_prova_questao (
     id_prova BIGINT NOT NULL,
     id_questao BIGINT NOT NULL,
     ordem INT,
+    pontos DECIMAL(4,2) NULL DEFAULT NULL,
     PRIMARY KEY (id_prova, id_questao),
     FOREIGN KEY (id_prova) REFERENCES mg_provas(id) ON DELETE CASCADE,
     FOREIGN KEY (id_questao) REFERENCES mg_questoes(id) ON DELETE CASCADE
+    );
+
+-- Coluna 'pontos' em mg_prova_questao (garante compatibilidade caso o banco já exista sem a coluna)
+SET @mg_pq_tem_pontos = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_prova_questao'
+      AND COLUMN_NAME = 'pontos'
 );
+SET @sql_mg_pq_pontos = IF(
+    @mg_pq_tem_pontos = 0,
+    'ALTER TABLE mg_prova_questao ADD COLUMN pontos DECIMAL(4,2) NULL DEFAULT NULL',
+    'SELECT 1'
+);
+PREPARE stmt_mg_pq_pontos FROM @sql_mg_pq_pontos;
+EXECUTE stmt_mg_pq_pontos;
+DEALLOCATE PREPARE stmt_mg_pq_pontos;
 
 CREATE TABLE IF NOT EXISTS mg_questao_alternativa (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -74,8 +111,39 @@ CREATE TABLE IF NOT EXISTS mg_questao_alternativa (
     texto TEXT NOT NULL,
     correta BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (id_questao) REFERENCES mg_questoes(id) ON DELETE CASCADE
-);
+    );
 
+-- Cada linha representa o inicio e a tentativa de um aluno em uma prova.
+CREATE TABLE IF NOT EXISTS mg_aluno_prova (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    ra_aluno BIGINT NOT NULL,
+    id_prova BIGINT NOT NULL,
+    data_inicio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    data_envio DATETIME DEFAULT NULL,
+    status ENUM('EM_ANDAMENTO', 'FINALIZADA', 'EXPIRADA') NOT NULL DEFAULT 'EM_ANDAMENTO',
+    UNIQUE KEY uk_aluno_prova (ra_aluno, id_prova),
+    FOREIGN KEY (ra_aluno) REFERENCES mg_aluno(ra) ON DELETE CASCADE,
+    FOREIGN KEY (id_prova) REFERENCES mg_provas(id) ON DELETE CASCADE
+    );
+
+CREATE TABLE IF NOT EXISTS mg_questao_correspondencia_item (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id_questao BIGINT NOT NULL,
+    ordem INT NOT NULL,
+    texto VARCHAR(255) NOT NULL,
+    FOREIGN KEY (id_questao)
+    REFERENCES mg_questoes(id)
+    ON DELETE CASCADE
+    );
+CREATE TABLE IF NOT EXISTS mg_questao_correspondencia_alternativa (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id_questao BIGINT NOT NULL,
+    texto VARCHAR(255) NOT NULL,
+    numero_correto INT NOT NULL,
+    FOREIGN KEY (id_questao)
+    REFERENCES mg_questoes(id)
+    ON DELETE CASCADE
+    );
 -- Cada linha representa a resposta de um aluno para uma questão de uma prova.
 CREATE TABLE IF NOT EXISTS mg_resposta_aluno (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -88,7 +156,7 @@ CREATE TABLE IF NOT EXISTS mg_resposta_aluno (
     FOREIGN KEY (ra_aluno) REFERENCES mg_aluno(ra) ON DELETE CASCADE,
     FOREIGN KEY (id_prova) REFERENCES mg_provas(id) ON DELETE CASCADE,
     FOREIGN KEY (id_questao) REFERENCES mg_questoes(id) ON DELETE CASCADE
-);
+    );
 
 -- Compatibilidade para bancos antigos onde mg_aluno foi criado sem id_curso.
 SET @mg_aluno_tem_id_curso = (
@@ -113,7 +181,7 @@ SET @tem_tabela_curso_disiciplina = (
     SELECT COUNT(*)
     FROM INFORMATION_SCHEMA.TABLES
     WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'mg_curso_disiciplina'
+    AND TABLE_NAME = 'mg_curso_disiciplina'
 );
 SET @sql_migrar_curso_disciplina = IF(
     @tem_tabela_curso_disiciplina > 0,
@@ -123,6 +191,122 @@ SET @sql_migrar_curso_disciplina = IF(
 PREPARE stmt_migrar_curso_disciplina FROM @sql_migrar_curso_disciplina;
 EXECUTE stmt_migrar_curso_disciplina;
 DEALLOCATE PREPARE stmt_migrar_curso_disciplina;
+
+-- Compatibilidade para bancos antigos onde mg_provas usava DATE e nao tinha duracao_minutos.
+SET @mg_provas_tem_duracao = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_provas'
+      AND COLUMN_NAME = 'duracao_minutos'
+);
+SET @sql_mg_provas_duracao = IF(
+    @mg_provas_tem_duracao = 0,
+    'ALTER TABLE mg_provas MODIFY COLUMN data_inicial DATETIME, MODIFY COLUMN data_limite DATETIME, ADD COLUMN duracao_minutos INT NOT NULL DEFAULT 120',
+    'SELECT 1'
+);
+PREPARE stmt_mg_provas_duracao FROM @sql_mg_provas_duracao;
+EXECUTE stmt_mg_provas_duracao;
+DEALLOCATE PREPARE stmt_mg_provas_duracao;
+
+-- Coluna 'pontos' em mg_questoes (garante compatibilidade caso o banco seja antigo)
+SET @mg_questoes_tem_pontos = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_questoes'
+      AND COLUMN_NAME = 'pontos'
+);
+SET @sql_mg_questoes_pontos = IF(
+    @mg_questoes_tem_pontos = 0,
+    'ALTER TABLE mg_questoes ADD COLUMN pontos DECIMAL(3,2) NOT NULL DEFAULT 1.00',
+    'SELECT 1'
+);
+PREPARE stmt_mg_questoes_pontos FROM @sql_mg_questoes_pontos;
+EXECUTE stmt_mg_questoes_pontos;
+DEALLOCATE PREPARE stmt_mg_questoes_pontos;
+
+-- Coluna 'correta' em mg_resposta_aluno (NULL = pendente de correção manual, 1 = correta/parcial, 0 = incorreta)
+SET @mg_resp_tem_correta = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_resposta_aluno'
+      AND COLUMN_NAME = 'correta'
+);
+SET @sql_mg_resp_correta = IF(
+    @mg_resp_tem_correta = 0,
+    'ALTER TABLE mg_resposta_aluno ADD COLUMN correta TINYINT(1) NULL DEFAULT NULL',
+    'SELECT 1'
+);
+PREPARE stmt_mg_resp_correta FROM @sql_mg_resp_correta;
+EXECUTE stmt_mg_resp_correta;
+DEALLOCATE PREPARE stmt_mg_resp_correta;
+
+-- Coluna 'nota_total' em mg_aluno_prova para devolver a nota final calculada ao aluno
+SET @mg_ap_tem_nota_total = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_aluno_prova'
+      AND COLUMN_NAME = 'nota_total'
+);
+SET @sql_mg_ap_nota_total = IF(
+    @mg_ap_tem_nota_total = 0,
+    'ALTER TABLE mg_aluno_prova ADD COLUMN nota_total DECIMAL(5,2) NULL DEFAULT NULL',
+    'SELECT 1'
+);
+PREPARE stmt_mg_ap_nota_total FROM @sql_mg_ap_nota_total;
+EXECUTE stmt_mg_ap_nota_total;
+DEALLOCATE PREPARE stmt_mg_ap_nota_total;
+
+-- Atualiza o ENUM de status em mg_aluno_prova para aceitar 'CORRIGIDA'
+ALTER TABLE mg_aluno_prova
+    MODIFY COLUMN status ENUM('EM_ANDAMENTO', 'FINALIZADA', 'EXPIRADA', 'CORRIGIDA') NOT NULL DEFAULT 'EM_ANDAMENTO';
+
+CREATE TABLE IF NOT EXISTS mg_media_final (
+    ra_aluno BIGINT NOT NULL,
+    id_disciplina BIGINT NOT NULL,
+    media_final DECIMAL(5,2) NOT NULL,
+    data_fechamento DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (ra_aluno, id_disciplina),
+    CONSTRAINT fk_media_final_aluno FOREIGN KEY (ra_aluno) REFERENCES mg_aluno(ra) ON DELETE CASCADE,
+    CONSTRAINT fk_media_final_disciplina FOREIGN KEY (id_disciplina) REFERENCES mg_disciplina(id) ON DELETE CASCADE
+    );
+
+-- Coluna 'id_disciplina' em mg_questoes (para questões avulsas no Banco de Questões)
+SET @mg_questoes_tem_disc = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_questoes'
+      AND COLUMN_NAME = 'id_disciplina'
+);
+SET @sql_mg_questoes_disc = IF(
+    @mg_questoes_tem_disc = 0,
+    'ALTER TABLE mg_questoes ADD COLUMN id_disciplina BIGINT NULL, ADD CONSTRAINT fk_questao_disciplina FOREIGN KEY (id_disciplina) REFERENCES mg_disciplina(id) ON DELETE SET NULL',
+    'SELECT 1'
+);
+PREPARE stmt_mg_questoes_disc FROM @sql_mg_questoes_disc;
+EXECUTE stmt_mg_questoes_disc;
+DEALLOCATE PREPARE stmt_mg_questoes_disc;
+
+-- Coluna 'matricula_professor' em mg_questoes
+SET @mg_questoes_tem_prof = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mg_questoes'
+      AND COLUMN_NAME = 'matricula_professor'
+);
+SET @sql_mg_questoes_prof = IF(
+    @mg_questoes_tem_prof = 0,
+    'ALTER TABLE mg_questoes ADD COLUMN matricula_professor BIGINT NULL, ADD CONSTRAINT fk_questao_professor FOREIGN KEY (matricula_professor) REFERENCES mg_professor(matricula) ON DELETE CASCADE',
+    'SELECT 1'
+);
+PREPARE stmt_mg_questoes_prof FROM @sql_mg_questoes_prof;
+EXECUTE stmt_mg_questoes_prof;
+DEALLOCATE PREPARE stmt_mg_questoes_prof;
 
 -- (Mantenha todas as suas criações de tabelas e migrações que já estão no seu arquivo...)
 
@@ -155,22 +339,22 @@ INSERT INTO mg_curso_disciplina (id_curso, id_disciplina, ordem)
 SELECT c.id, d.id, 1
 FROM mg_cursos c, mg_disciplina d
 WHERE c.nome_curso = 'Banco de Dados' AND d.nome = 'Matematica Discreta'
-AND NOT EXISTS (SELECT 1 FROM mg_curso_disciplina x WHERE x.id_curso = c.id AND x.id_disciplina = d.id);
+  AND NOT EXISTS (SELECT 1 FROM mg_curso_disciplina x WHERE x.id_curso = c.id AND x.id_disciplina = d.id);
 
 INSERT INTO mg_curso_disciplina (id_curso, id_disciplina, ordem)
 SELECT c.id, d.id, 2
 FROM mg_cursos c, mg_disciplina d
 WHERE c.nome_curso = 'Banco de Dados' AND d.nome = 'Algoritmo'
-AND NOT EXISTS (SELECT 1 FROM mg_curso_disciplina x WHERE x.id_curso = c.id AND x.id_disciplina = d.id);
+  AND NOT EXISTS (SELECT 1 FROM mg_curso_disciplina x WHERE x.id_curso = c.id AND x.id_disciplina = d.id);
 
 INSERT INTO mg_curso_disciplina (id_curso, id_disciplina, ordem)
 SELECT c.id, d.id, 3
 FROM mg_cursos c, mg_disciplina d
 WHERE c.nome_curso = 'Banco de Dados' AND d.nome = 'Modelagem de Dados'
-AND NOT EXISTS (SELECT 1 FROM mg_curso_disciplina x WHERE x.id_curso = c.id AND x.id_disciplina = d.id);
+  AND NOT EXISTS (SELECT 1 FROM mg_curso_disciplina x WHERE x.id_curso = c.id AND x.id_disciplina = d.id);
 
 INSERT INTO mg_curso_disciplina (id_curso, id_disciplina, ordem)
 SELECT c.id, d.id, 1
 FROM mg_cursos c, mg_disciplina d
 WHERE c.nome_curso = 'Logistica' AND d.nome = 'Logistica Verde'
-AND NOT EXISTS (SELECT 1 FROM mg_curso_disciplina x WHERE x.id_curso = c.id AND x.id_disciplina = d.id);
+  AND NOT EXISTS (SELECT 1 FROM mg_curso_disciplina x WHERE x.id_curso = c.id AND x.id_disciplina = d.id);

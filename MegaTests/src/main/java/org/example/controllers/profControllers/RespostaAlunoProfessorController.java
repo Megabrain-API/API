@@ -3,8 +3,15 @@ package org.example.controllers.profControllers;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
@@ -19,32 +26,54 @@ import org.example.entity.profEntity.TurmaItem;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 
-/**
- * Mostra ao professor a prova já respondida pelo aluno.
- * Questões corretas ficam destacadas em verde e incorretas em vermelho.
- */
 public class RespostaAlunoProfessorController implements Initializable {
 
-    @FXML
-    private Label lbl_titulo_correcao;
+    private static final Locale PT_BR = Locale.forLanguageTag("pt-BR");
 
     @FXML
-    private Label lbl_info_correcao;
+    private Button btnFinalizar;
 
     @FXML
-    private VBox vb_respostas_professor;
+    private Button btnSalvar;
+
+    @FXML
+    private Button btnVoltar;
+
+    @FXML
+    private Label lblNomeAluno;
+
+    @FXML
+    private Label lblNomeProva;
+
+    @FXML
+    private Label lblNotaTotal;
+
+    @FXML
+    private Label lblQuestoesCorrigidas;
+
+    @FXML
+    private Label lblRaAluno;
+
+    @FXML
+    private VBox vboxQuestoes;
 
     private final TurmaProfessorDAO dao = new TurmaProfessorDAO();
+    private List<RespostaAlunoProva> respostasAtuais = new ArrayList<>();
+    private final Map<RespostaAlunoProva, TextField> camposNotaChecklist = new LinkedHashMap<>();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        carregarRespostas();
+        carregarDadosCorrecao();
     }
 
-    private void carregarRespostas() {
+    private void carregarDadosCorrecao() {
         Prova prova = TurmasProfessorController.getProvaSelecionada();
         AlunoProva aluno = TurmasProfessorController.getAlunoSelecionado();
         TurmaItem curso = TurmasProfessorController.getCursoSelecionado();
@@ -55,114 +84,286 @@ public class RespostaAlunoProfessorController implements Initializable {
             return;
         }
 
-        lbl_titulo_correcao.setText(prova.getNome());
+        lblNomeAluno.setText(aluno.getNome());
+        lblRaAluno.setText(String.valueOf(aluno.getRa()));
 
-        String info = "Aluno: " + aluno.getNome() + "  •  RA: " + aluno.getRa();
-        if (curso != null) {
-            info += "  •  Curso: " + curso.getNome();
-        }
+        String tituloProva = prova.getNome();
         if (prova.getDisciplina() != null) {
-            info += "  •  Disciplina: " + prova.getDisciplina();
+            tituloProva += " (" + prova.getDisciplina() + ")";
         }
-        lbl_info_correcao.setText(info);
+        if (curso != null) {
+            tituloProva += " • " + curso.getNome();
+        }
+        lblNomeProva.setText(tituloProva);
 
         try {
-            List<RespostaAlunoProva> respostas = dao.buscarRespostasDoAluno(
+            respostasAtuais = dao.buscarRespostasDoAluno(
                     prova.getId(),
                     aluno.getRa(),
                     matriculaProfessor
             );
 
-            vb_respostas_professor.getChildren().clear();
+            vboxQuestoes.getChildren().clear();
+            camposNotaChecklist.clear();
 
-            if (respostas.isEmpty()) {
+            if (respostasAtuais.isEmpty()) {
                 Label vazio = new Label("Nenhuma resposta foi encontrada para este aluno.");
                 vazio.setStyle("-fx-text-fill: #1B1B1B; -fx-font-size: 14px;");
-                vb_respostas_professor.getChildren().add(vazio);
+                vboxQuestoes.getChildren().add(vazio);
+                atualizarResumoRodape();
                 return;
             }
 
-            for (RespostaAlunoProva resposta : respostas) {
-                vb_respostas_professor.getChildren().add(criarBlocoQuestao(resposta));
+            for (RespostaAlunoProva resposta : respostasAtuais) {
+                vboxQuestoes.getChildren().add(criarCardQuestao(resposta));
             }
+
+            atualizarResumoRodape();
         } catch (RuntimeException erro) {
             erro.printStackTrace();
             mostrarErro(erro.getMessage());
         }
     }
 
-    private VBox criarBlocoQuestao(RespostaAlunoProva resposta) {
-        VBox bloco = new VBox(9);
-        bloco.setPadding(new Insets(15));
-        bloco.setMaxWidth(Double.MAX_VALUE);
-        VBox.setVgrow(bloco, Priority.NEVER);
-        bloco.setStyle(
-                "-fx-background-color: rgba(255,255,255,0.96);" +
-                "-fx-background-radius: 10px;" +
-                "-fx-border-radius: 10px;" +
-                "-fx-border-width: 2px;" +
-                "-fx-border-color: " + (resposta.isCorreta() ? "#4A7C59;" : "#B3261E;")
-        );
+    private VBox criarCardQuestao(RespostaAlunoProva resposta) {
+        VBox card = new VBox(10);
+        card.setPadding(new Insets(18));
+        card.setMaxWidth(Double.MAX_VALUE);
+        VBox.setVgrow(card, Priority.NEVER);
+        aplicarEstiloBordaCard(card, resposta);
 
         Label enunciado = new Label(
                 resposta.getOrdem() + ". " + valorOuVazio(resposta.getEnunciado()));
-        enunciado.setFont(Font.font("System", FontWeight.BOLD, 14));
+        enunciado.setFont(Font.font("System", FontWeight.BOLD, 15));
         enunciado.setWrapText(true);
         enunciado.setMaxWidth(Double.MAX_VALUE);
         enunciado.setStyle("-fx-text-fill: #1B1B1B;");
-        bloco.getChildren().add(enunciado);
 
-        Label tipo = new Label(textoTipo(resposta.getTipo()));
-        tipo.setStyle("-fx-text-fill: #666666; -fx-font-size: 11px;");
-        bloco.getChildren().add(tipo);
+        Label subtituloTipo = new Label(String.format(
+                PT_BR,
+                "%s  •  Vale %.2f pt(s)",
+                textoTipo(resposta.getTipo()),
+                resposta.getPontosQuestao()
+        ));
+        subtituloTipo.setStyle("-fx-text-fill: #687386; -fx-font-size: 12px;");
+
+        card.getChildren().addAll(enunciado, subtituloTipo, new Separator());
+
+        Label badgeResultado = new Label();
+        badgeResultado.setFont(Font.font("System", FontWeight.BOLD, 12));
+        atualizarBadgeResultado(badgeResultado, resposta);
 
         if (Questao.DISSERTATIVA.equals(resposta.getTipo())) {
-            bloco.getChildren().add(criarTextoResposta(
-                    "Resposta do aluno:", resposta.getRespostaAluno()));
-            bloco.getChildren().add(criarTextoResposta(
-                    "Gabarito:", resposta.getGabarito()));
+            card.getChildren().add(criarCampoTextoLeitura(
+                    "Resposta do aluno", resposta.getRespostaAluno()));
+            card.getChildren().add(criarCampoTextoLeitura(
+                    "Gabarito / Resposta de referência", resposta.getGabarito()));
+
+            Label lblObs = new Label("Observação do professor (opcional)");
+            lblObs.setFont(Font.font("System", FontWeight.BOLD, 12));
+            lblObs.setStyle("-fx-text-fill: #1B1B1B;");
+
+            TextArea txtObservacao = new TextArea();
+            txtObservacao.setPromptText("Escreva uma observação sobre a resposta...");
+            txtObservacao.setWrapText(true);
+            txtObservacao.setPrefRowCount(2);
+            txtObservacao.setMaxWidth(Double.MAX_VALUE);
+            card.getChildren().addAll(lblObs, txtObservacao);
+
+            Label lblNota = new Label("Nota atribuída");
+            lblNota.setFont(Font.font("System", FontWeight.BOLD, 12));
+            lblNota.setStyle("-fx-text-fill: #1B1B1B;");
+
+            HBox linhaNota = new HBox(10);
+            linhaNota.setAlignment(Pos.CENTER_LEFT);
+
+            TextField txtNota = new TextField();
+            txtNota.setPrefWidth(95);
+            txtNota.setPromptText("Ex.: 1,50");
+            if (resposta.isCorrigida()) {
+                txtNota.setText(String.format(PT_BR, "%.2f", resposta.getNota()));
+            }
+
+            Label lblPontosMax = new Label(String.format(PT_BR, "/ %.2f Pontos", resposta.getPontosQuestao()));
+            lblPontosMax.setStyle("-fx-text-fill: #444444; -fx-font-size: 12px;");
+
+            Label lblErroNota = new Label();
+            lblErroNota.setStyle("-fx-text-fill: #B3261E; -fx-font-size: 11px; -fx-font-weight: bold;");
+
+            txtNota.textProperty().addListener((obs, antigo, novo) -> {
+                String limpo = novo == null ? "" : novo.trim().replace(",", ".");
+                if (limpo.isEmpty()) {
+                    resposta.setCorrigida(false);
+                    resposta.setNota(0.0);
+                    resposta.setCorreta(false);
+                    lblErroNota.setText("");
+                    aplicarEstiloBordaCard(card, resposta);
+                    atualizarBadgeResultado(badgeResultado, resposta);
+                    atualizarResumoRodape();
+                    return;
+                }
+
+                try {
+                    double valor = Double.parseDouble(limpo);
+                    if (valor < 0 || valor > resposta.getPontosQuestao()) {
+                        resposta.setCorrigida(false);
+                        lblErroNota.setText(String.format(
+                                PT_BR, "Informe entre 0,00 e %.2f", resposta.getPontosQuestao()));
+                    } else {
+                        lblErroNota.setText("");
+                        resposta.setNota(Math.round(valor * 100.0) / 100.0);
+                        resposta.setCorrigida(true);
+                        resposta.setCorreta(resposta.getNota() > 0.0);
+                    }
+                } catch (NumberFormatException e) {
+                    resposta.setCorrigida(false);
+                    lblErroNota.setText("Valor numérico inválido");
+                }
+
+                aplicarEstiloBordaCard(card, resposta);
+                atualizarBadgeResultado(badgeResultado, resposta);
+                atualizarResumoRodape();
+            });
+
+            Button btnZero = new Button("0,00");
+            btnZero.setStyle(
+                    "-fx-background-color: #F9E2E0; -fx-text-fill: #8C1D18; " +
+                            "-fx-font-weight: bold; -fx-background-radius: 6px; -fx-cursor: hand;"
+            );
+            btnZero.setOnAction(e -> txtNota.setText("0,00"));
+
+            Button btnMax = new Button(String.format(PT_BR, "Máx (%.2f)", resposta.getPontosQuestao()));
+            btnMax.setStyle(
+                    "-fx-background-color: #E4EFE7; -fx-text-fill: #285A36; " +
+                            "-fx-font-weight: bold; -fx-background-radius: 6px; -fx-cursor: hand;"
+            );
+            btnMax.setOnAction(e -> txtNota.setText(String.format(PT_BR, "%.2f", resposta.getPontosQuestao())));
+
+            linhaNota.getChildren().addAll(txtNota, lblPontosMax, btnZero, btnMax, lblErroNota);
+            card.getChildren().addAll(lblNota, linhaNota);
+        } else if (Questao.CORRESPONDENCIA.equals(resposta.getTipo())) {
+            card.getChildren().add(criarPainelItensCorrespondencia(resposta.getItensCorrespondencia()));
+            card.getChildren().add(criarCampoTextoLeitura(
+                    "Associações feitas pelo aluno", resposta.getRespostaAluno()));
+            card.getChildren().add(criarCampoTextoLeitura(
+                    "Gabarito (Associações corretas)", resposta.getGabarito()));
         } else {
             for (RespostaAlunoProva.AlternativaCorrecao alternativa : resposta.getAlternativas()) {
-                bloco.getChildren().add(criarAlternativa(alternativa));
+                card.getChildren().add(criarLinhaAlternativa(alternativa));
+            }
+
+            if (Questao.CHECKLIST.equals(resposta.getTipo())) {
+                resposta.setNotaAutomatica(resposta.getNota());
+
+                HBox linhaNotaChecklist = new HBox(10);
+                linhaNotaChecklist.setAlignment(Pos.CENTER_LEFT);
+                linhaNotaChecklist.setPadding(new Insets(6, 0, 2, 0));
+
+                Label lblNotaManual = new Label(String.format(
+                        PT_BR, "Nota manual (opcional, máx. %.2f):", resposta.getPontosQuestao()));
+                lblNotaManual.setFont(Font.font("System", FontWeight.BOLD, 12));
+                lblNotaManual.setStyle("-fx-text-fill: #1B1B1B;");
+
+                TextField txtNotaManual = new TextField();
+                txtNotaManual.setPrefWidth(110);
+                txtNotaManual.setPromptText(String.format(PT_BR, "Auto: %.2f", resposta.getNotaAutomatica()));
+
+                Label lblErroChecklist = new Label();
+                lblErroChecklist.setStyle("-fx-text-fill: #B3261E; -fx-font-size: 11px; -fx-font-weight: bold;");
+
+                camposNotaChecklist.put(resposta, txtNotaManual);
+
+                txtNotaManual.textProperty().addListener((obs, antigo, novo) -> {
+                    String limpo = novo == null ? "" : novo.trim().replace(",", ".");
+                    if (limpo.isEmpty()) {
+                        lblErroChecklist.setText("");
+                        resposta.setNota(resposta.getNotaAutomatica());
+                        resposta.setCorreta(resposta.getNotaAutomatica() > 0.0);
+                        aplicarEstiloBordaCard(card, resposta);
+                        atualizarBadgeResultado(badgeResultado, resposta);
+                        atualizarResumoRodape();
+                        return;
+                    }
+
+                    try {
+                        double valor = Double.parseDouble(limpo);
+                        if (valor < 0 || valor > resposta.getPontosQuestao()) {
+                            lblErroChecklist.setText(String.format(
+                                    PT_BR, "Informe entre 0,00 e %.2f", resposta.getPontosQuestao()));
+                            return;
+                        }
+                        lblErroChecklist.setText("");
+                        resposta.setNota(Math.round(valor * 100.0) / 100.0);
+                        resposta.setCorreta(resposta.getNota() > 0.0);
+                        aplicarEstiloBordaCard(card, resposta);
+                        atualizarBadgeResultado(badgeResultado, resposta);
+                        atualizarResumoRodape();
+                    } catch (NumberFormatException e) {
+                        lblErroChecklist.setText("Valor numérico inválido");
+                    }
+                });
+
+                linhaNotaChecklist.getChildren().addAll(lblNotaManual, txtNotaManual, lblErroChecklist);
+                card.getChildren().add(linhaNotaChecklist);
             }
         }
 
-        Label resultado = new Label(
-                resposta.isCorreta() ? "✓ RESPOSTA CORRETA" : "✗ RESPOSTA INCORRETA");
-        resultado.setFont(Font.font("System", FontWeight.BOLD, 12));
-        resultado.setStyle(
-                "-fx-text-fill: white;" +
-                "-fx-background-color: " + (resposta.isCorreta() ? "#4A7C59;" : "#B3261E;") +
-                "-fx-background-radius: 7px;" +
-                "-fx-padding: 6px 10px;"
-        );
-        bloco.getChildren().add(resultado);
-
-        return bloco;
+        card.getChildren().add(badgeResultado);
+        return card;
     }
 
-    private VBox criarTextoResposta(String titulo, String texto) {
-        VBox caixa = new VBox(3);
+    private VBox criarPainelItensCorrespondencia(List<String> itens) {
+        VBox box = new VBox(4);
 
-        Label lblTitulo = new Label(titulo);
-        lblTitulo.setFont(Font.font("System", FontWeight.BOLD, 12));
-        lblTitulo.setStyle("-fx-text-fill: #1B1B1B;");
+        Label lbl = new Label("Itens");
+        lbl.setFont(Font.font("System", FontWeight.BOLD, 12));
+        lbl.setStyle("-fx-text-fill: #1B1B1B;");
 
-        Label lblTexto = new Label(valorOuVazio(texto));
-        lblTexto.setWrapText(true);
-        lblTexto.setMaxWidth(Double.MAX_VALUE);
-        lblTexto.setStyle(
-                "-fx-text-fill: #1B1B1B;" +
-                "-fx-background-color: #F1F1F1;" +
-                "-fx-background-radius: 6px;" +
-                "-fx-padding: 8px;"
-        );
+        VBox listaItens = new VBox(4);
+        listaItens.setPadding(new Insets(8));
 
-        caixa.getChildren().addAll(lblTitulo, lblTexto);
-        return caixa;
+        if (itens == null || itens.isEmpty()) {
+            Label vazio = new Label("(nenhum item cadastrado)");
+            vazio.setStyle("-fx-text-fill: #666666;");
+            listaItens.getChildren().add(vazio);
+        } else {
+            for (int i = 0; i < itens.size(); i++) {
+                Label lblItem = new Label((i + 1) + ". " + valorOuVazio(itens.get(i)));
+                lblItem.setWrapText(true);
+                lblItem.setStyle("-fx-text-fill: #1B1B1B; -fx-font-size: 12px;");
+                listaItens.getChildren().add(lblItem);
+            }
+        }
+
+        ScrollPane scrollItens = new ScrollPane(listaItens);
+        scrollItens.setFitToWidth(true);
+        scrollItens.setPrefViewportHeight(85);
+        scrollItens.setMaxHeight(110);
+        scrollItens.setStyle("-fx-background: #F4F6F8; -fx-background-color: #F4F6F8; -fx-border-color: #dce1e7; -fx-border-radius: 6px;");
+
+        box.getChildren().addAll(lbl, scrollItens);
+        return box;
     }
 
-    private Label criarAlternativa(RespostaAlunoProva.AlternativaCorrecao alternativa) {
+    private VBox criarCampoTextoLeitura(String titulo, String conteudo) {
+        VBox box = new VBox(4);
+
+        Label lbl = new Label(titulo);
+        lbl.setFont(Font.font("System", FontWeight.BOLD, 12));
+        lbl.setStyle("-fx-text-fill: #1B1B1B;");
+
+        TextArea area = new TextArea(valorOuVazio(conteudo));
+        area.setEditable(false);
+        area.setWrapText(true);
+        area.setPrefRowCount(2);
+        area.setMaxWidth(Double.MAX_VALUE);
+        area.setStyle("-fx-control-inner-background: #F4F6F8; -fx-text-fill: #1B1B1B;");
+
+        box.getChildren().addAll(lbl, area);
+        return box;
+    }
+
+    private Label criarLinhaAlternativa(RespostaAlunoProva.AlternativaCorrecao alternativa) {
         String prefixo = "• ";
         String fundo = "transparent";
         String corTexto = "#1B1B1B";
@@ -177,7 +378,7 @@ public class RespostaAlunoProfessorController implements Initializable {
             corTexto = "#8C1D18";
         } else if (alternativa.isCorreta()) {
             prefixo = "✓ Alternativa correta: ";
-            fundo = "#EAF4ED";
+            fundo = "transparent";
             corTexto = "#285A36";
         }
 
@@ -186,11 +387,209 @@ public class RespostaAlunoProfessorController implements Initializable {
         label.setMaxWidth(Double.MAX_VALUE);
         label.setStyle(
                 "-fx-text-fill: " + corTexto + ";" +
-                "-fx-background-color: " + fundo + ";" +
-                "-fx-background-radius: 6px;" +
-                "-fx-padding: 7px 9px;"
+                        "-fx-background-color: " + fundo + ";" +
+                        "-fx-background-radius: 6px;" +
+                        "-fx-padding: 7px 10px;"
         );
         return label;
+    }
+
+    private void aplicarEstiloBordaCard(VBox card, RespostaAlunoProva resposta) {
+        String corBorda;
+        if (!resposta.isCorrigida()) {
+            corBorda = "#D9822B"; // Laranja: aguardando nota manual
+        } else if (resposta.isParcial()) {
+            corBorda = "#C68B00"; // Âmbar: pontuação parcial
+        } else if (resposta.getNota() > 0.0) {
+            corBorda = "#4A7C59"; // Verde: nota máxima
+        } else {
+            corBorda = "#B3261E"; // Vermelho: zerada
+        }
+
+        card.setStyle(
+                "-fx-background-color: rgba(255,255,255,0.97);" +
+                        "-fx-background-radius: 10px;" +
+                        "-fx-border-radius: 10px;" +
+                        "-fx-border-width: 2px;" +
+                        "-fx-border-color: " + corBorda + ";"
+        );
+    }
+
+    private void atualizarBadgeResultado(Label badge, RespostaAlunoProva resposta) {
+        String detalhe = (resposta.getDetalheCorrecao() != null && !resposta.getDetalheCorrecao().isEmpty())
+                ? " (" + resposta.getDetalheCorrecao() + ")"
+                : "";
+
+        if (!resposta.isCorrigida()) {
+            badge.setText(String.format(
+                    PT_BR, "⏳ AGUARDANDO NOTA MANUAL (0,00 / %.2f pts)", resposta.getPontosQuestao()));
+            badge.setStyle(
+                    "-fx-text-fill: white; -fx-background-color: #D9822B; " +
+                            "-fx-background-radius: 7px; -fx-padding: 6px 10px;"
+            );
+        } else if (resposta.isParcial()) {
+            badge.setText(String.format(
+                    PT_BR, "◐ PONTUAÇÃO PARCIAL%s  •  +%.2f / %.2f pts",
+                    detalhe, resposta.getNota(), resposta.getPontosQuestao()));
+            badge.setStyle(
+                    "-fx-text-fill: white; -fx-background-color: #C68B00; " +
+                            "-fx-background-radius: 7px; -fx-padding: 6px 10px;"
+            );
+        } else if (resposta.getNota() > 0.0) {
+            badge.setText(String.format(
+                    PT_BR, "✓ CORRETA%s  •  +%.2f / %.2f pts",
+                    detalhe, resposta.getNota(), resposta.getPontosQuestao()));
+            badge.setStyle(
+                    "-fx-text-fill: white; -fx-background-color: #4A7C59; " +
+                            "-fx-background-radius: 7px; -fx-padding: 6px 10px;"
+            );
+        } else {
+            badge.setText(String.format(
+                    PT_BR, "✗ INCORRETA%s  •  0,00 / %.2f pts",
+                    detalhe, resposta.getPontosQuestao()));
+            badge.setStyle(
+                    "-fx-text-fill: white; -fx-background-color: #B3261E; " +
+                            "-fx-background-radius: 7px; -fx-padding: 6px 10px;"
+            );
+        }
+    }
+
+    private void atualizarResumoRodape() {
+        int totalQuestoes = respostasAtuais.size();
+        int corrigidas = 0;
+        double pontosObtidos = 0.0;
+        double pontosMaximos = 0.0;
+
+        for (RespostaAlunoProva r : respostasAtuais) {
+            pontosMaximos += r.getPontosQuestao();
+            if (r.isCorrigida()) {
+                corrigidas++;
+                pontosObtidos += r.getNota();
+            }
+        }
+
+        if (lblQuestoesCorrigidas != null) {
+            lblQuestoesCorrigidas.setText("Questões corrigidas: " + corrigidas + "/" + totalQuestoes);
+        }
+
+        if (lblNotaTotal != null) {
+            lblNotaTotal.setText(String.format(
+                    PT_BR, "Nota total: %.2f / %.2f", pontosObtidos, pontosMaximos));
+        }
+    }
+
+    private boolean validarNotasChecklist() {
+        for (Map.Entry<RespostaAlunoProva, TextField> entry : camposNotaChecklist.entrySet()) {
+            String limpo = entry.getValue().getText() == null ? "" : entry.getValue().getText().trim().replace(",", ".");
+            if (!limpo.isEmpty()) {
+                try {
+                    double valor = Double.parseDouble(limpo);
+                    if (valor < 0 || valor > entry.getKey().getPontosQuestao()) {
+                        mostrarErro(String.format(PT_BR,
+                                "A nota da questão %d deve estar entre 0,00 e %.2f.",
+                                entry.getKey().getOrdem(), entry.getKey().getPontosQuestao()));
+                        return false;
+                    }
+                } catch (NumberFormatException e) {
+                    mostrarErro("Valor numérico inválido na nota manual da questão " + entry.getKey().getOrdem() + ".");
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    @FXML
+    private void salvarRascunhoCorrecao() {
+        Prova prova = TurmasProfessorController.getProvaSelecionada();
+        AlunoProva aluno = TurmasProfessorController.getAlunoSelecionado();
+
+        if (prova == null || aluno == null || respostasAtuais.isEmpty()) {
+            mostrarErro("Não há respostas carregadas para salvar.");
+            return;
+        }
+
+        if (!validarNotasChecklist()) {
+            return;
+        }
+
+        try {
+            double notaParcial = dao.salvarCorrecaoProva(
+                    prova.getId(),
+                    aluno.getRa(),
+                    respostasAtuais
+            );
+
+            Alert info = new Alert(Alert.AlertType.INFORMATION);
+            info.setTitle("Progresso salvo");
+            info.setHeaderText("Notas salvas com sucesso");
+            info.setContentText(String.format(
+                    PT_BR, "Pontuação atual registrada: %.2f pts", notaParcial));
+            info.showAndWait();
+        } catch (RuntimeException erro) {
+            erro.printStackTrace();
+            mostrarErro(erro.getMessage());
+        }
+    }
+
+    @FXML
+    private void finalizarCorrecao() {
+        Prova prova = TurmasProfessorController.getProvaSelecionada();
+        AlunoProva aluno = TurmasProfessorController.getAlunoSelecionado();
+
+        if (prova == null || aluno == null || respostasAtuais.isEmpty()) {
+            mostrarErro("Não há respostas carregadas para finalizar a correção.");
+            return;
+        }
+
+        if (!validarNotasChecklist()) {
+            return;
+        }
+
+        List<Integer> questoesPendentes = new ArrayList<>();
+        for (RespostaAlunoProva r : respostasAtuais) {
+            if (!r.isCorrigida()) {
+                questoesPendentes.add(r.getOrdem());
+            }
+        }
+
+        if (!questoesPendentes.isEmpty()) {
+            Alert aviso = new Alert(Alert.AlertType.WARNING);
+            aviso.setTitle("Correção incompleta");
+            aviso.setHeaderText("Atribua uma nota válida para todas as questões dissertativas");
+            aviso.setContentText("Questões pendentes ou com valor inválido: " + questoesPendentes);
+            aviso.showAndWait();
+            return;
+        }
+
+        try {
+            double notaFinal = dao.salvarCorrecaoProva(
+                    prova.getId(),
+                    aluno.getRa(),
+                    respostasAtuais
+            );
+
+            double pontosMaximos = respostasAtuais.stream()
+                    .mapToDouble(RespostaAlunoProva::getPontosQuestao)
+                    .sum();
+
+            Alert sucesso = new Alert(Alert.AlertType.INFORMATION);
+            sucesso.setTitle("Correção finalizada");
+            sucesso.setHeaderText("Prova corrigida e retornada ao aluno!");
+            sucesso.setContentText(String.format(
+                    PT_BR,
+                    "Aluno: %s\nNota final: %.2f / %.2f pts",
+                    aluno.getNome(),
+                    notaFinal,
+                    pontosMaximos
+            ));
+            sucesso.showAndWait();
+
+            voltarParaTurmas();
+        } catch (RuntimeException | IOException erro) {
+            erro.printStackTrace();
+            mostrarErro(erro.getMessage());
+        }
     }
 
     private String textoTipo(String tipo) {
@@ -198,9 +597,12 @@ public class RespostaAlunoProfessorController implements Initializable {
             return "Questão dissertativa";
         }
         if (Questao.CHECKLIST.equals(tipo)) {
-            return "Questão de múltiplas respostas";
+            return "Checklist numerado";
         }
-        return "Questão de múltipla escolha";
+        if (Questao.CORRESPONDENCIA.equals(tipo)) {
+            return "Correspondência";
+        }
+        return "Múltipla escolha";
     }
 
     private String valorOuVazio(String valor) {
@@ -209,8 +611,8 @@ public class RespostaAlunoProfessorController implements Initializable {
 
     private void mostrarErro(String mensagem) {
         Alert alerta = new Alert(Alert.AlertType.ERROR);
-        alerta.setTitle("Erro ao abrir respostas");
-        alerta.setHeaderText("Não foi possível carregar a prova respondida");
+        alerta.setTitle("Erro na correção");
+        alerta.setHeaderText("Não foi possível carregar ou salvar a correção");
         alerta.setContentText(mensagem == null ? "Erro desconhecido." : mensagem);
         alerta.showAndWait();
     }

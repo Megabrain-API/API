@@ -1,8 +1,9 @@
 # Pastas de build e compilação
-/target/
+target/
 .class
 
 # Configurações locais do IntelliJ
+.run/
 .idea/
 *.iml
 *.iws

@@ -5,15 +5,16 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import org.example.controllers.alunoControllers.FazerProvaController;
 import org.example.dao.ConexaoDAO;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.Statement;
 
 public class App extends Application {
 
     private static Scene scene;
+    private static Parent telaAntesDosDados;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -65,12 +66,44 @@ public class App extends Application {
         stage.setMinHeight(600);
         stage.setResizable(true);
 
+        // --- SUBMISSÃO AUTOMÁTICA SE FECHAR A JANELA ---
+        stage.setOnCloseRequest(event -> {
+            if (FazerProvaController.isProvaEmAndamento()) {
+                FazerProvaController.submeterProvaAutomaticamenteNoEncerramento();
+            }
+        });
 
         stage.show();
     }
 
     public static void setRoot(String fxml) throws IOException {
-        scene.setRoot(loadFXML(fxml));
+        // Se mudar de tela enquanto estiver a fazer a prova, submete automaticamente
+        if (FazerProvaController.isProvaEmAndamento()) {
+            FazerProvaController.submeterProvaAutomaticamenteNoEncerramento();
+        }
+        Parent destino = loadFXML(fxml);
+        telaAntesDosDados = null;
+        scene.setRoot(destino);
+    }
+
+    /** Mantém a tela anterior viva, incluindo respostas e cronômetro de uma prova. */
+    public static void abrirDadosPessoais() throws IOException {
+        if (telaAntesDosDados != null) return;
+        Parent dados = loadFXML("DadosPessoais");
+        telaAntesDosDados = scene.getRoot();
+        scene.setRoot(dados);
+    }
+
+    public static void voltarDosDadosPessoais() throws IOException {
+        if (telaAntesDosDados != null) {
+            Parent anterior = telaAntesDosDados;
+            telaAntesDosDados = null;
+            scene.setRoot(anterior);
+        } else {
+            boolean aluno = "Aluno".equalsIgnoreCase(
+                    org.example.controllers.profControllers.SessaoUsuarioController.getTipoUsuario());
+            setRoot(aluno ? "alunoFluxo/MenuAluno" : "professorFluxo/MenuProf");
+        }
     }
 
     private static Parent loadFXML(String fxml) throws IOException {

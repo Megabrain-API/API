@@ -1,0 +1,100 @@
+.seletor-questoes {
+    -fx-background-color: #f3f7f4;
+}
+.seletor-questoes .seletor-topo,
+.seletor-questoes .seletor-previa {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #d2e1d7;
+    -fx-border-radius: 12;
+    -fx-padding: 16;
+}
+.seletor-questoes .seletor-titulo {
+    -fx-text-fill: #183b2a;
+    -fx-font-size: 23px;
+    -fx-font-weight: bold;
+}
+.seletor-questoes .seletor-secundario {
+    -fx-text-fill: #486455;
+}
+.seletor-questoes .text-field, .seletor-questoes .combo-box,
+.seletor-questoes .button {
+    -fx-min-height: 34;
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-border-color: #c4d6ca;
+    -fx-border-radius: 8;
+}
+.seletor-questoes .button {
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+    -fx-text-fill: #285a36;
+}
+.seletor-questoes .seletor-confirmar {
+    -fx-background-color: #3d7452;
+    -fx-text-fill: white;
+}
+.seletor-questoes .text-field:focused, .seletor-questoes .combo-box:focused,
+.seletor-questoes .button:focused {
+    -fx-border-color: #4a7c59;
+}
+.seletor-questoes .seletor-resultados,
+.seletor-questoes .seletor-resultados .list-cell,
+.seletor-questoes .seletor-previa .scroll-pane,
+.seletor-questoes .seletor-previa .scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+.seletor-questoes .seletor-resultados .list-cell {
+    -fx-padding: 0 6 8 0;
+}
+.seletor-questoes .combo-box-popup > .list-view {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-border-color: #c4d6ca;
+    -fx-border-radius: 8;
+    -fx-padding: 4;
+}
+.seletor-questoes .combo-box-popup .list-cell {
+    -fx-background-color: white;
+    -fx-background-radius: 5;
+    -fx-text-fill: #192e22;
+    -fx-padding: 6 10;
+}
+.seletor-questoes .combo-box-popup .list-cell:filled:hover,
+.seletor-questoes .combo-box-popup .list-cell:filled:focused,
+.seletor-questoes .combo-box-popup .list-cell:filled:selected {
+    -fx-background-color: #e2f1e6;
+    -fx-text-fill: #192e22;
+}
+.seletor-questoes .combo-box > .list-cell {
+    -fx-text-fill: #192e22;
+}
+.seletor-questoes .seletor-cartao {
+    -fx-padding: 11;
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: #d2e1d7;
+    -fx-border-radius: 10;
+}
+.seletor-questoes .list-cell:filled:hover .seletor-cartao {
+    -fx-border-color: #77a589;
+}
+.seletor-questoes .list-cell:selected .seletor-cartao {
+    -fx-background-color: #e2f1e6;
+    -fx-border-color: #4a7c59;
+}
+.seletor-questoes .seletor-tag-disciplina, .seletor-questoes .seletor-tag-tipo {
+    -fx-padding: 3 8;
+    -fx-background-radius: 9;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #285a36;
+    -fx-background-color: #dceee1;
+}
+.seletor-questoes .seletor-tag-tipo {
+    -fx-background-color: #eff3ef;
+}
+.seletor-questoes .seletor-enunciado {
+    -fx-font-weight: bold;
+    -fx-text-fill: #192e22;
+}

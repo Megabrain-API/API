@@ -6,49 +6,58 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="400.0" prefWidth="600.0" styleClass="fundo-inicio" stylesheets="@../estilo.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.profControllers.TurmasProfessorController">
+<BorderPane prefHeight="600.0" prefWidth="960.0" styleClass="fundo-inicio" stylesheets="@../estilo.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.profControllers.TurmasProfessorController">
    <left>
       <fx:include source="BarraLateralProf.fxml" />
    </left>
    <center>
-      <StackPane minHeight="0.0" minWidth="0.0">
+      <VBox prefHeight="600.0" prefWidth="880.0" spacing="0.0" BorderPane.alignment="CENTER">
          <children>
-            <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="470.0" prefWidth="620.0" spacing="8.0">
+            <!-- Cabeçalho superior alinhado ao padrão MeuCursoAluno -->
+            <HBox alignment="CENTER_LEFT" spacing="16.0" style="-fx-background-color: rgba(255, 255, 255, 0.90); -fx-border-color: #DCE5DF; -fx-border-width: 0 0 1 0;">
+               <padding>
+                  <Insets bottom="18.0" left="28.0" right="28.0" top="18.0" />
+               </padding>
                <children>
-                  <Label fx:id="lbl_titulo_turmas" text="Minhas Turmas" textFill="#1B1B1B">
-                     <font>
-                        <Font name="System Bold" size="24.0" />
-                     </font>
-                  </Label>
-                  <Label fx:id="lbl_caminho_turmas" alignment="CENTER" maxWidth="560.0" text="Escolha uma disciplina" textFill="#444444" wrapText="true">
-                     <font>
-                        <Font size="13.0" />
-                     </font>
-                  </Label>
-                  <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="330.0" prefWidth="560.0">
-                     <content>
-                        <VBox fx:id="vb_turmas_container" fillWidth="true" prefWidth="535.0" />
-                     </content>
-                  </ScrollPane>
-                  <HBox alignment="CENTER" prefHeight="55.0" prefWidth="560.0">
+                  <VBox spacing="4.0">
                      <children>
-                        <Button fx:id="btn_voltar_turmas" mnemonicParsing="false" onAction="#voltar" prefHeight="40.0" prefWidth="130.0" style="-fx-background-radius: 8px;" text="Voltar">
+                        <Label fx:id="lbl_subtitulo_topo" text="MINHAS TURMAS" textFill="#4A7C59">
                            <font>
-                              <Font size="16.0" />
+                              <Font name="System Bold" size="11.0" />
                            </font>
-                        </Button>
+                        </Label>
+                        <Label fx:id="lbl_titulo_turmas" text="Disciplinas e Cursos" textFill="#1B1B1B">
+                           <font>
+                              <Font name="System Bold" size="22.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="lbl_caminho_turmas" text="Carregando disciplinas e cursos..." textFill="#5F6368" wrapText="true">
+                           <font>
+                              <Font size="13.0" />
+                           </font>
+                        </Label>
                      </children>
-                     <VBox.margin>
-                        <Insets top="10.0" />
-                     </VBox.margin>
-                  </HBox>
+                  </VBox>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Button fx:id="btn_voltar_turmas" mnemonicParsing="false" onAction="#voltar" prefHeight="38.0" prefWidth="115.0" style="-fx-background-color: #F1F4F2; -fx-border-color: #C4D0C8; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-text-fill: #2B362F; -fx-font-weight: bold; -fx-cursor: hand;" text="Voltar" />
                </children>
-            </VBox>
+            </HBox>
+
+            <!-- Área rolável com os cards -->
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
+               <content>
+                  <VBox fx:id="vb_turmas_container" fillWidth="true" spacing="18.0">
+                     <padding>
+                        <Insets bottom="26.0" left="28.0" right="28.0" top="22.0" />
+                     </padding>
+                  </VBox>
+               </content>
+            </ScrollPane>
          </children>
-      </StackPane>
+      </VBox>
    </center>
 </BorderPane>

@@ -6,47 +6,94 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="400.0" prefWidth="600.0" styleClass="fundo-inicio" stylesheets="@../estilo.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.profControllers.PreviewFormularioController">
+<BorderPane prefHeight="650.0" prefWidth="980.0" styleClass="fundo-inicio" stylesheets="@../estilo.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.profControllers.PreviewFormularioController">
    <left>
       <fx:include source="BarraLateralProf.fxml" />
    </left>
    <center>
-      <StackPane minHeight="0.0" minWidth="0.0">
+      <VBox spacing="14.0" BorderPane.alignment="CENTER">
+         <padding>
+            <Insets bottom="18.0" left="24.0" right="24.0" top="18.0" />
+         </padding>
          <children>
-            <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="402.0" prefWidth="459.0">
+            <!-- Cabeçalho no padrão das telas de correção e realização de prova -->
+            <HBox alignment="CENTER_LEFT" spacing="16.0" style="-fx-background-color: rgba(255, 255, 255, 0.96); -fx-background-radius: 12px; -fx-border-color: #D4DFD8; -fx-border-radius: 12px; -fx-border-width: 1px; -fx-padding: 16 20 16 20;">
                <children>
-                  <Label text="Demonstração do Formulário">
+                  <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <Label style="-fx-background-color: #DDEEE2; -fx-text-fill: #285A36; -fx-font-weight: bold; -fx-font-size: 11px; -fx-padding: 3 10 3 10; -fx-background-radius: 10px;" text="PRÉ-VISUALIZAÇÃO DA PROVA" />
+                              <Label fx:id="lbl_disciplina_preview" text="" textFill="#5F6368">
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </HBox>
+                        <Label fx:id="lbl_titulo_preview" text="Demonstração do Formulário" textFill="#1B1B1B" wrapText="true">
+                           <font>
+                              <Font name="System Bold" size="22.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="lbl_info_preview" text="Visualizando estrutura e gabarito da avaliação" textFill="#5F6368" wrapText="true">
+                           <font>
+                              <Font size="13.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </VBox>
+
+                  <VBox alignment="CENTER_RIGHT" spacing="4.0" style="-fx-background-color: #EEF5F0; -fx-background-radius: 10px; -fx-border-color: #C4D6CA; -fx-border-radius: 10px; -fx-padding: 10 16 10 16;">
+                     <children>
+                        <Label fx:id="lbl_resumo_questoes" text="0 questões" textFill="#285A36">
+                           <font>
+                              <Font name="System Bold" size="13.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="lbl_resumo_pontos" text="Total: 0,00 pts" textFill="#4A7C59">
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+
+            <!-- Área rolável com os cards das questões -->
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
+               <content>
+                  <VBox fx:id="vb_formulario" alignment="TOP_LEFT" spacing="12.0">
+                     <padding>
+                        <Insets bottom="8.0" left="2.0" right="6.0" top="2.0" />
+                     </padding>
+                  </VBox>
+               </content>
+            </ScrollPane>
+
+            <!-- Rodapé fixo alinhado com as demais telas -->
+            <HBox alignment="CENTER_LEFT" spacing="12.0" style="-fx-background-color: rgba(255, 255, 255, 0.96); -fx-background-radius: 12px; -fx-border-color: #D4DFD8; -fx-border-radius: 12px; -fx-border-width: 1px; -fx-padding: 12 20 12 20;">
+               <children>
+                  <Label text="Modo de visualização do professor — os gabaritos destacados em verde não aparecem para o aluno durante a prova." textFill="#5F6368" wrapText="true">
                      <font>
-                        <Font name="System Bold" size="24.0" />
+                        <Font size="12.0" />
                      </font>
                   </Label>
-                  <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="362.0" prefWidth="459.0">
-                     <content>
-                        <VBox fx:id="vb_formulario" alignment="CENTER_LEFT" prefWidth="450.0" spacing="10.0">
-                           <padding>
-                              <Insets right="100.0" />
-                           </padding></VBox>
-                     </content>
-                  </ScrollPane>
-                  <HBox alignment="CENTER" prefHeight="90.0" prefWidth="459.0" spacing="20.0">
-                     <children>
-                        <Button fx:id="btn_voltar" lineSpacing="10.0" mnemonicParsing="false" onAction="#VoltarLista" prefHeight="40.0" prefWidth="120.0" style="-fx-background-radius: 8px;" text="Voltar">
-                           <font>
-                              <Font size="16.0" />
-                           </font>
-                        </Button>
-                     </children>
-                     <VBox.margin>
-                        <Insets top="20.0" />
-                     </VBox.margin>
-                  </HBox>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Button fx:id="btn_voltar" mnemonicParsing="false" onAction="#VoltarLista" prefHeight="38.0" prefWidth="150.0" style="-fx-background-color: #4A7C59; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-cursor: hand;" text="Voltar às Provas">
+                     <font>
+                        <Font size="13.0" />
+                     </font>
+                  </Button>
                </children>
-            </VBox>
+            </HBox>
          </children>
-      </StackPane>
+      </VBox>
    </center>
 </BorderPane>

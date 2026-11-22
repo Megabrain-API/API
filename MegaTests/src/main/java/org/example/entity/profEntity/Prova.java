@@ -2,13 +2,17 @@ package org.example.entity.profEntity;
 
 import org.example.entity.profEntity.Questao;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Prova {
 
     private String nome;
-    private String prazo;
+    private LocalDateTime dataInicial;
+    private LocalDateTime dataLimite;
+    private Integer duracaoMinutos;
+    private Double peso = 1.0;
     private String disciplina;
     private String tipoQuestoes;
     private int id;
@@ -31,12 +35,36 @@ public class Prova {
         this.nome = nome;
     }
 
-    public String getPrazo() {
-        return prazo;
+    public LocalDateTime getDataInicial() {
+        return dataInicial;
     }
 
-    public void setPrazo(String prazo) {
-        this.prazo = prazo;
+    public void setDataInicial(LocalDateTime dataInicial) {
+        this.dataInicial = dataInicial;
+    }
+
+    public LocalDateTime getDataLimite() {
+        return dataLimite;
+    }
+
+    public void setDataLimite(LocalDateTime dataLimite) {
+        this.dataLimite = dataLimite;
+    }
+
+    public Integer getDuracaoMinutos() {
+        return duracaoMinutos;
+    }
+
+    public void setDuracaoMinutos(Integer duracaoMinutos) {
+        this.duracaoMinutos = duracaoMinutos;
+    }
+
+    public Double getPeso() {
+        return peso;
+    }
+
+    public void setPeso(Double peso) {
+        this.peso = peso;
     }
 
     public String getDisciplina() {

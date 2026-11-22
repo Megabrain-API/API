@@ -2,23 +2,48 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.profControllers.MenuProfController">
+<?import javafx.scene.effect.ColorAdjust?>
+<BorderPane prefHeight="600.0" prefWidth="960.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.profControllers.MenuProfController">
    <center>
-      <StackPane styleClass="fundo-inicio" stylesheets="@../../../../../../../../../../../estilo.css" BorderPane.alignment="CENTER">
+      <StackPane styleClass="fundo-inicio" stylesheets="@../estilo.css" BorderPane.alignment="CENTER">
          <children>
-            <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="0.0" minWidth="0.0" prefHeight="34.0" prefWidth="600.0" style="-fx-background-radius: 15; -fx-padding: 25;" StackPane.alignment="CENTER" />
+            <VBox alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="560.0" spacing="14.0" style="-fx-background-color: rgba(255, 255, 255, 0.96); -fx-background-radius: 16px; -fx-border-color: #D4DFD8; -fx-border-radius: 16px; -fx-border-width: 1px; -fx-padding: 32; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 16, 0, 0, 4);" StackPane.alignment="CENTER">
+               <children>
+                  <Label style="-fx-background-color: #DDEEE2; -fx-text-fill: #285A36; -fx-font-weight: bold; -fx-font-size: 11px; -fx-padding: 4 12 4 12; -fx-background-radius: 12px;" text="PORTAL DO PROFESSOR" />
+                  <Label fx:id="lbl_boas_vindas_prof" text="Bem-vindo(a)!" textFill="#1B1B1B" wrapText="true">
+                     <font>
+                        <Font name="System Bold" size="26.0" />
+                     </font>
+                  </Label>
+                  <Label fx:id="lbl_subtitulo_prof" text="Gerencie suas avaliações postadas, acompanhe suas turmas e corrija as provas enviadas." textFill="#5F6368" wrapText="true">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </Label>
+                  <Separator />
+                  <HBox spacing="12.0">
+                     <children>
+                        <Button mnemonicParsing="false" onAction="#entra_listaprova" prefHeight="40.0" prefWidth="175.0" style="-fx-background-color: #4A7C59; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-cursor: hand;" text="Minhas Provas" />
+                        <Button mnemonicParsing="false" onAction="#entra_minhaturma" prefHeight="40.0" prefWidth="175.0" style="-fx-background-color: #EEF5F0; -fx-border-color: #C4D6CA; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-text-fill: #285A36; -fx-font-weight: bold; -fx-cursor: hand;" text="Minhas Turmas" />
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
          </children>
       </StackPane>
    </center>
    <left>
-      <VBox fx:id="barra_lateral" alignment="CENTER_LEFT" minHeight="200.0" minWidth="60.0" onMouseEntered="#expande_barra" onMouseExited="#minimiza_barra" prefHeight="400.0" prefWidth="60.0" style="-fx-background-color: #00674f;" styleClass="barralateral" BorderPane.alignment="CENTER_LEFT">
+      <VBox fx:id="barra_lateral" alignment="CENTER_LEFT" minHeight="200.0" minWidth="60.0" onMouseEntered="#expande_barra" onMouseExited="#minimiza_barra" prefHeight="600.0" prefWidth="60.0" style="-fx-background-color: #00674f;" styleClass="barralateral" BorderPane.alignment="CENTER_LEFT">
          <children>
 
             <Button fx:id="menu_minhaturma" alignment="BASELINE_LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#entra_minhaturma" prefHeight="48.0" prefWidth="200.0" style="-fx-background-color: #00674f; -fx-padding: 0 0 0 10;" text="Minhas Turmas" textFill="WHITE">
@@ -46,6 +71,23 @@
                      <image>
                         <Image url="@../Imagens/prova.png" />
                      </image>
+                  </ImageView>
+               </graphic>
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+            </Button>
+
+            <Button fx:id="banco_questoes" accessibleText="Banco de Questões" alignment="BASELINE_LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#entra_banco_questoes" prefHeight="48.0" prefWidth="200.0" style="-fx-background-color: #00674F; -fx-padding: 0 0 0 13;" text="Banco Questões" textFill="WHITE">
+               <VBox.margin>
+                  <Insets bottom="25.0" top="30.0" />
+               </VBox.margin>
+               <graphic>
+                  <ImageView fitHeight="49.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../Imagens/Questoesicon.png" />
+                     </image>
+                     <effect><ColorAdjust brightness="1.0" /></effect>
                   </ImageView>
                </graphic>
                <font>
