@@ -138,6 +138,9 @@ public class QuestaoDAO {
     public List<Questao> listarQuestoes() {
         Map<Long, Questao> mapaQuestoes = new LinkedHashMap<>();
         Long matriculaProf = SessaoUsuarioController.getIdUsuarioLogado();
+        if (matriculaProf == null || !"Professor".equalsIgnoreCase(SessaoUsuarioController.getTipoUsuario())) {
+            return List.of();
+        }
 
         String sqlBase =
                 "SELECT " +
@@ -146,8 +149,10 @@ public class QuestaoDAO {
                         "    q.pontos, " +
                         "    q.enunciado, " +
                         "    q.gabarito, " +
+                        "    q.matricula_professor AS matricula_autor, " +
+                        "    autor.nome AS nome_autor, " +
                         "    COALESCE(d_q.nome, d_p.nome, 'Sem disciplina') AS nome_disciplina, " +
-                        "    p.nome AS nome_prova, " +
+                        "    CASE WHEN p.matricula_professor = ? THEN p.nome END AS nome_prova, " +
                         "    COALESCE(( " +
                         "        SELECT COUNT(*) " +
                         "        FROM mg_questao_alternativa a " +
@@ -159,13 +164,11 @@ public class QuestaoDAO {
                         "        WHERE ci.id_questao = q.id " +
                         "    ), 0) AS qtd_itens_corr " +
                         "FROM mg_questoes q " +
+                        "LEFT JOIN mg_professor autor ON autor.matricula = q.matricula_professor " +
                         "LEFT JOIN mg_disciplina d_q ON d_q.id = q.id_disciplina " +
                         "LEFT JOIN mg_prova_questao pq ON pq.id_questao = q.id " +
                         "LEFT JOIN mg_provas p ON p.id = pq.id_prova " +
                         "LEFT JOIN mg_disciplina d_p ON d_p.id = p.id_disciplina " +
-                        (matriculaProf != null
-                                ? "WHERE COALESCE(q.matricula_professor, p.matricula_professor) = ? "
-                                : "") +
                         "ORDER BY q.id DESC";
 
         String sqlAlternativas =
@@ -189,9 +192,7 @@ public class QuestaoDAO {
         try (Connection conn = new ConexaoDAO().conectaBD();
              PreparedStatement stmt = conn.prepareStatement(sqlBase)) {
 
-            if (matriculaProf != null) {
-                stmt.setLong(1, matriculaProf);
-            }
+            stmt.setLong(1, matriculaProf);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -206,6 +207,8 @@ public class QuestaoDAO {
                         q.setPontos(rs.getDouble("pontos"));
                         q.setDisciplina(rs.getString("nome_disciplina"));
                         q.setProva(rs.getString("nome_prova"));
+                        q.setMatriculaAutor(rs.getObject("matricula_autor", Long.class));
+                        q.setNomeAutor(rs.getString("nome_autor"));
 
                         String tipoBanco = rs.getString("tipo");
                         int qtdCorretas = rs.getInt("qtd_corretas");

@@ -795,6 +795,8 @@ public class FormEditorController {
         copia.setReutilizadaDoBanco(original.isReutilizadaDoBanco());
         copia.setDisciplina(original.getDisciplina());
         copia.setProva(original.getProva());
+        copia.setMatriculaAutor(original.getMatriculaAutor());
+        copia.setNomeAutor(original.getNomeAutor());
 
         if (original.getAlternativas() != null) {
             for (String s : original.getAlternativas()) {
@@ -1139,6 +1141,12 @@ public class FormEditorController {
         busca.setAccessibleText("Buscar pelo enunciado");
         HBox.setHgrow(busca, Priority.ALWAYS);
 
+        ComboBox<AutoriaQuestao.Filtro> autor = new ComboBox<>();
+        autor.setAccessibleText("Filtrar por professor");
+        autor.setPrefWidth(170);
+        autor.getItems().setAll(AutoriaQuestao.filtros(questoes, SessaoUsuarioController.getIdUsuarioLogado()));
+        autor.getSelectionModel().selectFirst();
+
         ComboBox<String> disciplina = new ComboBox<>();
         disciplina.setAccessibleText("Filtrar por disciplina");
         disciplina.getItems().add(todasDisciplinas);
@@ -1157,10 +1165,11 @@ public class FormEditorController {
         Button limpar = new Button("Limpar filtros");
         limpar.setOnAction(e -> {
             busca.clear();
+            autor.getSelectionModel().selectFirst();
             disciplina.setValue(todasDisciplinas);
             tipo.setValue(todosTipos);
         });
-        HBox filtros = new HBox(10, busca, disciplina, tipo, limpar);
+        HBox filtros = new HBox(10, busca, autor, disciplina, tipo, limpar);
         filtros.setAlignment(Pos.CENTER_LEFT);
 
         FilteredList<Questao> filtradas = new FilteredList<>(FXCollections.observableArrayList(questoes));
@@ -1189,7 +1198,11 @@ public class FormEditorController {
                 enunciado.setWrapText(true);
                 enunciado.maxWidthProperty().bind(widthProperty().subtract(44));
                 enunciado.getStyleClass().add("seletor-enunciado");
-                VBox cartao = new VBox(7, etiquetas, enunciado);
+                Label autoria = new Label(AutoriaQuestao.formatar(q));
+                autoria.setWrapText(true);
+                autoria.maxWidthProperty().bind(enunciado.maxWidthProperty());
+                autoria.getStyleClass().add("seletor-secundario");
+                VBox cartao = new VBox(7, etiquetas, enunciado, autoria);
                 cartao.getStyleClass().add("seletor-cartao");
                 setGraphic(cartao);
             }
@@ -1204,6 +1217,7 @@ public class FormEditorController {
         Runnable filtrar = () -> {
             Questao selecionada = listaQuestoes.getSelectionModel().getSelectedItem();
             String termo = busca.getText().trim().toLowerCase(PT_BR);
+            AutoriaQuestao.Filtro autorSelecionado = autor.getValue();
             String disciplinaSelecionada = disciplina.getValue();
             String tipoSelecionado = tipo.getValue();
             filtradas.setPredicate(q ->
@@ -1211,7 +1225,8 @@ public class FormEditorController {
                             && q.getEnunciado().toLowerCase(PT_BR).contains(termo)))
                     && (todasDisciplinas.equals(disciplinaSelecionada) || (q.getDisciplina() != null
                             && q.getDisciplina().trim().equalsIgnoreCase(disciplinaSelecionada)))
-                    && (todosTipos.equals(tipoSelecionado) || mapearTipoParaCombo(q.getTipo()).equals(tipoSelecionado)));
+                    && (todosTipos.equals(tipoSelecionado) || mapearTipoParaCombo(q.getTipo()).equals(tipoSelecionado))
+                    && (autorSelecionado == null || autorSelecionado.aceita(q)));
             if (selecionada != null && filtradas.contains(selecionada)) {
                 listaQuestoes.getSelectionModel().select(selecionada);
             } else {
@@ -1220,6 +1235,7 @@ public class FormEditorController {
             atualizarContador.run();
         };
         busca.textProperty().addListener((obs, anterior, atual) -> filtrar.run());
+        autor.valueProperty().addListener((obs, anterior, atual) -> filtrar.run());
         disciplina.valueProperty().addListener((obs, anterior, atual) -> filtrar.run());
         tipo.valueProperty().addListener((obs, anterior, atual) -> filtrar.run());
 
@@ -1282,7 +1298,11 @@ public class FormEditorController {
         enun.setWrapText(true);
         enun.setStyle("-fx-text-fill: #1B1B1B; -fx-font-weight: bold; -fx-font-size: 13px;");
 
-        alvo.getChildren().addAll(meta, enun);
+        meta.setWrapText(true);
+        Label autoria = new Label(AutoriaQuestao.formatar(q));
+        autoria.setWrapText(true);
+        autoria.getStyleClass().add("seletor-secundario");
+        alvo.getChildren().addAll(meta, autoria, enun);
 
         if (Questao.DISSERTATIVA.equals(q.getTipo())) {
             String modelo = (q.getRespostaModelo() != null && !q.getRespostaModelo().isBlank())

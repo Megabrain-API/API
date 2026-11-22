@@ -55,6 +55,7 @@
                         <HBox alignment="CENTER_LEFT" spacing="12.0">
                             <children>
                                 <TextField fx:id="txt_filtro_enunciado" prefHeight="38.0" promptText="Buscar questão pelo enunciado..." style="-fx-background-color: #FFFFFF; -fx-border-color: #C4D6CA; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-padding: 0 12 0 12; -fx-font-size: 13px;" HBox.hgrow="ALWAYS" />
+                                <ComboBox fx:id="cb_filtro_autor" prefHeight="38.0" prefWidth="180.0" accessibleText="Filtrar por professor" promptText="Todos os professores" style="-fx-background-color: #FFFFFF; -fx-border-color: #C4D6CA; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-font-size: 13px;" />
                                 <ComboBox fx:id="cb_filtro_disciplina" prefHeight="38.0" prefWidth="220.0" promptText="Todas as disciplinas" style="-fx-background-color: #FFFFFF; -fx-border-color: #C4D6CA; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-font-size: 13px;" />
                                 <ComboBox fx:id="cb_filtro_tipo" prefHeight="38.0" prefWidth="190.0" promptText="Todos os tipos" style="-fx-background-color: #FFFFFF; -fx-border-color: #C4D6CA; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-font-size: 13px;" />
                             </children>

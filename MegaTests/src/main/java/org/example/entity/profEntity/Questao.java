@@ -30,6 +30,8 @@ public class Questao {
     private double pontos = 1.0; // Pontuação/Valor atribuído à questão
     private String disciplina;
     private String prova;
+    private Long matriculaAutor;
+    private String nomeAutor;
 
     private Long idOrigemBanco;
     private boolean reutilizadaDoBanco;
@@ -135,6 +137,22 @@ public class Questao {
 
     public void setDisciplina(String disciplina) {
         this.disciplina = disciplina;
+    }
+
+    public Long getMatriculaAutor() {
+        return matriculaAutor;
+    }
+
+    public void setMatriculaAutor(Long matriculaAutor) {
+        this.matriculaAutor = matriculaAutor;
+    }
+
+    public String getNomeAutor() {
+        return nomeAutor;
+    }
+
+    public void setNomeAutor(String nomeAutor) {
+        this.nomeAutor = nomeAutor;
     }
 
     public String getProva() {

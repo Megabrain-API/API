@@ -54,6 +54,9 @@ public class BancoQuestoesController implements Initializable {
     private TextField txt_filtro_enunciado;
 
     @FXML
+    private ComboBox<AutoriaQuestao.Filtro> cb_filtro_autor;
+
+    @FXML
     private ComboBox<String> cb_filtro_disciplina;
 
     @FXML
@@ -110,6 +113,9 @@ public class BancoQuestoesController implements Initializable {
         try {
             QuestaoDAO dao = new QuestaoDAO();
             todasQuestoes.addAll(dao.listarQuestoes());
+            cb_filtro_autor.getItems().setAll(AutoriaQuestao.filtros(
+                    todasQuestoes, SessaoUsuarioController.getIdUsuarioLogado()));
+            cb_filtro_autor.getSelectionModel().selectFirst();
             popularFiltroDisciplinas();
             aplicarFiltros();
         } catch (Exception e) {
@@ -152,6 +158,7 @@ public class BancoQuestoesController implements Initializable {
 
     private void configurarListenersFiltro() {
         txt_filtro_enunciado.textProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
+        cb_filtro_autor.valueProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
         cb_filtro_disciplina.valueProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
         if (cb_filtro_tipo != null) {
             cb_filtro_tipo.valueProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
@@ -163,6 +170,7 @@ public class BancoQuestoesController implements Initializable {
                 ? ""
                 : txt_filtro_enunciado.getText().trim().toLowerCase(PT_BR);
 
+        AutoriaQuestao.Filtro autor = cb_filtro_autor.getValue();
         String disciplinaSelecionada = cb_filtro_disciplina.getValue();
         String tipoSelecionado = cb_filtro_tipo != null ? cb_filtro_tipo.getValue() : TODOS_TIPOS;
 
@@ -179,7 +187,8 @@ public class BancoQuestoesController implements Initializable {
                             || TODOS_TIPOS.equals(tipoSelecionado)
                             || formatarTipo(q.getTipo()).equalsIgnoreCase(tipoSelecionado);
 
-                    return bateEnunciado && bateDisciplina && bateTipo;
+                    return bateEnunciado && bateDisciplina && bateTipo
+                            && (autor == null || autor.aceita(q));
                 })
                 .collect(Collectors.toList());
 
@@ -214,7 +223,9 @@ public class BancoQuestoesController implements Initializable {
             lblTitulo.setFont(Font.font("System", FontWeight.BOLD, 16));
             lblTitulo.setStyle("-fx-text-fill: #1B1B1B;");
 
-            Label lblSub = new Label("Em Minhas Provas, clique em \"+ Criar Questão\" para cadastrar uma questão neste repositório.");
+            Label lblSub = new Label(todasQuestoes.isEmpty()
+                    ? "Em Minhas Provas, clique em \"+ Criar Questão\" para cadastrar uma questão neste repositório."
+                    : "Ajuste os filtros para encontrar outras questões.");
             lblSub.setWrapText(true);
             lblSub.setStyle("-fx-text-fill: #66706A; -fx-font-size: 13px;");
 
@@ -294,7 +305,10 @@ public class BancoQuestoesController implements Initializable {
         lblEnunciado.setFont(Font.font("System", FontWeight.BOLD, 15));
         lblEnunciado.setStyle("-fx-text-fill: #1B1B1B;");
 
-        card.getChildren().addAll(topo, lblEnunciado, new Separator());
+        Label autoria = new Label(AutoriaQuestao.formatar(q));
+        autoria.setWrapText(true);
+        autoria.setStyle("-fx-text-fill: #486455; -fx-font-size: 12px;");
+        card.getChildren().addAll(topo, lblEnunciado, autoria, new Separator());
 
         // Corpo específico de acordo com o tipo da questão
         if (Questao.DISSERTATIVA.equals(q.getTipo())) {
